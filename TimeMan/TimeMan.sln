@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31919.166
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeManUI", "TimeManUI\TimeManUI.csproj", "{4FB09A25-FD06-46A3-B8F0-747E81B4A6BC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeManTester", "TimeManTester\TimeManTester.csproj", "{516C868F-B83D-4C69-AE61-A90793410F0C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4FB09A25-FD06-46A3-B8F0-747E81B4A6BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FB09A25-FD06-46A3-B8F0-747E81B4A6BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FB09A25-FD06-46A3-B8F0-747E81B4A6BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FB09A25-FD06-46A3-B8F0-747E81B4A6BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{516C868F-B83D-4C69-AE61-A90793410F0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{516C868F-B83D-4C69-AE61-A90793410F0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{516C868F-B83D-4C69-AE61-A90793410F0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{516C868F-B83D-4C69-AE61-A90793410F0C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7E9C56CB-0C03-4593-89C8-3C1D3998DBD4}
+	EndGlobalSection
+EndGlobal
