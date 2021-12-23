@@ -14,6 +14,19 @@ namespace TimeManUI.Data
   {
     public string DataDirectory { get; private set; }
 
+
+    private string? _CurrentUserID = null;
+    public string CurrentUserID { get; private set; }
+    public void SetCurrentUser(string userID)
+    {
+      _CurrentUserID = userID;
+    }
+    public string ValidateUser()
+    {
+      if (string.IsNullOrWhiteSpace(_CurrentUserID)) { throw new InvalidOperationException("The current user ID is null!"); }
+      return _CurrentUserID;
+    }
+
     private ConcurrentDictionary<string, DataTableFile<TimeManSession>> SessionHistories = new ConcurrentDictionary<string, DataTableFile<TimeManSession>>();
 
     public TimeManDataAccess(string dataDir)
@@ -26,8 +39,9 @@ namespace TimeManUI.Data
 
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public TimeManSession? GetCurrentSession(string userID)
+    public TimeManSession? GetCurrentSession()
     {
+      string userID = ValidateUser();
       string dataPath = GetCurrentSessionPath(userID);
       if (File.Exists(dataPath))
       {
@@ -61,9 +75,11 @@ namespace TimeManUI.Data
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public TimeManSession StartSession(string userID, DateTimeOffset timestamp)
+    public TimeManSession StartSession(DateTimeOffset timestamp)
     {
-      TimeManSession? cur = GetCurrentSession(userID);
+      string userID = ValidateUser();
+
+      TimeManSession? cur = GetCurrentSession();
       if (cur == null || cur.HasEnded)
       {
         TimeManSession sesh = new TimeManSession()
@@ -77,8 +93,8 @@ namespace TimeManUI.Data
 
       if (cur.HasStarted)
       {
-        EndSession(userID, timestamp);
-        return StartSession(userID, timestamp);
+        EndSession(timestamp);
+        return StartSession(timestamp);
       }
 
       return cur;
@@ -86,16 +102,16 @@ namespace TimeManUI.Data
 
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public TimeManSession? EndSession(string userID, DateTimeOffset timestamp)
+    public TimeManSession? EndSession(DateTimeOffset timestamp)
     {
-      var res = GetCurrentSession(userID);
+      var res = GetCurrentSession();
 
       if (res != null && !res.HasEnded)
       {
         res.EndTime = timestamp;
         SaveCurrentSession(res);
 
-        var history = ResolveSessionHistory(userID);
+        var history = ResolveSessionHistory();
         history.AddItem(res);
       }
 
@@ -155,16 +171,18 @@ namespace TimeManUI.Data
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public TimeManSession? GetSession(string userID, int sessionID)
+    public TimeManSession? GetSession(int sessionID)
     {
-      DataTableFile<TimeManSession> history = ResolveSessionHistory(userID);
+      DataTableFile<TimeManSession> history = ResolveSessionHistory();
       TimeManSession? res = history.GetItem(sessionID);
       return res;
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    private DataTableFile<TimeManSession> ResolveSessionHistory(string userID)
+    private DataTableFile<TimeManSession> ResolveSessionHistory()
     {
+      string userID = ValidateUser();
+
       if (SessionHistories.TryGetValue(userID, out var res))
       {
         return res;
@@ -184,8 +202,10 @@ namespace TimeManUI.Data
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public void CancelCurrentSession(string userID)
+    public void CancelCurrentSession()
     {
+      string userID = ValidateUser();
+
       // Destroy the session file.
       SafeWrite(userID, () =>
       {
@@ -195,11 +215,19 @@ namespace TimeManUI.Data
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public List<TimeManSession> GetSessions(string userID)
+    public List<TimeManSession> GetSessions()
     {
-      var history = ResolveSessionHistory(userID);
+      var history = ResolveSessionHistory();
       List<TimeManSession> res = history.GetItems();
       return res;
     }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    public TimeMark AddTimeMark(TimeManSession session)
+    {
+      throw new NotImplementedException();
+    }
+
+
   }
 }

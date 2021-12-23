@@ -1,6 +1,4 @@
-﻿using drewCo.Tools;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace TimeManUI.Data
 {
@@ -8,14 +6,29 @@ namespace TimeManUI.Data
   // ============================================================================================================================
   public interface ITimeManDataAccess
   {
-    TimeManSession? GetCurrentSession(string userID);
-    TimeManSession? StartSession(string userID, DateTimeOffset timestamp);
-    TimeManSession? EndSession(string userID, DateTimeOffset timestamp);
+    void SetCurrentUser(string userID);
+    string CurrentUserID { get; }
+    
+    /// <exception cref="InvalidOperationException">This should throw an exception if the current user ID is null or otherwise invalid.</exception>
+    string ValidateUser();
+
+    TimeManSession? GetCurrentSession();
+    TimeManSession? StartSession(DateTimeOffset timestamp);
+    TimeManSession? EndSession(DateTimeOffset timestamp);
+
+
+    ///// <summary>
+    ///// Add a time mark to the session.
+    ///// </summary>
+    //TimeMark AddTimeMark(TimeManSession session);
+
+
+    //WorkCategory AddCategory(WorkCategory workCategory);
 
     /// <summary>
     /// Cancel any currently active session!
     /// </summary>
-    void CancelCurrentSession(string userID);
+    void CancelCurrentSession();
 
     /// <summary>
     /// Get the session by its ID.
@@ -23,8 +36,8 @@ namespace TimeManUI.Data
     /// <returns>
     /// The session with the matching ID, or null if it doesn't exist!
     /// </returns>
-    TimeManSession? GetSession(string userID, int sessionID);
-    List<TimeManSession> GetSessions(string userID);
+    TimeManSession? GetSession(int sessionID);
+    List<TimeManSession> GetSessions();
 
     void SaveCurrentSession(TimeManSession session);
   }
@@ -37,12 +50,31 @@ namespace TimeManUI.Data
   }
 
   // ============================================================================================================================
+  /// <summary>
+  /// Used to indicate that the member in question has a relationship to some other data type.
+  /// This is like a foreign key in a database.
+  /// </summary>
+  [AttributeUsage(AttributeTargets.Property)]
+  public class Relationship : Attribute
+  {
+    //public Type RelatedType { get; private set; }
+
+    //public Relationship(Type dataType)
+    //{
+    //  RelatedType = dataType;
+    //}
+  }
+
+  // ============================================================================================================================
   public class TimeManSession : IHasID
   {
     public int ID { get; set; } = 0;
     public string UserID { get; set; } = "DEFAULT";
     public DateTimeOffset? StartTime { get; set; }
     public DateTimeOffset? EndTime { get; set; }
+
+    [Relationship]
+    public List<TimeMark> TimeMarks { get; set; } = new List<TimeMark>();
 
     [JsonIgnore]
     public bool IsActive { get { return StartTime != null && EndTime == null; } }
@@ -54,149 +86,37 @@ namespace TimeManUI.Data
     public bool HasEnded { get { return HasStarted && EndTime != null; } }
   }
 
-
   // ============================================================================================================================
   /// <summary>
-  /// This is meant to mimick a table in a database, however this one is stored
-  /// on disk.
+  /// Used to mark certain segments of time in a TimeMan session.
+  /// This is used to help describe what the user is actually spending their time on, work, meetings, paperwork, etc.
   /// </summary>
-  public class DataTableFile<T> where T : class, IHasID, new()
+  public class TimeMark : IHasID
   {
-    private object IDLock = new object();
-    private object AddLock = new object();
-    private object WriteLock = new object();
+    public int ID { get; set; }
+    public DateTimeOffset Timestamp { get; set; }
+    public string Notes { get; set; }
 
-    private List<T> Items { get; set; } = new List<T>();
-    private int LastID { get; set; } = 0;
+    [Relationship]
+    public WorkCategory Category { get; set; }
 
-    [JsonIgnore]
-    public DateTime LastWrite { get; private set; } = DateTime.MinValue;
-
-    private string FilePath;
-    private string DataDir;
-
-    // --------------------------------------------------------------------------------------------------------------------------
-    public DataTableFile(string dataDir)
-    {
-      DataDir = dataDir;
-      FilePath = Path.Combine(DataDir, "datatablefile.json");
-      if (File.Exists(FilePath))
-      {
-        // Load our content from disk!
-        string data = File.ReadAllText(FilePath);
-        var doc = JsonDocument.Parse(data);
-        var root = doc.RootElement;
-
-        {
-          var prop = root.GetProperty(nameof(LastID));
-          LastID = prop.GetInt32();
-        }
-
-
-        {
-          var prop = root.GetProperty(nameof(Items));
-          foreach (var item in prop.EnumerateArray())
-          {
-            T nextItem = item.Deserialize<T>();
-            Items.Add(nextItem);
-          }
-        }
-
-        UpdateWriteTime();
-      }
-      else
-      {
-        // This is a new file, I guess....
-      }
-    }
-
-    // --------------------------------------------------------------------------------------------------------------------------
-    private void UpdateWriteTime()
-    {
-      var fi = new FileInfo(FilePath);
-      this.LastWrite = fi.LastWriteTimeUtc;
-    }
-
-    // --------------------------------------------------------------------------------------------------------------------------
-    public T? GetItem(int id)
-    {
-      // NOTE: This is really slow.  An index is the answer, but we can implement something like that later.
-      // I don't think that our data file formats are really useful for that type of thing....
-      foreach (var item in this.Items)
-      {
-        if (item.ID == id) { return item; }
-      }
-      return null;
-    }
-
-    // --------------------------------------------------------------------------------------------------------------------------
-    public void AddItem(T item)
-    {
-      if (item.ID != 0)
-      {
-        throw new InvalidOperationException("Item has already been added (id != 0)");
-      }
-      lock (AddLock)
-      {
-        int id = GetNextID();
-        item.ID = id;
-        Items.Add(item);
-
-        Save();
-      }
-    }
-
-    // --------------------------------------------------------------------------------------------------------------------------
-    private void Save()
-    {
-      lock (WriteLock)
-      {
-        // Check for correct write times.....
-        if (File.Exists(FilePath))
-        {
-          var fi = new FileInfo(FilePath);
-          if (this.LastWrite != fi.LastWriteTimeUtc)
-          {
-            // TODO: This needs a proper exception type so we can implement retries elsewhere....
-            throw new InvalidOperationException("File write times don't match!  Can't save!");
-          }
-        }
-        else
-        {
-          FileTools.CreateDirectory(Path.GetDirectoryName(FilePath));
-        }
-
-        // An anonymous proxy object ought to do it.
-        string data = JsonSerializer.Serialize(new { LastID = this.LastID, Items = this.Items });
-        File.WriteAllText(FilePath, data);
-      }
-    }
-
-
-    // --------------------------------------------------------------------------------------------------------------------------
-    private int GetNextID()
-    {
-      lock (IDLock)
-      {
-        ++LastID;
-        int res = LastID;
-        return res;
-      }
-    }
-
-    // --------------------------------------------------------------------------------------------------------------------------
-    public List<T> GetItems()
-    {
-      // Yes, this is also a pig....
-      // We are making a deep copy of everything and sending it back.
-      // In a perfect world, we would have a query type interface to do this.
-      var res = new List<T>();
-      foreach (var item in this.Items)
-      {
-        res.Add(DTOMapper.CreateCopy<T>(item));
-      }
-      return res;
-    }
+    public bool IsBillable { get; set; }
   }
+
+
+
+  // ============================================================================================================================
+  public class WorkCategory : IHasID
+  {
+    public int ID { get; set; }
+    public string Name { get; set; }
+
+    /// <summary>
+    /// Indicates that this category of work is billable by default.
+    /// </summary>
+    public bool IsBillable { get; set; }
+  }
+
+
 
 }

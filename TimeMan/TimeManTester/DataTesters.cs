@@ -18,21 +18,22 @@ namespace TimeManTester
 
     // --------------------------------------------------------------------------------------------------------------------------
     [Fact]
-    public void CanCancelCurrentSession(){
+    public void CanCancelCurrentSession()
+    {
       const string TEST_USER = nameof(CanCancelCurrentSession);
-      ITimeManDataAccess da = GetDataAccess();
+      ITimeManDataAccess da = GetDataAccess(TEST_USER);
 
-      TimeManSession? sesh = da.StartSession(TEST_USER, DateTimeOffset.Now);
+      TimeManSession? sesh = da.StartSession(DateTimeOffset.Now);
       Assert.NotNull(sesh);
 
       // There should no longer be a current session for the user.
-      da.CancelCurrentSession(TEST_USER);
-      sesh = da.GetCurrentSession(TEST_USER);
+      da.CancelCurrentSession();
+      sesh = da.GetCurrentSession();
       Assert.Null(sesh);
 
 
       // Make sure that there are no sessions to be had in the manager.
-      List<TimeManSession> sessions = da.GetSessions(TEST_USER);
+      List<TimeManSession> sessions = da.GetSessions();
       Assert.Empty(sessions);
 
     }
@@ -46,10 +47,10 @@ namespace TimeManTester
     {
 
       const string TEST_USER = nameof(EndingCurrentSessionSavesItToHistory);
-      ITimeManDataAccess da = GetDataAccess();
+      ITimeManDataAccess da = GetDataAccess(TEST_USER);
 
-      TimeManSession? sesh = da.StartSession(TEST_USER, DateTimeOffset.Now);
-      TimeManSession? ended =  da.EndSession(TEST_USER, DateTimeOffset.Now)!;
+      TimeManSession? sesh = da.StartSession(DateTimeOffset.Now);
+      TimeManSession? ended = da.EndSession(DateTimeOffset.Now)!;
 
       // This should have written the data to the history log.
       Assert.NotNull(ended);
@@ -57,13 +58,13 @@ namespace TimeManTester
 
 
       // Now we can check the DAL to make sure that our session has been saved in the system!
-      TimeManSession? saved = da.GetSession(TEST_USER, ended.ID)!;
+      TimeManSession? saved = da.GetSession(ended.ID)!;
       Assert.Equal(ended.StartTime, saved.StartTime);
       Assert.Equal(ended.EndTime, saved.EndTime);
 
 
       // Make sure that we don't have a current session since we just ended one.
-      TimeManSession? current = da.GetCurrentSession(TEST_USER);
+      TimeManSession? current = da.GetCurrentSession();
       Assert.Null(current);
     }
 
@@ -75,19 +76,19 @@ namespace TimeManTester
     {
       const string TEST_USER = nameof(CanStartTimeManSession);
 
-      ITimeManDataAccess da = GetDataAccess();
+      ITimeManDataAccess da = GetDataAccess(TEST_USER);
 
       // The current session should be null, since we don't have one yet.
-      TimeManSession? cur = da.GetCurrentSession(TEST_USER);
+      TimeManSession? cur = da.GetCurrentSession();
       Assert.Null(cur);
 
 
-      var newSesh = da.StartSession(TEST_USER, DateTimeOffset.Now);
+      var newSesh = da.StartSession(DateTimeOffset.Now);
       Assert.NotNull(newSesh);
       Assert.True(newSesh.HasStarted);
 
       // Make sure that the new session and current session are the same.
-      var curSesh = da.GetCurrentSession(TEST_USER)!;
+      var curSesh = da.GetCurrentSession()!;
       Assert.NotNull(curSesh);
       Assert.Equal(newSesh.StartTime, curSesh.StartTime);
       Assert.False(newSesh.HasEnded);
@@ -100,9 +101,12 @@ namespace TimeManTester
     // --------------------------------------------------------------------------------------------------------------------------
     // NOTE: The idea with this function is that we can hook our test cases up to a DB driver, etc.
     // and still get a full set of passing test cases.
-    private ITimeManDataAccess GetDataAccess()
+    private ITimeManDataAccess GetDataAccess(string userID)
     {
       var res = new TimeManDataAccess(Path.Combine(FileTools.GetAppDir(), "TimeManData"));
+      res.SetCurrentUser(userID);
+      res.CancelCurrentSession();
+
       return res;
     }
 
