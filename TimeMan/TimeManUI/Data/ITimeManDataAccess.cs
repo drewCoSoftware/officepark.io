@@ -6,8 +6,8 @@ namespace TimeManUI.Data
   // ============================================================================================================================
   public interface ITimeManDataAccess
   {
-    void SetCurrentUser(string userID);
-    string CurrentUserID { get; }
+    void SetCurrentUser(string? userID);
+    string? CurrentUserID { get; }
     
     /// <exception cref="InvalidOperationException">This should throw an exception if the current user ID is null or otherwise invalid.</exception>
     string ValidateUser();
@@ -16,6 +16,8 @@ namespace TimeManUI.Data
     TimeManSession? StartSession(DateTimeOffset timestamp);
     TimeManSession? EndSession(DateTimeOffset timestamp);
 
+    void AddTimeMark(TimeMark mark);
+    void AddTimeMark(TimeMark mark, TimeManSession session);
 
     ///// <summary>
     ///// Add a time mark to the session.
@@ -37,9 +39,11 @@ namespace TimeManUI.Data
     /// The session with the matching ID, or null if it doesn't exist!
     /// </returns>
     TimeManSession? GetSession(int sessionID);
-    List<TimeManSession> GetSessions();
 
-    void SaveCurrentSession(TimeManSession session);
+    IEnumerable<TimeManSession> GetSessions();
+    IEnumerable<TimeManSession> GetSessions(Predicate<TimeManSession> filter);
+
+    void SaveSession(TimeManSession session);
   }
 
 

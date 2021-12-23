@@ -15,6 +15,47 @@ namespace TimeManTester
   public class DataTesters
   {
 
+    //// --------------------------------------------------------------------------------------------------------------------------
+    //[Fact]
+    //public void AddingTimeMark
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    [Fact]
+    public void CantAddTimeMarkWithNoActiveSession()
+    {
+      const string TEST_USER = nameof(DataAccessDoesntAllowInvalidUserID);
+      ITimeManDataAccess da = GetDataAccess(TEST_USER);
+
+      TimeMark mark = new TimeMark()
+      {
+        Timestamp = DateTimeOffset.Now,
+        Category = new WorkCategory()
+        {
+          Name = "Work"
+        }
+      };
+
+      Assert.Throws<InvalidOperationException>(() =>
+      {
+        da.AddTimeMark(mark);
+      });
+
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    [Fact]
+    public void DataAccessDoesntAllowInvalidUserID()
+    {
+      const string TEST_USER = nameof(DataAccessDoesntAllowInvalidUserID);
+      ITimeManDataAccess da = GetDataAccess(TEST_USER);
+      da.SetCurrentUser(null);
+
+      Assert.Throws<InvalidOperationException>(() =>
+      {
+        da.ValidateUser();
+      });
+    }
+
 
     // --------------------------------------------------------------------------------------------------------------------------
     [Fact]
@@ -33,7 +74,7 @@ namespace TimeManTester
 
 
       // Make sure that there are no sessions to be had in the manager.
-      List<TimeManSession> sessions = da.GetSessions();
+      List<TimeManSession> sessions = da.GetSessions(x => x.UserID == TEST_USER).ToList();
       Assert.Empty(sessions);
 
     }

@@ -16,8 +16,8 @@ namespace TimeManUI.Data
 
 
     private string? _CurrentUserID = null;
-    public string CurrentUserID { get; private set; }
-    public void SetCurrentUser(string userID)
+    public string? CurrentUserID { get; private set; }
+    public void SetCurrentUser(string? userID)
     {
       _CurrentUserID = userID;
     }
@@ -27,16 +27,20 @@ namespace TimeManUI.Data
       return _CurrentUserID;
     }
 
-    private ConcurrentDictionary<string, DataTableFile<TimeManSession>> SessionHistories = new ConcurrentDictionary<string, DataTableFile<TimeManSession>>();
+    private DataTableFile<TimeManSession> Sessions = null;
+    // private ConcurrentDictionary<string, DataTableFile<TimeManSession>> SessionHistories = new ConcurrentDictionary<string, DataTableFile<TimeManSession>>();
 
-    public TimeManDataAccess(string dataDir)
-    {
-      DataDirectory = dataDir;
-    }
 
     // private object 
     private ConcurrentDictionary<string, object> UserDataLocks = new ConcurrentDictionary<string, object>();
 
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    public TimeManDataAccess(string dataDir)
+    {
+      DataDirectory = dataDir;
+      Sessions = new DataTableFile<TimeManSession>(DataDirectory);
+    }
 
     // --------------------------------------------------------------------------------------------------------------------------
     public TimeManSession? GetCurrentSession()
@@ -55,7 +59,7 @@ namespace TimeManUI.Data
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public void SaveCurrentSession(TimeManSession session)
+    public void SaveSession(TimeManSession session)
     {
       if (session == null)
       {
@@ -87,7 +91,7 @@ namespace TimeManUI.Data
           UserID = userID,
           StartTime = timestamp
         };
-        SaveCurrentSession(sesh);
+        SaveSession(sesh);
         return sesh;
       }
 
@@ -109,10 +113,9 @@ namespace TimeManUI.Data
       if (res != null && !res.HasEnded)
       {
         res.EndTime = timestamp;
-        SaveCurrentSession(res);
+        SaveSession(res);
 
-        var history = ResolveSessionHistory();
-        history.AddItem(res);
+        Sessions.AddItem(res);
       }
 
       return res;
@@ -173,33 +176,46 @@ namespace TimeManUI.Data
     // --------------------------------------------------------------------------------------------------------------------------
     public TimeManSession? GetSession(int sessionID)
     {
-      DataTableFile<TimeManSession> history = ResolveSessionHistory();
-      TimeManSession? res = history.GetItem(sessionID);
+      TimeManSession? res = Sessions.GetItem(sessionID);
       return res;
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    private DataTableFile<TimeManSession> ResolveSessionHistory()
+    public IEnumerable<TimeManSession> GetSessions()
     {
-      string userID = ValidateUser();
-
-      if (SessionHistories.TryGetValue(userID, out var res))
-      {
-        return res;
-      }
-
-      int tryCount = 0;
-      const int SANITY_COUNT = 100;
-      while (!SessionHistories.TryAdd(userID, new DataTableFile<TimeManSession>(GetSessionHistoryDirectory(userID))))
-      {
-        ++tryCount;
-        if (tryCount > SANITY_COUNT)
-        {
-          throw new InvalidOperationException($"Could not create a new session history for user {userID}!  Max attempts exceeded!");
-        }
-      }
-      return SessionHistories[userID];
+      List<TimeManSession> res = Sessions.GetItems();
+      return res;
     }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    public IEnumerable<TimeManSession> GetSessions(Predicate<TimeManSession> filter)
+    {
+      var res = Sessions.GetItems().Where(x => filter(x));
+      return res;
+    }
+
+    //// --------------------------------------------------------------------------------------------------------------------------
+    //private DataTableFile<TimeManSession> ResolveSessionHistory()
+    //{
+    //  string userID = ValidateUser();
+
+    //  if (SessionHistories.TryGetValue(userID, out var res))
+    //  {
+    //    return res;
+    //  }
+
+    //  int tryCount = 0;
+    //  const int SANITY_COUNT = 100;
+    //  while (!SessionHistories.TryAdd(userID, new DataTableFile<TimeManSession>(GetSessionHistoryDirectory(userID))))
+    //  {
+    //    ++tryCount;
+    //    if (tryCount > SANITY_COUNT)
+    //    {
+    //      throw new InvalidOperationException($"Could not create a new session history for user {userID}!  Max attempts exceeded!");
+    //    }
+    //  }
+    //  return SessionHistories[userID];
+    //}
 
     // --------------------------------------------------------------------------------------------------------------------------
     public void CancelCurrentSession()
@@ -214,20 +230,39 @@ namespace TimeManUI.Data
       });
     }
 
+
     // --------------------------------------------------------------------------------------------------------------------------
-    public List<TimeManSession> GetSessions()
+    /// <summary>
+    /// Adds a time mark to the currently active session.
+    /// </summary>
+    public void AddTimeMark(TimeMark mark)
     {
-      var history = ResolveSessionHistory();
-      List<TimeManSession> res = history.GetItems();
-      return res;
+      TimeManSession? session = GetCurrentSession();
+      if (session == null)
+      {
+        throw new InvalidOperationException("You may not add a time mark if there isn't a currently active session!");
+      }
+
+      AddTimeMark(mark, session);
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public TimeMark AddTimeMark(TimeManSession session)
+    public void AddTimeMark(TimeMark mark, TimeManSession session)
     {
-      throw new NotImplementedException();
-    }
+      string userID = ValidateUser();
+      if (session.HasEnded && mark.Timestamp > session.EndTime)
+      {
+        throw new InvalidOperationException("You can't add a time mark that exceeds the end time of the session!");
+      }
 
+      if (session.UserID != userID)
+      {
+        throw new InvalidOperationException($"The session user ({session.UserID}) doesn't match the current user ID ({userID})");
+      }
+
+      session.TimeMarks.Add(mark);
+      SaveSession(session);
+    }
 
   }
 }
