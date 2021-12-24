@@ -15,6 +15,45 @@ namespace TimeManTester
   public class DataTesters
   {
 
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    /// <summary>
+    /// Show that we can create our data schema and generate the appropriate 'CREATE TABLE' syntax, etc.
+    /// </summary>
+    [Fact]
+    public void CanCreateDataSchema()
+    {
+      var schema = new SchemaDefinition(new SqliteFlavor());
+      schema.AddTable<TimeManSession>("Sessions");
+
+      // We should have one dependent table in our def.
+      {
+        var allDefs = schema.TableDefs;
+        Assert.Equal(3, allDefs.Count);
+        var match = (from x in allDefs where x.Name == "Sessions" select x).FirstOrDefault()!;
+        Assert.NotNull(match);
+        Assert.Single(match.DependentTables);
+      }
+
+
+      // Now let's add another table of the same type, but with a different name!
+      schema.AddTable<TimeManSession>("CurrentSessions");
+      {
+        var allDefs = schema.TableDefs;
+        Assert.Equal(4, allDefs.Count);
+        var match = (from x in allDefs where x.Name == "CurrentSessions" select x).FirstOrDefault()!;
+        Assert.NotNull(match);
+        Assert.Single(match.DependentTables);
+      }
+
+
+      // OK!  Let's get our create SQL code now!
+      string query = schema.GetCreateSQL();
+
+    }
+
+
+
     //// --------------------------------------------------------------------------------------------------------------------------
     //[Fact]
     //public void AddingTimeMark
@@ -144,7 +183,9 @@ namespace TimeManTester
     // and still get a full set of passing test cases.
     private ITimeManDataAccess GetDataAccess(string userID)
     {
-      var res = new TimeManDataAccess(Path.Combine(FileTools.GetAppDir(), "TimeManData"));
+      var res = new TimeManSqliteDataAccess(Path.Combine(FileTools.GetAppDir(), "TimeManData"), "TimeManTesters");
+      res.SetupDatabase();
+
       res.SetCurrentUser(userID);
       res.CancelCurrentSession();
 

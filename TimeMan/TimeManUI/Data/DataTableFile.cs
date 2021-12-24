@@ -9,7 +9,7 @@ namespace TimeManUI.Data
   /// This is meant to mimick a table in a database, however this one is stored
   /// on disk.
   /// </summary>
-  public class DataTableFile<T> where T : class, IHasID, new()
+  public class DataTableFile<T> where T : class, IHasPrimary , new()
   {
     private object IDLock = new object();
     private object AddLock = new object();

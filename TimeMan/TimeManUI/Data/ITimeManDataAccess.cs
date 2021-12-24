@@ -8,7 +8,7 @@ namespace TimeManUI.Data
   {
     void SetCurrentUser(string? userID);
     string? CurrentUserID { get; }
-    
+
     /// <exception cref="InvalidOperationException">This should throw an exception if the current user ID is null or otherwise invalid.</exception>
     string ValidateUser();
 
@@ -48,7 +48,7 @@ namespace TimeManUI.Data
 
 
   // ============================================================================================================================
-  public interface IHasID
+  public interface IHasPrimary
   {
     int ID { get; set; }
   }
@@ -61,16 +61,29 @@ namespace TimeManUI.Data
   [AttributeUsage(AttributeTargets.Property)]
   public class Relationship : Attribute
   {
-    //public Type RelatedType { get; private set; }
-
-    //public Relationship(Type dataType)
-    //{
-    //  RelatedType = dataType;
-    //}
   }
 
   // ============================================================================================================================
-  public class TimeManSession : IHasID
+  [AttributeUsage(AttributeTargets.Property)]
+  public class PrimaryKey : Attribute
+  {
+  }
+
+  //// ============================================================================================================================
+  //[AttributeUsage(AttributeTargets.Property)]
+  //public class PrimaryKey : Attribute
+  //{
+  //}
+
+  // ============================================================================================================================
+  public class TimeManSchema
+  {
+    public List<TimeManSession> Sessions { get; set; } = new List<TimeManSession>();
+    public List<TimeManSession> ActiveSessions { get; set; } = new List<TimeManSession>();
+  }
+
+  // ============================================================================================================================
+  public class TimeManSession : IHasPrimary
   {
     public int ID { get; set; } = 0;
     public string UserID { get; set; } = "DEFAULT";
@@ -95,7 +108,7 @@ namespace TimeManUI.Data
   /// Used to mark certain segments of time in a TimeMan session.
   /// This is used to help describe what the user is actually spending their time on, work, meetings, paperwork, etc.
   /// </summary>
-  public class TimeMark : IHasID
+  public class TimeMark : IHasPrimary
   {
     public int ID { get; set; }
     public DateTimeOffset Timestamp { get; set; }
@@ -110,7 +123,7 @@ namespace TimeManUI.Data
 
 
   // ============================================================================================================================
-  public class WorkCategory : IHasID
+  public class WorkCategory : IHasPrimary
   {
     public int ID { get; set; }
     public string Name { get; set; }
