@@ -14,7 +14,6 @@ namespace TimeManUI.Data
   {
     public string DataDirectory { get; private set; }
 
-
     private string? _CurrentUserID = null;
     public string? CurrentUserID { get; private set; }
     public void SetCurrentUser(string? userID)
@@ -27,9 +26,7 @@ namespace TimeManUI.Data
       return _CurrentUserID;
     }
 
-    private DataTableFile<TimeManSession> Sessions = null;
-    // private ConcurrentDictionary<string, DataTableFile<TimeManSession>> SessionHistories = new ConcurrentDictionary<string, DataTableFile<TimeManSession>>();
-
+    private DataTableFile<TimeManSession> Sessions;
 
     // private object 
     private ConcurrentDictionary<string, object> UserDataLocks = new ConcurrentDictionary<string, object>();
@@ -193,29 +190,6 @@ namespace TimeManUI.Data
       var res = Sessions.GetItems().Where(x => filter(x));
       return res;
     }
-
-    //// --------------------------------------------------------------------------------------------------------------------------
-    //private DataTableFile<TimeManSession> ResolveSessionHistory()
-    //{
-    //  string userID = ValidateUser();
-
-    //  if (SessionHistories.TryGetValue(userID, out var res))
-    //  {
-    //    return res;
-    //  }
-
-    //  int tryCount = 0;
-    //  const int SANITY_COUNT = 100;
-    //  while (!SessionHistories.TryAdd(userID, new DataTableFile<TimeManSession>(GetSessionHistoryDirectory(userID))))
-    //  {
-    //    ++tryCount;
-    //    if (tryCount > SANITY_COUNT)
-    //    {
-    //      throw new InvalidOperationException($"Could not create a new session history for user {userID}!  Max attempts exceeded!");
-    //    }
-    //  }
-    //  return SessionHistories[userID];
-    //}
 
     // --------------------------------------------------------------------------------------------------------------------------
     public void CancelCurrentSession()

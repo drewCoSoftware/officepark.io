@@ -115,7 +115,7 @@ namespace TimeManUI.Data
           FileTools.CreateDirectory(Path.GetDirectoryName(FilePath));
         }
 
-        // An anonymous proxy object ought to do it.
+        // An anonymous proxy object ought to do it...
         string data = JsonSerializer.Serialize(new { LastID = this.LastID, Items = this.Items });
         File.WriteAllText(FilePath, data);
       }
