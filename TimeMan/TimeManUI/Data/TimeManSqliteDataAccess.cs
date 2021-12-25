@@ -361,6 +361,11 @@ namespace TimeManUI.Data
   /// </summary>
   public class TimeManSqliteDataAccess : ITimeManDataAccess
   {
+
+    // This is the ISO8601 format mentioned in:
+    // https://www.sqlite.org/datatype3.html
+    public const string SQLITE_DATETIME_FORMAT = "YYYY-MM-DD HH:MM:SS.SSS";
+
     public string DataDirectory { get; private set; }
     private string DBFilePath { get; set; }
     private string ConnectionString;
@@ -473,16 +478,12 @@ namespace TimeManUI.Data
     public TimeManSession? GetCurrentSession()
     {
       string userID = ValidateUser();
+
+      // NOTE: These queries will have to be sensitive to the names that are generated during schema creation.
       string query = $"SELECT * from ActiveSessions where UserID = @userID";
 
-      var conn = new SqliteConnection(ConnectionString);
-      conn.Open();
+      TimeManSession? res = RunQuery<TimeManSession>(query, new { userID = userID }).FirstOrDefault();
 
-      var qr = conn.Query<TimeManSession>(query, new { userID = userID });
-
-      conn.Close();
-
-      TimeManSession? res = qr.FirstOrDefault();
       if (res == null || res.HasEnded)
       {
         res = null;
@@ -505,14 +506,59 @@ namespace TimeManUI.Data
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public void SaveSession(TimeManSession session)
+    private IEnumerable<T> RunQuery<T>(string query, object parameters)
+    {
+      // NOTE: This connection object could be abstracted more so that we could handle
+      // connection pooling, etc. as neeed.
+      using (var conn = new SqliteConnection(ConnectionString))
+      {
+        conn.Open();
+        var res = conn.Query<T>(query, parameters);
+        return res;
+      }
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    private void RunExecute(string query, object qParams)
+    {
+      using (var conn = new SqliteConnection(ConnectionString))
+      {
+        conn.Open();
+        conn.Execute(query, qParams);
+      }
+    }
+
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    public void SaveCurrentSession(TimeManSession session)
     {
       if (session == null)
       {
         throw new ArgumentNullException(nameof(session));
       }
+      string query = null;
+      var qParams = new
+      {
+        userID = session.UserID,
+        startTime = session.StartTime?.ToString(SQLITE_DATETIME_FORMAT),
+        endTime = session.EndTime?.ToString(SQLITE_DATETIME_FORMAT),
+        sessionID = session.ID
+      };
 
-      throw new NotImplementedException();
+      if (session.ID == 0)
+      {
+        query = "INSERT INTO ActiveSessions (UserID, StartTime, EndTime) VALUES (@userID, @startTime, @endTime)";
+      }
+      else
+      {
+        // We are updating exiting data.
+        query = "UPDATE ActiveSessions SET StartTim e= @startTime, EndTime = @endTime WHERE SessionID = @sessionID";
+      }
+      RunExecute(query, qParams);
+
+
+
+      // throw new NotImplementedException();
 
       //// We want to write this data to disk...
       //SafeWrite(session.UserID, () =>
@@ -525,6 +571,7 @@ namespace TimeManUI.Data
       //  File.WriteAllText(path, data);
       //});
     }
+
 
     // --------------------------------------------------------------------------------------------------------------------------
     public TimeManSession StartSession(DateTimeOffset timestamp)
@@ -539,7 +586,7 @@ namespace TimeManUI.Data
           UserID = userID,
           StartTime = timestamp
         };
-        SaveSession(sesh);
+        SaveCurrentSession(sesh);
         return sesh;
       }
 
@@ -561,7 +608,7 @@ namespace TimeManUI.Data
       if (res != null && !res.HasEnded)
       {
         res.EndTime = timestamp;
-        SaveSession(res);
+        SaveCurrentSession(res);
 
         Sessions.AddItem(res);
       }
@@ -687,8 +734,19 @@ namespace TimeManUI.Data
       }
 
       session.TimeMarks.Add(mark);
-      SaveSession(session);
+      SaveCurrentSession(session);
     }
 
   }
+
+
+  //private class DbConnection : IDisposable
+  //{
+  //  private SqliteConnection Connection = null;
+  //  public void Dispose()
+  //  {
+  //    Connection.dis
+  //    throw new NotImplementedException();
+  //  }
+  //}
 }

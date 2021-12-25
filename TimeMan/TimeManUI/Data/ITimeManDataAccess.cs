@@ -43,7 +43,7 @@ namespace TimeManUI.Data
     IEnumerable<TimeManSession> GetSessions();
     IEnumerable<TimeManSession> GetSessions(Predicate<TimeManSession> filter);
 
-    void SaveSession(TimeManSession session);
+    void SaveCurrentSession(TimeManSession session);
   }
 
 
