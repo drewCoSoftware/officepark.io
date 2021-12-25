@@ -128,30 +128,48 @@ namespace TimeManUI.Data
       sb.AppendLine($"CREATE TABLE IF NOT EXISTS {tableDef.Name} (");
 
       var colDefs = new List<string>();
+      var fkDefs = new List<string>();
+
       foreach (var col in tableDef.Columns)
       {
-        string def = $"{col.Name.ToLower()} {col.DataType}";
+        string useName = FormatName(col.Name);
+
+        string def = $"{useName} {col.DataType}";
         if (col.IsPrimary)
         {
           def += " PRIMARY KEY";
         }
 
+        colDefs.Add(def);
 
         if (col.RelatedTableName != null)
         {
-          int x = 10;
-        }
-        else
-        {
-          colDefs.Add(def);
+          string fk = $"FOREIGN KEY({useName}) REFERENCES {col.RelatedTableName}({col.RelatedTableColumn})";
+          fkDefs.Add(fk);
         }
 
       }
-      sb.AppendLine(string.Join(", " + Environment.NewLine, colDefs));
+      sb.AppendLine(string.Join(", " + Environment.NewLine, colDefs) + (fkDefs.Count > 0 ? "," : ""));
+
+      foreach (var fk in fkDefs)
+      {
+        sb.AppendLine(fk);
+      }
+
+
       sb.AppendLine(");");
 
       string res = sb.ToString();
       return res;
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    /// <summary>
+    /// NOTE: This should happen when we are building out our defs.
+    /// </summary>
+    private string FormatName(string name)
+    {
+      return name.ToLower();
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
@@ -174,8 +192,8 @@ namespace TimeManUI.Data
     public string Name { get; private set; }
 
     public ReadOnlyCollection<DependentTable> DependentTables { get { return new ReadOnlyCollection<DependentTable>(_DependentTables); } }
-
     private List<DependentTable> _DependentTables = new List<DependentTable>();
+
     private List<ColumnDef> _Columns = new List<ColumnDef>();
     public ReadOnlyCollection<ColumnDef> Columns { get { return new ReadOnlyCollection<ColumnDef>(_Columns); } }
 
@@ -204,11 +222,20 @@ namespace TimeManUI.Data
             useType = useType.GetGenericArguments()[0];
           }
 
+          // Get the dependent table...
           var def = schema.ResolveTableDef(p.Name, useType);
           _DependentTables.Add(new DependentTable()
           {
             Def = def,
           });
+
+
+          _Columns.Add(new ColumnDef(def.Name + "_ID",
+                                     schema.Flavor.TypeResolver.GetDataTypeName(typeof(int)),
+                                     false,
+                                     def.Name,
+                                     nameof(IHasPrimary.ID)));
+
         }
         else
         {
@@ -428,7 +455,6 @@ namespace TimeManUI.Data
 
       // NOTE: Later we can find a way to validate schema versions or whatever....
       var conn = new SqliteConnection(ConnectionString);
-
       conn.Open();
       string query = $"select * from sqlite_schema where type = 'table' AND tbl_name=@tableName";
 
@@ -447,16 +473,35 @@ namespace TimeManUI.Data
     public TimeManSession? GetCurrentSession()
     {
       string userID = ValidateUser();
-      string dataPath = GetCurrentSessionPath(userID);
-      if (File.Exists(dataPath))
-      {
-        var data = File.ReadAllText(dataPath);
-        var sesh = JsonSerializer.Deserialize<TimeManSession>(data);
+      string query = $"SELECT * from ActiveSessions where UserID = @userID";
 
-        if (sesh.HasEnded) { return null; }
-        return sesh;
+      var conn = new SqliteConnection(ConnectionString);
+      conn.Open();
+
+      var qr = conn.Query<TimeManSession>(query, new { userID = userID });
+
+      conn.Close();
+
+      TimeManSession? res = qr.FirstOrDefault();
+      if (res == null || res.HasEnded)
+      {
+        res = null;
       }
-      return null;
+
+      return res;
+
+      ////string dataPath = GetCurrentSessionPath(userID);
+      ////if (File.Exists(dataPath))
+      ////{
+      ////  var data = File.ReadAllText(dataPath);
+      ////  var sesh = JsonSerializer.Deserialize<TimeManSession>(data);
+
+      ////  if (sesh.HasEnded) { return null; }
+
+
+      //return sesh;
+      //}
+      //return null;
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
@@ -526,33 +571,33 @@ namespace TimeManUI.Data
 
 
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    private string GetUserDir(string userID)
-    {
-      string res = Path.Combine(DataDirectory, userID);
-      return res;
-    }
+    //// --------------------------------------------------------------------------------------------------------------------------
+    //private string GetUserDir(string userID)
+    //{
+    //  string res = Path.Combine(DataDirectory, userID);
+    //  return res;
+    //}
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    private string GetSessionDir(string userID)
-    {
-      string res = Path.Combine(GetUserDir(userID), "Sessions");
-      return res;
-    }
+    //// --------------------------------------------------------------------------------------------------------------------------
+    //private string GetSessionDir(string userID)
+    //{
+    //  string res = Path.Combine(GetUserDir(userID), "Sessions");
+    //  return res;
+    //}
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    private string GetCurrentSessionPath(string userID)
-    {
-      string res = Path.Combine(GetSessionDir(userID), "CurSession.json");
-      return res;
-    }
+    //// --------------------------------------------------------------------------------------------------------------------------
+    //private string GetCurrentSessionPath(string userID)
+    //{
+    //  string res = Path.Combine(GetSessionDir(userID), "CurSession.json");
+    //  return res;
+    //}
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    private string GetSessionHistoryDirectory(string userID)
-    {
-      string res = Path.Combine(GetSessionDir(userID), "SessionHistory");
-      return res;
-    }
+    //// --------------------------------------------------------------------------------------------------------------------------
+    //private string GetSessionHistoryDirectory(string userID)
+    //{
+    //  string res = Path.Combine(GetSessionDir(userID), "SessionHistory");
+    //  return res;
+    //}
 
     //// --------------------------------------------------------------------------------------------------------------------------
     //private void SafeWrite(string userID, Action action)

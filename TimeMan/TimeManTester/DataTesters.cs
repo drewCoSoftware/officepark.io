@@ -49,7 +49,6 @@ namespace TimeManTester
 
       // OK!  Let's get our create SQL code now!
       string query = schema.GetCreateSQL();
-
     }
 
 
