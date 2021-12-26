@@ -8,6 +8,8 @@ using System.Text;
 using System.Reflection;
 using System.Collections;
 using System.Collections.ObjectModel;
+using drewCo.Curations;
+using TimeMan;
 
 namespace TimeManUI.Data
 {
@@ -66,6 +68,20 @@ namespace TimeManUI.Data
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
+    internal bool HasTableDef(string tableName, Type propertyType)
+    {
+      if (_TableDefs.TryGetValue(tableName, out TableDef def))
+      {
+        return def.DataType == propertyType;
+      }
+      else
+      {
+        return false;
+      }
+    }
+
+
+    // --------------------------------------------------------------------------------------------------------------------------
     internal TableDef ResolveTableDef(string tableName, Type propertyType)
     {
       lock (ResolveLock)
@@ -88,6 +104,8 @@ namespace TimeManUI.Data
           }
           var res = new TableDef(useType, tableName, this);
           _TableDefs.Add(tableName, res);
+          res.PopulateMembers();
+
           return res;
         }
       }
@@ -190,12 +208,22 @@ namespace TimeManUI.Data
   {
     public Type DataType { get; private set; }
     public string Name { get; private set; }
+    public SchemaDefinition Schema { get; private set; }
 
     public ReadOnlyCollection<DependentTable> DependentTables { get { return new ReadOnlyCollection<DependentTable>(_DependentTables); } }
     private List<DependentTable> _DependentTables = new List<DependentTable>();
 
     private List<ColumnDef> _Columns = new List<ColumnDef>();
     public ReadOnlyCollection<ColumnDef> Columns { get { return new ReadOnlyCollection<ColumnDef>(_Columns); } }
+
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    public TableDef(Type type_, string name_, SchemaDefinition schema_)
+    {
+      DataType = type_;
+      Name = name_;
+      Schema = schema_;
+    }
 
     // --------------------------------------------------------------------------------------------------------------------------
     public override int GetHashCode()
@@ -204,11 +232,8 @@ namespace TimeManUI.Data
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public TableDef(Type type_, string name_, SchemaDefinition schema)
+    internal void PopulateMembers()
     {
-      DataType = type_;
-      Name = name_;
-
       foreach (var p in ReflectionTools.GetProperties(DataType))
       {
         if (!p.CanWrite) { continue; }
@@ -217,23 +242,48 @@ namespace TimeManUI.Data
         if (dependent != null)
         {
           Type useType = p.PropertyType;
-          if (ReflectionTools.HasInterface<IList>(useType))
+          bool isList = ReflectionTools.HasInterface<IList>(useType);
+          if (isList)
           {
             useType = useType.GetGenericArguments()[0];
           }
 
           // Get the dependent table...
-          var def = schema.ResolveTableDef(p.Name, useType);
+          var def = Schema.ResolveTableDef(p.Name, useType);
+
+
+          // This is where we decide if we want a reference to a single item, or a list of them.
+          string colName = $"{def.Name}_ID";
+          string fkTableName = def.Name;
+          var fkTableDef = def;
+          Type fkType = ReflectionTools.IsNullable(DataType) ? typeof(int?) : typeof(int);
+          if (isList)
+          {
+            // Resolve the mapping table....
+            // what to do about the actual data type....  If we don't have a type defined,
+            // should we just generate one?
+            //object mappingTable = new { ParentID = (int)0, ChildID = (int)0 };
+            //Type mappingTableType = mappingTable.GetType();
+
+            fkTableName = $"{Name}_to_{def.Name}";
+            Type mappingTableType = ResolveMappingTableType(DataType, useType);
+
+            fkTableDef = Schema.ResolveTableDef(fkTableName, mappingTableType);
+          }
+          //else
+          //{
+          //  int x = 10;
+          //}
+
           _DependentTables.Add(new DependentTable()
           {
-            Def = def,
+            Def = fkTableDef,
           });
 
-
-          _Columns.Add(new ColumnDef(def.Name + "_ID",
-                                     schema.Flavor.TypeResolver.GetDataTypeName(typeof(int)),
+          _Columns.Add(new ColumnDef(colName,
+                                     Schema.Flavor.TypeResolver.GetDataTypeName(fkType, false),
                                      false,
-                                     def.Name,
+                                     fkTableName,
                                      nameof(IHasPrimary.ID)));
 
         }
@@ -242,13 +292,74 @@ namespace TimeManUI.Data
           // This is a normal column.
           // NOTE: Non-related lists can't be represented.... should we make it so that lists are always included?
           _Columns.Add(new ColumnDef(p.Name,
-                                     schema.Flavor.TypeResolver.GetDataTypeName(p.PropertyType),
+                                     Schema.Flavor.TypeResolver.GetDataTypeName(p.PropertyType, false),
                                      p.Name == nameof(IHasPrimary.ID),
                                      null,
                                      null));
         }
       }
+    }
 
+    // --------------------------------------------------------------------------------------------------------------------------
+    private Type ResolveMappingTableType(Type parentType, Type childType)
+    {
+      // HACK: We won't always want a new instance of this....
+      TypeGenerator gen = new TypeGenerator();
+      Type res = gen.ResolveMappingTableType(parentType, childType);
+      return res;
+    }
+
+  }
+
+  // ============================================================================================================================
+  // NOTE: This might want to go live with reflection tools?
+  public class TypeGenerator
+  {
+    private object CacheLock = new object();
+    private MultiDictionary<Type, Type, Type> _MappingTypesCache = new MultiDictionary<Type, Type, Type>();
+
+    private DynamicTypeManager TypeMan = new DynamicTypeManager("TimeMan_DynamicTypes");
+
+    public Type ResolveMappingTableType(Type parentType, Type childType)
+    {
+      lock (CacheLock)
+      {
+        // TODO: Update this call to 'TryGetValue'
+        if (_MappingTypesCache.ContainsKey(parentType, childType))
+        {
+          return _MappingTypesCache[parentType, childType];
+        }
+        else
+        {
+          // We will now generate the new type definition....
+          TypeDef tDef = new TypeDef()
+          {
+            Name = $"{parentType.Name}_To_{childType.Name}"
+          };
+          tDef.Properties.Add(new TypeDef.PropertyDef()
+          {
+            Name = parentType.Name,
+            Type = parentType.Name,
+            Attributes = new List<TypeDef.AttributeDef>()
+            {
+              new TypeDef.AttributeDef(typeof(Relationship))
+            }
+          });
+          tDef.Properties.Add(new TypeDef.PropertyDef()
+          {
+            Name = childType.Name,
+            Type = childType.Name,
+            Attributes = new List<TypeDef.AttributeDef>()
+            {
+              new TypeDef.AttributeDef(typeof(Relationship))
+            }
+          });
+
+          Type res = TypeMan.CreateDynamicType(tDef);
+          _MappingTypesCache.Add(parentType, childType, res);
+          return res;
+        }
+      }
     }
 
 
@@ -263,13 +374,13 @@ namespace TimeManUI.Data
   // ============================================================================================================================
   public interface IDataTypeResolver
   {
-    string GetDataTypeName(Type t);
+    string GetDataTypeName(Type t, bool forceNull);
   }
 
   // ============================================================================================================================
   public class SqliteDataTypeResolver : IDataTypeResolver
   {
-    public string GetDataTypeName(Type t)
+    public string GetDataTypeName(Type t, bool forceNull)
     {
       string res = "";
 
@@ -279,6 +390,8 @@ namespace TimeManUI.Data
         isNull = true;
         t = t.GetGenericArguments()[0];
       }
+      isNull = isNull | forceNull;
+
       if (t == typeof(Int32) || t == typeof(Int64))
       {
         res = "INTEGER";
