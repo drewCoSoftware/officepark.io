@@ -39,11 +39,11 @@ namespace TimeManUI.Data
     /// The session with the matching ID, or null if it doesn't exist!
     /// </returns>
     TimeManSession? GetSession(int sessionID);
-
     IEnumerable<TimeManSession> GetSessions();
-    IEnumerable<TimeManSession> GetSessions(Predicate<TimeManSession> filter);
+    IEnumerable<TimeManSession> GetSessions(string userID);
+    // IEnumerable<TimeManSession> GetSessions(Predicate<TimeManSession> filter);
 
-    void SaveCurrentSession(TimeManSession session);
+    void SaveSession(TimeManSession session);
   }
 
 
@@ -79,7 +79,7 @@ namespace TimeManUI.Data
   public class TimeManSchema
   {
     public List<TimeManSession> Sessions { get; set; } = new List<TimeManSession>();
-    public List<TimeManSession> ActiveSessions { get; set; } = new List<TimeManSession>();
+    // public List<TimeManSession> ActiveSessions { get; set; } = new List<TimeManSession>();
   }
 
   // ============================================================================================================================

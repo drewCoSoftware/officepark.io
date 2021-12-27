@@ -15,41 +15,66 @@ namespace TimeManTester
   public class DataTesters
   {
 
-
     // --------------------------------------------------------------------------------------------------------------------------
     /// <summary>
-    /// Show that we can create our data schema and generate the appropriate 'CREATE TABLE' syntax, etc.
+    /// Shows that our schema generator can detect and properly model an implicit one-to-many relationship.
     /// </summary>
     [Fact]
-    public void CanCreateDataSchema()
+    public void CanDetectOneToManyRelationship()
     {
+
       var schema = new SchemaDefinition(new SqliteFlavor());
       schema.AddTable<TimeManSession>("Sessions");
 
-      // We should have one dependent table in our def.
-      {
-        var allDefs = schema.TableDefs;
-        Assert.Equal(3, allDefs.Count);
-        var match = (from x in allDefs where x.Name == "Sessions" select x).FirstOrDefault()!;
-        Assert.NotNull(match);
-        Assert.Single(match.DependentTables);
-      }
+      TableDef? sessDef = schema.GetTableDef("Sessions");
+      Assert.NotNull(sessDef);
 
+      TableDef? timeMarkDef = schema.GetTableDef("TimeMarks");
+      Assert.NotNull(timeMarkDef);
 
-      // Now let's add another table of the same type, but with a different name!
-      schema.AddTable<TimeManSession>("CurrentSessions");
-      {
-        var allDefs = schema.TableDefs;
-        Assert.Equal(4, allDefs.Count);
-        var match = (from x in allDefs where x.Name == "CurrentSessions" select x).FirstOrDefault()!;
-        Assert.NotNull(match);
-        Assert.Single(match.DependentTables);
-      }
+      // The time mark table should have the fk relation to the Sessions table.
+      // That is because the dtype 'TimeManSession' has a member that points to a list of time marks.
+      var deps = timeMarkDef.DependentTables;
+      Assert.Single(deps);
+      Assert.Equal("Sessions", deps[0].Def.Name);
 
-
-      // OK!  Let's get our create SQL code now!
-      string query = schema.GetCreateSQL();
     }
+
+
+    //// --------------------------------------------------------------------------------------------------------------------------
+    ///// <summary>
+    ///// Show that we can create our data schema and generate the appropriate 'CREATE TABLE' syntax, etc.
+    ///// </summary>
+    //[Fact]
+    //public void CanCreateDataSchema()
+    //{
+    //  var schema = new SchemaDefinition(new SqliteFlavor());
+    //  schema.AddTable<TimeManSession>("Sessions");
+
+    //  // We should have one dependent table in our def.
+    //  {
+    //    var allDefs = schema.TableDefs;
+    //    Assert.Equal(3, allDefs.Count);
+    //    var match = (from x in allDefs where x.Name == "Sessions" select x).FirstOrDefault()!;
+    //    Assert.NotNull(match);
+    //    Assert.Single(match.DependentTables);
+    //  }
+
+
+    //  // Now let's add another table of the same type, but with a different name!
+    //  schema.AddTable<TimeManSession>("CurrentSessions");
+    //  {
+    //    var allDefs = schema.TableDefs;
+    //    Assert.Equal(4, allDefs.Count);
+    //    var match = (from x in allDefs where x.Name == "CurrentSessions" select x).FirstOrDefault()!;
+    //    Assert.NotNull(match);
+    //    Assert.Single(match.DependentTables);
+    //  }
+
+
+    //  // OK!  Let's get our create SQL code now!
+    //  string query = schema.GetCreateSQL();
+    //}
 
 
 
@@ -112,7 +137,7 @@ namespace TimeManTester
 
 
       // Make sure that there are no sessions to be had in the manager.
-      List<TimeManSession> sessions = da.GetSessions(x => x.UserID == TEST_USER).ToList();
+      List<TimeManSession> sessions = da.GetSessions(TEST_USER).ToList();
       Assert.Empty(sessions);
 
     }
@@ -165,6 +190,7 @@ namespace TimeManTester
       var newSesh = da.StartSession(DateTimeOffset.Now);
       Assert.NotNull(newSesh);
       Assert.True(newSesh.HasStarted);
+      Assert.True(newSesh.ID > 0);
 
       // Make sure that the new session and current session are the same.
       var curSesh = da.GetCurrentSession()!;
@@ -172,7 +198,7 @@ namespace TimeManTester
       Assert.Equal(newSesh.StartTime, curSesh.StartTime);
       Assert.False(newSesh.HasEnded);
       Assert.False(curSesh.HasEnded);
-
+      Assert.Equal(curSesh.ID, newSesh.ID);
     }
 
 

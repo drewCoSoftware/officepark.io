@@ -10,6 +10,8 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using drewCo.Curations;
 using TimeMan;
+using static Dapper.SqlMapper;
+using System.Data;
 
 namespace TimeManUI.Data
 {
@@ -20,6 +22,20 @@ namespace TimeManUI.Data
     private object ResolveLock = new object();
     private Dictionary<string, TableDef> _TableDefs = new Dictionary<string, TableDef>(StringComparer.OrdinalIgnoreCase);
     public ReadOnlyCollection<TableDef> TableDefs { get { return new ReadOnlyCollection<TableDef>(_TableDefs.Values.ToList()); } }
+
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    public TableDef? GetTableDef(string tableName)
+    {
+      if (_TableDefs.TryGetValue(tableName, out TableDef? tableDef))
+      {
+        return tableDef;
+      }
+      else
+      {
+        return null;
+      }
+    }
 
 
     // --------------------------------------------------------------------------------------------------------------------------
@@ -248,39 +264,44 @@ namespace TimeManUI.Data
             useType = useType.GetGenericArguments()[0];
           }
 
-          // Get the dependent table...
-          var def = Schema.ResolveTableDef(p.Name, useType);
+          // Get the related table...
+          var relatedDef = Schema.ResolveTableDef(p.Name, useType);
 
 
           // This is where we decide if we want a reference to a single item, or a list of them.
-          string colName = $"{def.Name}_ID";
-          string fkTableName = def.Name;
-          var fkTableDef = def;
-          Type fkType = ReflectionTools.IsNullable(DataType) ? typeof(int?) : typeof(int);
-          if (isList)
-          {
-            // Resolve the mapping table....
-            // what to do about the actual data type....  If we don't have a type defined,
-            // should we just generate one?
-            //object mappingTable = new { ParentID = (int)0, ChildID = (int)0 };
-            //Type mappingTableType = mappingTable.GetType();
+          string colName = $"{this.Name}_ID";
+          string fkTableName = this.Name;
+          var fkTableDef = this;
 
-            fkTableName = $"{Name}_to_{def.Name}";
-            Type mappingTableType = ResolveMappingTableType(DataType, useType);
+          var fkType = ReflectionTools.IsNullable(p.PropertyType) ? typeof(int?) : typeof(int);
 
-            fkTableDef = Schema.ResolveTableDef(fkTableName, mappingTableType);
-          }
-          //else
+          // NOTE: This is some incomplete work for many-many relationships, which we don't
+          // actually support at this time.  Keep this block around for a while....
+          //if (isList)
           //{
-          //  int x = 10;
-          //}
+          //  // Resolve the mapping table....
+          //  // what to do about the actual data type....  If we don't have a type defined,
+          //  // should we just generate one?
+          //  //object mappingTable = new { ParentID = (int)0, ChildID = (int)0 };
+          //  //Type mappingTableType = mappingTable.GetType();
 
-          _DependentTables.Add(new DependentTable()
+          //  fkTableName = $"{Name}_to_{relatedDef.Name}";
+          //  Type mappingTableType = ResolveMappingTableType(DataType, useType);
+
+          //  fkTableDef = Schema.ResolveTableDef(fkTableName, mappingTableType);
+          //}
+          ////else
+          ////{
+          ////  int x = 10;
+          ////}
+          ///
+
+          relatedDef._DependentTables.Add(new DependentTable()
           {
             Def = fkTableDef,
           });
 
-          _Columns.Add(new ColumnDef(colName,
+          relatedDef._Columns.Add(new ColumnDef(colName,
                                      Schema.Flavor.TypeResolver.GetDataTypeName(fkType, false),
                                      false,
                                      fkTableName,
@@ -437,25 +458,6 @@ namespace TimeManUI.Data
   public record ColumnDef(string Name, string DataType, bool IsPrimary, string? RelatedTableName, string? RelatedTableColumn);
 
 
-  //public class ColumnDef
-  //{
-  //  public ColumnDef(string name, Type dataType, bool isPrimary, string dataType, string? relatedTableName, string? relatedTableColumn)
-  //  {
-  //    Name = name;
-  //    DataType = dataType;
-  //    RelatedTableName = relatedTableName;
-  //    RelatedTableColumn = relatedTableColumn;
-
-  //  }
-
-  //  public bool IsPrimary { get; private set; }
-  //  public string Name { get; private set; }
-  //  public string DataType { get; private set; }
-  //  public string? RelatedTableName { get; private set; }
-  //  public string? RelatedTableColumn { get; private set; }
-
-  //}
-
   // ============================================================================================================================
   /// <summary>
   /// Describes a table that another is dependent upon.
@@ -465,6 +467,27 @@ namespace TimeManUI.Data
   {
     public TableDef Def { get; set; }
 
+  }
+
+  // ============================================================================================================================
+  public class DateTimeOffsetHandler : TypeHandler<DateTimeOffset>
+  {
+    // --------------------------------------------------------------------------------------------------------------------------
+    public override DateTimeOffset Parse(object value)
+    {
+      if (value == null) { return DateTimeOffset.MinValue; }
+      if (DateTimeOffset.TryParse(value as string, out DateTimeOffset res))
+      {
+        return res;
+      }
+      throw new InvalidOperationException($"Input value: '{value as string}' is not a valid DateTimeOffset type!");
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    public override void SetValue(IDbDataParameter parameter, DateTimeOffset value)
+    {
+      parameter.Value = value;
+    }
   }
 
 
@@ -477,7 +500,7 @@ namespace TimeManUI.Data
 
     // This is the ISO8601 format mentioned in:
     // https://www.sqlite.org/datatype3.html
-    public const string SQLITE_DATETIME_FORMAT = "YYYY-MM-DD HH:MM:SS.SSS";
+    public const string SQLITE_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss.fffffff";
 
     public string DataDirectory { get; private set; }
     private string DBFilePath { get; set; }
@@ -486,11 +509,7 @@ namespace TimeManUI.Data
     private string? _CurrentUserID = null;
     public string? CurrentUserID { get; private set; }
 
-    private DataTableFile<TimeManSession> Sessions;
-
-    //// private object 
-    //  private ConcurrentDictionary<string, object> UserDataLocks = new ConcurrentDictionary<string, object>();
-
+    //  private DataTableFile<TimeManSession> Sessions;
 
     // --------------------------------------------------------------------------------------------------------------------------
     public TimeManSqliteDataAccess(string dataDir, string dbFileName)
@@ -499,7 +518,11 @@ namespace TimeManUI.Data
       DBFilePath = Path.Combine(DataDirectory, $"{dbFileName}.sqlite");
       ConnectionString = $"Data Source={DBFilePath};Mode=ReadWriteCreate";
 
-      Sessions = new DataTableFile<TimeManSession>(DataDirectory);
+      //   Sessions = new DataTableFile<TimeManSession>(DataDirectory);
+
+
+      SqlMapper.RemoveTypeMap(typeof(DateTimeOffset));
+      SqlMapper.AddTypeHandler<DateTimeOffset>(new DateTimeOffsetHandler());
     }
 
 
@@ -539,7 +562,6 @@ namespace TimeManUI.Data
     private void CreateSchema()
     {
       var schema = new SchemaDefinition(new SqliteFlavor(), typeof(TimeManSchema));
-      // schema.AddTable<TimeManSchema>();
 
       string query = schema.GetCreateSQL();
 
@@ -593,7 +615,7 @@ namespace TimeManUI.Data
       string userID = ValidateUser();
 
       // NOTE: These queries will have to be sensitive to the names that are generated during schema creation.
-      string query = $"SELECT * from ActiveSessions where UserID = @userID";
+      string query = $"SELECT * from Sessions where UserID = @userID AND EndTime IS NULL";
 
       TimeManSession? res = RunQuery<TimeManSession>(query, new { userID = userID }).FirstOrDefault();
 
@@ -619,17 +641,54 @@ namespace TimeManUI.Data
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    private IEnumerable<T> RunQuery<T>(string query, object parameters)
+    /// <summary>
+    /// Runs a database transaction, automatically rolling it back if there is an exception.
+    /// </summary>
+    private void Transaction(Action<SqliteConnection> txWork)
+    {
+      using (var conn = new SqliteConnection(ConnectionString))
+      {
+        conn.Open();
+
+        using (var tx = conn.BeginTransaction())
+        {
+          try
+          {
+            txWork(conn);
+            tx.Commit();
+          }
+          catch (Exception ex)
+          {
+            // TODO: A better logging mechanism!
+            Console.WriteLine($"An exception was encountered when trying to execute the transaction!");
+            Console.WriteLine(ex.Message);
+            Console.WriteLine("Transaction will be rolled back!");
+
+            tx.Rollback();
+          }
+        }
+      }
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    private IEnumerable<T> RunQuery<T>(string query, object qParams)
     {
       // NOTE: This connection object could be abstracted more so that we could handle
       // connection pooling, etc. as neeed.
       using (var conn = new SqliteConnection(ConnectionString))
       {
         conn.Open();
-        var res = conn.Query<T>(query, parameters);
-        return res;
+        return RunQuery<T>(conn, query, qParams);
       }
     }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    private IEnumerable<T> RunQuery<T>(SqliteConnection conn, string query, object parameters)
+    {
+      var res = conn.Query<T>(query, parameters);
+      return res;
+    }
+
 
     // --------------------------------------------------------------------------------------------------------------------------
     private void RunExecute(string query, object qParams)
@@ -637,19 +696,27 @@ namespace TimeManUI.Data
       using (var conn = new SqliteConnection(ConnectionString))
       {
         conn.Open();
-        conn.Execute(query, qParams);
+        RunExecute(conn, query, qParams);
       }
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    private void RunExecute(SqliteConnection conn, string query, object qParams)
+    {
+      conn.Execute(query, qParams);
     }
 
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public void SaveCurrentSession(TimeManSession session)
+    /// <summary>
+    /// Save or update the given session data.
+    /// </summary>
+    public void SaveSession(TimeManSession session)
     {
       if (session == null)
       {
         throw new ArgumentNullException(nameof(session));
       }
-      string query = null;
       var qParams = new
       {
         userID = session.UserID,
@@ -660,14 +727,16 @@ namespace TimeManUI.Data
 
       if (session.ID == 0)
       {
-        query = "INSERT INTO ActiveSessions (UserID, StartTime, EndTime) VALUES (@userID, @startTime, @endTime)";
+        string query = "INSERT INTO Sessions (UserID, StartTime, EndTime) VALUES (@userID, @startTime, @endTime) RETURNING ID";
+        int newID = RunQuery<int>(query, qParams).First();
+        session.ID = newID;
       }
       else
       {
         // We are updating exiting data.
-        query = "UPDATE ActiveSessions SET StartTim e= @startTime, EndTime = @endTime WHERE SessionID = @sessionID";
+        string query = "UPDATE Sessions SET StartTime = @startTime, EndTime = @endTime WHERE ID = @sessionID";
+        RunExecute(query, qParams);
       }
-      RunExecute(query, qParams);
 
 
 
@@ -699,7 +768,7 @@ namespace TimeManUI.Data
           UserID = userID,
           StartTime = timestamp
         };
-        SaveCurrentSession(sesh);
+        SaveSession(sesh);
         return sesh;
       }
 
@@ -721,9 +790,7 @@ namespace TimeManUI.Data
       if (res != null && !res.HasEnded)
       {
         res.EndTime = timestamp;
-        SaveCurrentSession(res);
-
-        Sessions.AddItem(res);
+        SaveSession(res);
       }
 
       return res;
@@ -784,36 +851,60 @@ namespace TimeManUI.Data
     // --------------------------------------------------------------------------------------------------------------------------
     public TimeManSession? GetSession(int sessionID)
     {
-      TimeManSession? res = Sessions.GetItem(sessionID);
+      // NOTE: Some way to get all of the time-marks would be good too....
+      string query = "SELECT * FROM Sessions WHERE ID = @id";
+      var qParams = new { id = sessionID };
+
+      var res = RunQuery<TimeManSession>(query, qParams).SingleOrDefault();
       return res;
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
     public IEnumerable<TimeManSession> GetSessions()
     {
-      List<TimeManSession> res = Sessions.GetItems();
+      // NOTE: Some way to get all of the time-marks would be good too....
+      string query = "SELECT * FROM Sessions";
+
+      var res = RunQuery<TimeManSession>(query, null);
       return res;
     }
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    public IEnumerable<TimeManSession> GetSessions(Predicate<TimeManSession> filter)
+    //--------------------------------------------------------------------------------------------------------------------------
+    //NOTE: These types of predicate filters won't work with dapper since we have to
+    //create the queries by hand.Some kind of automation for this may be in order in the future....
+    public IEnumerable<TimeManSession> GetSessions(string userID)
     {
-      var res = Sessions.GetItems().Where(x => filter(x));
+      string query = "SELECT * FROM Sessions WHERE UserID = @userID";
+      var qParams = new { userID = userID };
+
+      var res = RunQuery<TimeManSession>(query, qParams);
       return res;
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
     public void CancelCurrentSession()
     {
-      string userID = ValidateUser();
+      var current = GetCurrentSession();
+      if (current != null)
+      {
+        Transaction((conn) =>
+        {
+          var qParams = new { id = current.ID };
 
-      // throw new NotImplementedException();
-      //// Destroy the session file.
-      //SafeWrite(userID, () =>
-      //{
-      //  string path = GetCurrentSessionPath(userID);
-      //  FileTools.DeleteExistingFile(path);
-      //});
+          // Cleanup any of the time marks!
+          {
+            string query = $"DELETE FROM TimeMarks WHERE Sessions_ID = @id";
+            RunExecute(conn, query, qParams);
+          }
+
+          // Now delete the parent object.
+          {
+            string query = $"DELETE FROM Sessions WHERE ID = @id";
+            RunExecute(conn, query, qParams);
+          }
+        });
+
+      }
     }
 
 
@@ -847,7 +938,7 @@ namespace TimeManUI.Data
       }
 
       session.TimeMarks.Add(mark);
-      SaveCurrentSession(session);
+      SaveSession(session);
     }
 
   }
