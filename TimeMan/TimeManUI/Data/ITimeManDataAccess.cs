@@ -41,7 +41,6 @@ namespace TimeManUI.Data
     TimeManSession? GetSession(int sessionID);
     IEnumerable<TimeManSession> GetSessions();
     IEnumerable<TimeManSession> GetSessions(string userID);
-    // IEnumerable<TimeManSession> GetSessions(Predicate<TimeManSession> filter);
 
     void SaveSession(TimeManSession session);
   }
