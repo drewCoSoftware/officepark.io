@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeManUI", "TimeManUI\TimeManUI.csproj", "{4FB09A25-FD06-46A3-B8F0-747E81B4A6BC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeManTester", "TimeManTester\TimeManTester.csproj", "{516C868F-B83D-4C69-AE61-A90793410F0C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeManTester", "TimeManTester\TimeManTester.csproj", "{516C868F-B83D-4C69-AE61-A90793410F0C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeManServer", "TimeManServer\TimeManServer.csproj", "{B12C5B91-8967-4A89-A561-BA824EE490DC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4FB09A25-FD06-46A3-B8F0-747E81B4A6BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4FB09A25-FD06-46A3-B8F0-747E81B4A6BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4FB09A25-FD06-46A3-B8F0-747E81B4A6BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4FB09A25-FD06-46A3-B8F0-747E81B4A6BC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{516C868F-B83D-4C69-AE61-A90793410F0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{516C868F-B83D-4C69-AE61-A90793410F0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{516C868F-B83D-4C69-AE61-A90793410F0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{516C868F-B83D-4C69-AE61-A90793410F0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B12C5B91-8967-4A89-A561-BA824EE490DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B12C5B91-8967-4A89-A561-BA824EE490DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B12C5B91-8967-4A89-A561-BA824EE490DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B12C5B91-8967-4A89-A561-BA824EE490DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

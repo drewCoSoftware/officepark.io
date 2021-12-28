@@ -1,7 +1,7 @@
 ﻿using drewCo.Curations;
 using TimeMan;
 
-namespace TimeManUI.Data
+namespace TimeManServer.Data
 {
   // ============================================================================================================================
   // NOTE: This might want to go live with reflection tools?

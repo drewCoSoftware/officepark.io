@@ -8,7 +8,7 @@
     }
   },
   "profiles": {
-    "TimeManUI": {
+    "TimeManServer": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,

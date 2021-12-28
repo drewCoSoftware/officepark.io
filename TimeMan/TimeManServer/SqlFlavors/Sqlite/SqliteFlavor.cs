@@ -1,6 +1,6 @@
 ﻿using drewCo.Tools;
 
-namespace TimeManUI.Data
+namespace TimeManServer.Data
 {
   // ============================================================================================================================
   public class SqliteFlavor : ISqlFlavor

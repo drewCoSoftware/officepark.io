@@ -10,7 +10,7 @@ using System.Collections.ObjectModel;
 using static Dapper.SqlMapper;
 using System.Data;
 
-namespace TimeManUI.Data
+namespace TimeManServer.Data
 {
 
   // ============================================================================================================================

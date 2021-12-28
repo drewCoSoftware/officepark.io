@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TimeManUI.Data;
+using TimeManServer.Data;
 using Xunit;
 
 namespace TimeManTester

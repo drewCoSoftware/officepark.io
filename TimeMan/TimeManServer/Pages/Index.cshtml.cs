@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace TimeManUI.Pages
+namespace TimeManServer.Pages
 {
   public class IndexModel : PageModel
   {

@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TimeManUI\TimeManUI.csproj" />
+    <ProjectReference Include="..\TimeManServer\TimeManServer.csproj" />
   </ItemGroup>
 
 </Project>

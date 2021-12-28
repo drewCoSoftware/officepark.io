@@ -3,7 +3,7 @@ using System.Text;
 using System.Collections;
 using System.Collections.ObjectModel;
 
-namespace TimeManUI.Data
+namespace TimeManServer.Data
 {
   // ============================================================================================================================
   public class SchemaDefinition
