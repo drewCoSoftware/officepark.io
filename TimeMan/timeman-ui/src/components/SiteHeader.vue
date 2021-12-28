@@ -19,12 +19,16 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="less" scoped>
 
   #site-header{
     background:red;
     display: flex;
     flex-direction: row;
+
+    > div {
+      flex-grow:1;
+    }
   }
 
 </style>

@@ -1,15 +1,19 @@
 <template>
   <div class="tm-session">
     <p>Date:</p>
-    <p>Hello, I am time man session!</p>
+    <p>{{ sess.sessionName }}</p>
   </div>
 </template>
 
 
 <script>
-
-  export default {
-    name: 'TimeManSession',
-  }
-
+export default {
+  name: "TimeManSession",
+  // data() {
+  //   return {
+  //     sessionName: "Active Session",
+  //   };
+  // },
+  props: [ 'sess' ]
+};
 </script>
