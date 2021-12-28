@@ -1,15 +1,17 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to SPA hell!"/>
+  <SiteHeader />
+  <HelloWorld msg="Welcome to SPA hell!" count="0"/>
 </template>
 
 <script>
 import HelloWorld from './components/HelloWorld.vue'
+import SiteHeader from './components/SiteHeader.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    HelloWorld,
+    SiteHeader
   }
 }
 </script>

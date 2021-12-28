@@ -1,6 +1,11 @@
 <template>
   <div class="hello">
     <h1>{{ msg }}</h1>
+    <p>Count is: {{ count }}</p>
+    <button v-on:click=increment>Push me!</button>
+
+    <time-man-session></time-man-session>
+
     <!-- <p>
       For a guide and recipes on how to configure / customize this project,<br>
       check out the
@@ -31,10 +36,22 @@
 </template>
 
 <script>
+import TimeManSession from './TimeManSession.vue';
 export default {
+  components: { TimeManSession },
   name: 'HelloWorld',
   props: {
-    msg: String
+    msg: String,
+  },
+  data(){
+    return {
+      count: 0
+    }
+  },
+  methods:{
+    increment: function(){
+      this.count++;
+    }
   }
 }
 </script>
