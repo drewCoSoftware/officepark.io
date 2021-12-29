@@ -1,7 +1,9 @@
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorPages();
+//builder.Services.AddRazorPages();
+//builder.Services.AddRouting();
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -16,10 +18,12 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-app.UseRouting();
+//app.UseRouting();
 
 app.UseAuthorization();
+app.MapControllers();
 
-app.MapRazorPages();
+//app.MapRazorPages();
+
 
 app.Run();

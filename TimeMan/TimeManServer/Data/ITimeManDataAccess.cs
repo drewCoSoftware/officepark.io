@@ -9,6 +9,8 @@ namespace TimeManServer.Data
     void SetCurrentUser(string? userID);
     string? CurrentUserID { get; }
 
+    void SetupDatabase();
+
     /// <exception cref="InvalidOperationException">This should throw an exception if the current user ID is null or otherwise invalid.</exception>
     string ValidateUser();
 
