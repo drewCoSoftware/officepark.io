@@ -2,7 +2,7 @@
   <div class="hello">
     <h1>{{ msg }}</h1>
     <p>Count is: {{ count }}</p>
-    <button v-on:click="increment">Push me!</button>
+    <button v-on:click="getSessions">Push me!</button>
 
     <time-man-session
       v-for="item in sessions"
@@ -33,6 +33,17 @@ export default {
   methods: {
     increment: function () {
       this.count++;
+    },
+    getSessions: function () {
+     // let t = this;
+      let p = fetch("https://localhost:7001/api/sessions/active");
+      p.then(response => response.json()).then(data =>{
+        this.sessions = data;
+        //console.dir(data);
+      });
+        
+        // (t.sessions = [{ id: 10, sessionName: "Fetched Session!" }])
+        //);
     },
   },
 };

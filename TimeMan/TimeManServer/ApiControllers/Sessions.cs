@@ -81,6 +81,9 @@ namespace TimeManServer.ApiControllers
                     StartTime = DateTimeOffset.Now + TimeSpan.FromDays(1)
                 },
             };
+
+   //   Response.Headers.Add("Access-Control-Allow-Origin", "*");
+
       return res;
     }
   }

@@ -5,6 +5,14 @@ var builder = WebApplication.CreateBuilder(args);
 //builder.Services.AddRouting();
 builder.Services.AddControllers();
 
+builder.Services.AddCors((ops) =>
+{
+  ops.AddPolicy("corsPolicy", builder =>
+  {
+    builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+  });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -18,12 +26,12 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-//app.UseRouting();
-
 app.UseAuthorization();
 app.MapControllers();
 
+
 //app.MapRazorPages();
+app.UseCors("corsPolicy");
 
 
 app.Run();
