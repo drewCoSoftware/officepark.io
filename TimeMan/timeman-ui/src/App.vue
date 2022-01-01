@@ -1,6 +1,7 @@
 <template>
-  <SiteHeader />
+  <SiteHeader v-bind:loginState="loginState" />
   <HelloWorld msg="Welcome to SPA hell!" count="0"/>
+  <button v-on:click="toggleLogin()">Toggle Login</button>
 </template>
 
 <script>
@@ -12,7 +13,28 @@ export default {
   components: {
     HelloWorld,
     SiteHeader
+  },
+  data() {
+      return {
+        loginState: {
+          isLoggedIn: true
+        }
+      }
+  },
+  methods: {
+    'toggleLogin': function(){
+      this.loginState.isLoggedIn = !this.loginState.isLoggedIn;
+//      alert('login changed! (' + this.isLoggedIn + ')');
+    }
   }
+  // setup (){
+  //   this.isLoggedIn = false;
+  // }
+  // data() {
+  //   return new {
+  //     isLoggedIn: false
+  //   }
+  // }
 }
 </script>
 

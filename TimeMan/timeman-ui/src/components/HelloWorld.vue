@@ -39,7 +39,6 @@ export default {
       let p = fetch("https://localhost:7001/api/sessions/active");
       p.then(response => response.json()).then(data =>{
         this.sessions = data;
-        //console.dir(data);
       });
         
         // (t.sessions = [{ id: 10, sessionName: "Fetched Session!" }])

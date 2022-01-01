@@ -4,7 +4,13 @@
       <h1>TimeMan</h1>
       <p>officepark.io</p>
     </div>
-    <div><a>Login</a></div>
+    <div v-if="loginState">
+        <a>Login</a>
+    </div>
+    <div v-else>
+        <p>Welcome user! <a>Logout</a></p>
+    </div>
+    <div><p>Login status = </p><span>{{ loginState.isLoggedIn ? "yes" : "no" }}</span></div>
   </div>
 </template>
 
@@ -16,6 +22,7 @@ export default {
     // alert("I am setting up the site header!");
   },
   name: "SiteHeader",
+  props: ['loginState']
 };
 </script>
 
