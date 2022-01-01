@@ -12,6 +12,11 @@
     </div>
     <div><p>Login status = </p><span>{{ loginState.isLoggedIn ? "yes" : "no" }}</span></div>
   </div>
+
+  <div>
+    <!-- This is an attempt to talk to the parent to initiate logout! -->
+      <button v-on:click="toggleLogin()">Logout</button>
+    </div>
 </template>
 
 <script>
@@ -22,7 +27,13 @@ export default {
     // alert("I am setting up the site header!");
   },
   name: "SiteHeader",
-  props: ['loginState']
+  props: ['loginState'],
+  inject: [ 'toggleLogin' ]
+  // methods: {
+  //   'toggleLogin': function(){
+  //     // parent.toggleLogin();
+  //   }
+  // }
 };
 </script>
 

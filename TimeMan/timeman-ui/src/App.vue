@@ -1,32 +1,38 @@
 <template>
   <SiteHeader v-bind:loginState="loginState" />
-  <HelloWorld msg="Welcome to SPA hell!" count="0"/>
+  <HelloWorld msg="Welcome to SPA hell!" count="0" />
   <button v-on:click="toggleLogin()">Toggle Login</button>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-import SiteHeader from './components/SiteHeader.vue'
+import HelloWorld from "./components/HelloWorld.vue";
+import SiteHeader from "./components/SiteHeader.vue";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
     HelloWorld,
-    SiteHeader
+    SiteHeader,
   },
   data() {
-      return {
-        loginState: {
-          isLoggedIn: true
-        }
-      }
+    return {
+      loginState: {
+        isLoggedIn: true,
+      },
+    };
   },
   methods: {
-    'toggleLogin': function(){
+    toggleLogin: function () {
       this.loginState.isLoggedIn = !this.loginState.isLoggedIn;
-//      alert('login changed! (' + this.isLoggedIn + ')');
-    }
-  }
+      //      alert('login changed! (' + this.isLoggedIn + ')');
+    },
+  },
+  provide() {
+    return {
+      toggleLogin: this.toggleLogin,
+    };
+  },
+
   // setup (){
   //   this.isLoggedIn = false;
   // }
@@ -35,7 +41,7 @@ export default {
   //     isLoggedIn: false
   //   }
   // }
-}
+};
 </script>
 
 <style>
