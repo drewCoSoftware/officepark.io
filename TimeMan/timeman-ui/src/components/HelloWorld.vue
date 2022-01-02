@@ -14,6 +14,7 @@
 
 <script>
 import TimeManSession from "./TimeManSession.vue";
+
 export default {
   components: { TimeManSession },
   name: "HelloWorld",
