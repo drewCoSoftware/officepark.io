@@ -48,14 +48,27 @@ namespace TimeManServer.ApiControllers
 
   }
 
+  // ============================================================================================================================
   [ApiController]
   [Route("[controller]")]
   public class SessionsController : TimeManApiController
   {
 
+    // --------------------------------------------------------------------------------------------------------------------------
+    [HttpGet]
+    [Route("/api/pingtest")]
+    public object PingTest()
+    {
+      string cookieval = Request.Cookies["cookie-3"] ?? "<null>";
+      return new
+      {
+        cookieval = cookieval,
+        status = "ok"
+      };
+    }
 
 
-
+    // --------------------------------------------------------------------------------------------------------------------------
     [HttpGet]
     [Route("/api/[controller]/active")]
     public object Active()

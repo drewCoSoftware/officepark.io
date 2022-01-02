@@ -7,18 +7,22 @@
     <div v-if="!loginState.isLoggedIn">
       <a>Login</a>
     </div>
-    <div v-else>
+    <!-- <div v-else>
       <p>Welcome user! <a>Logout</a></p>
     </div>
     <div>
       <p>Login status =</p>
       <span>{{ loginState.isLoggedIn ? "yes" : "no" }}</span>
-    </div>
+    </div> -->
   </div>
 
   <div id="nav">
     <router-link to="/">Home</router-link>
     <router-link to="/about">About</router-link>
+  </div>
+
+  <div>
+    <button v-on:click="pingTest">Ping API</button>
   </div>
 </template>
 
@@ -32,9 +36,23 @@ export default {
   name: "SiteHeader",
   props: ["loginState"],
   inject: ["toggleLogin"],
-  mounted: function () {
-    // alert('i am mounted!');
-    this.$cookies.set("thecookie", "whatever");
+  methods: {
+    // Ping some API provider, hopefully with cookie goodness.
+    pingTest: function () {
+//       this.$cookies.set("cookie-2", "works ala CORS", {domain: 'localhost'});
+       this.$cookies.set("cookie-3", "a&h", undefined, undefined, 'august-harper.com')
+
+      // Let's call our API!
+      // OPTIONS:
+      fetch("https://localhost:7001/api/pingtest", {
+        credentials: 'include'
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("got some data....");
+          console.dir(data);
+        });
+    },
   },
 };
 </script>

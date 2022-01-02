@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -9,9 +11,20 @@ builder.Services.AddCors((ops) =>
 {
   ops.AddPolicy("corsPolicy", builder =>
   {
-    builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    builder.SetIsOriginAllowed(IsOriginAllowed);
+    builder.AllowCredentials();
+//    builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
   });
 });
+
+static bool IsOriginAllowed(string host)
+{
+  // NOTE: These could come from some kind of updateable cache.
+  var corsOriginAllowed = new[] { "localhost" };
+
+  return corsOriginAllowed.Any(origin =>
+      Regex.IsMatch(host, $@"^http(s)?://.*{origin}(:[0-9]+)?$", RegexOptions.IgnoreCase));
+}
 
 var app = builder.Build();
 
