@@ -1,33 +1,24 @@
-
 <template>
-    <div id="nav">
-      <router-link to="/">Home</router-link>
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view />
-    <!-- <SiteHeader v-bind:loginState="loginState" />
+  <SiteHeader v-bind:loginState="loginState" />
+  <router-view />
+  <!-- 
   <HelloWorld msg="Welcome to SPA hell!" count="0" />
   <button v-on:click="toggleLogin()">Toggle Login</button> -->
 </template>
 
 <script>
-// import { RouterLink, RouterView } from "vue-router";
-
-
-// import HelloWorld from "./components/HelloWorld.vue";
-// import SiteHeader from "./components/SiteHeader.vue";
-// import router from "main.js"
+ import SiteHeader from "./components/SiteHeader.vue";
 
 export default {
   name: "App",
-  // components: {
-  //   HelloWorld,
-  //   SiteHeader,
-  // },
+  components: {
+    SiteHeader,
+  },
   data() {
     return {
       loginState: {
-        isLoggedIn: true,
+        isLoggedIn: false,
+        loginToken: null        // Special token to help with session tracking.
       },
     };
   },
@@ -37,16 +28,16 @@ export default {
       //      alert('login changed! (' + this.isLoggedIn + ')');
     },
     // Log out any connected user, and redirect them to the homepage.
-    logout: function() {
-      if (this.loginState){
-        this.$router.push('/');
+    logout: function () {
+      if (this.loginState) {
+        this.$router.push("/");
       }
-    }
+    },
   },
   provide() {
     return {
       toggleLogin: this.toggleLogin,
-      logout: this.logout
+      logout: this.logout,
     };
   },
 
