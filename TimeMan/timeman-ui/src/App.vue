@@ -1,41 +1,43 @@
 <template>
   <SiteHeader v-bind:loginState="loginState" />
-  <router-view v-bind:loginState="loginState" />
-  <!-- 
-  <HelloWorld msg="Welcome to SPA hell!" count="0" />
-  <button v-on:click="toggleLogin()">Toggle Login</button> -->
+  <router-view  />
+  <button v-on:click="toggleLogin()">Toggle Login</button>
 </template>
 
-<script>
- import SiteHeader from "./components/SiteHeader.vue";
+<script lang="ts">
+import SiteHeader from "./components/SiteHeader.vue";
+import { Options, Vue } from "vue-class-component";
+// import HelloWorld from "./components/HelloWorld.vue";
 
-export default {
-  name: "App",
+@Options({
   components: {
     SiteHeader,
   },
+
   data() {
     return {
       loginState: {
         isLoggedIn: true,
-        loginToken: null,        // Special token to help with session tracking.
-        userID: 'drew'
+        loginToken: null, // Special token to help with session tracking.
+        userID: "drew",
       },
     };
   },
   methods: {
     toggleLogin: function () {
       this.loginState.isLoggedIn = !this.loginState.isLoggedIn;
-      if (this.loginState.isLoggedIn){
-        this.$router.push('/sessions');
+      if (this.loginState.isLoggedIn) {
+        this.$router.push("/sessions");
       }
     },
     // Log out any connected user, and redirect them to the homepage.
-    logout: function () {
-      if (this.loginState) {
-        this.$router.push("/");
-      }
-    },
+    userID: "drew",
+  },
+  // Log out any connected user, and redirect them to the homepage.
+  logout: function () {
+    if (this.loginState) {
+      this.$router.push("/");
+    }
   },
   provide() {
     return {
@@ -43,19 +45,11 @@ export default {
       logout: this.logout,
     };
   },
-
-  // setup (){
-  //   this.isLoggedIn = false;
-  // }
-  // data() {
-  //   return new {
-  //     isLoggedIn: false
-  //   }
-  // }
-};
+})
+export default class App extends Vue {}
 </script>
 
-<style>
+<style lang="less">
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
