@@ -3,6 +3,7 @@ import App from './App.vue'
 
 import Home from "./components/Home.vue"
 import About from "./components/About.vue"
+import Sessions from "./components/Sessions.vue"
 
 import { createRouter, createWebHistory } from "vue-router";
 
@@ -19,6 +20,11 @@ const routes = [
     path: "/about",
     name: "About",
     component: About,
+  },
+  {
+    path: "/sessions",
+    name: "Sessions",
+    component: Sessions,
   },
 ];
 

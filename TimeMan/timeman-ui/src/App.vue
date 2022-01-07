@@ -1,6 +1,6 @@
 <template>
   <SiteHeader v-bind:loginState="loginState" />
-  <router-view />
+  <router-view v-bind:loginState="loginState" />
   <!-- 
   <HelloWorld msg="Welcome to SPA hell!" count="0" />
   <button v-on:click="toggleLogin()">Toggle Login</button> -->
@@ -17,15 +17,18 @@ export default {
   data() {
     return {
       loginState: {
-        isLoggedIn: false,
-        loginToken: null        // Special token to help with session tracking.
+        isLoggedIn: true,
+        loginToken: null,        // Special token to help with session tracking.
+        userID: 'drew'
       },
     };
   },
   methods: {
     toggleLogin: function () {
       this.loginState.isLoggedIn = !this.loginState.isLoggedIn;
-      //      alert('login changed! (' + this.isLoggedIn + ')');
+      if (this.loginState.isLoggedIn){
+        this.$router.push('/sessions');
+      }
     },
     // Log out any connected user, and redirect them to the homepage.
     logout: function () {
