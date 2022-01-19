@@ -6,16 +6,19 @@ using IOFile = System.IO.File;
 
 namespace TimeManServer.ApiControllers
 {
+  // ==========================================================================
   public class TimeManApiResponse
   {
     public bool IsAuthenticated { get; set; }
   }
 
+  // ==========================================================================
   public class SessionResponse : TimeManApiResponse
   {
     public TimeManSession? Session { get; set; }
   }
 
+  // ==========================================================================
   public class TimeManApiController : ControllerBase
   {
     // NOTE: We are assuming all sqlite data access for the time being...
@@ -95,7 +98,7 @@ namespace TimeManServer.ApiControllers
                 },
             };
 
-   //   Response.Headers.Add("Access-Control-Allow-Origin", "*");
+      //   Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
       return res;
     }

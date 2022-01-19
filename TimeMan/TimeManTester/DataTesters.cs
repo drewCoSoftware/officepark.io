@@ -16,6 +16,12 @@ namespace TimeManTester
   {
 
     // --------------------------------------------------------------------------------------------------------------------------
+    public DataTesters()
+    {
+      FileTools.CreateDirectory(Path.Combine(FileTools.GetAppDir(), "TimeManData"));
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
     /// <summary>
     /// Shows that our schema generator can detect and properly model an implicit one-to-many relationship.
     /// </summary>
@@ -40,47 +46,6 @@ namespace TimeManTester
 
     }
 
-
-    //// --------------------------------------------------------------------------------------------------------------------------
-    ///// <summary>
-    ///// Show that we can create our data schema and generate the appropriate 'CREATE TABLE' syntax, etc.
-    ///// </summary>
-    //[Fact]
-    //public void CanCreateDataSchema()
-    //{
-    //  var schema = new SchemaDefinition(new SqliteFlavor());
-    //  schema.AddTable<TimeManSession>("Sessions");
-
-    //  // We should have one dependent table in our def.
-    //  {
-    //    var allDefs = schema.TableDefs;
-    //    Assert.Equal(3, allDefs.Count);
-    //    var match = (from x in allDefs where x.Name == "Sessions" select x).FirstOrDefault()!;
-    //    Assert.NotNull(match);
-    //    Assert.Single(match.DependentTables);
-    //  }
-
-
-    //  // Now let's add another table of the same type, but with a different name!
-    //  schema.AddTable<TimeManSession>("CurrentSessions");
-    //  {
-    //    var allDefs = schema.TableDefs;
-    //    Assert.Equal(4, allDefs.Count);
-    //    var match = (from x in allDefs where x.Name == "CurrentSessions" select x).FirstOrDefault()!;
-    //    Assert.NotNull(match);
-    //    Assert.Single(match.DependentTables);
-    //  }
-
-
-    //  // OK!  Let's get our create SQL code now!
-    //  string query = schema.GetCreateSQL();
-    //}
-
-
-
-    //// --------------------------------------------------------------------------------------------------------------------------
-    //[Fact]
-    //public void AddingTimeMark
 
     // --------------------------------------------------------------------------------------------------------------------------
     [Fact]

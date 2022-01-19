@@ -9,6 +9,7 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using static Dapper.SqlMapper;
 using System.Data;
+using System.Diagnostics;
 
 namespace TimeManServer.Data
 {
@@ -112,6 +113,20 @@ namespace TimeManServer.Data
     // --------------------------------------------------------------------------------------------------------------------------
     private bool ValidateSchema()
     {
+      // Make sure that the file exists!
+      var parts = ConnectionString.Split(";");
+      foreach (var p in parts)
+      {
+        if (p.StartsWith("Data Source"))
+        {
+          string filePath = p.Split("=")[1].Trim();
+          if (!File.Exists(filePath))
+          {
+            Debug.WriteLine($"The database file at: {filePath} does not exist!");
+            return false;
+          }
+        }
+      }
       // NOTE: This is simple.  In the future we could come up with a more robust verison of this.
       bool res = HasTable(nameof(TimeManSchema.Sessions));
       return res;
