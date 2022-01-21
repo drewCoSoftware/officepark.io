@@ -25,16 +25,31 @@
 </template>
 
 <script>
+import { inject } from "vue";
+
 export default {
+  name: "SiteHeader",
+  props: ["loginState"],
+  inject: ["toggleLogin", "main_logout"],
   setup() {
+    const logout = inject("main_logout");
+    return {
+      logout
+    }
+    //var x = inject("main_logout");
     // This is where we could check for initial login status....
     // That means we have to send cookies around, I guess...
     // alert("I am setting up the site header!");
+    //var x = inject("main_logout");
+    //    console.dir(inject("toggleLogin"));
   },
-  name: "SiteHeader",
-  props: ["loginState"],
-  inject: ["toggleLogin"],
   methods: {
+    other: function () {
+      alert("other");
+    },
+    //logout: inject("main_logout"),
+    //   logout: $main_logout,
+    //logout: inject("logout"),
     // Ping some API provider, hopefully with cookie goodness.
     pingTest: function () {
       this.$cookies.set(
@@ -54,6 +69,15 @@ export default {
         .then((data) => {
           console.log("got some data....");
           console.dir(data);
+
+          if (data.AuthToken == null) {
+            // alert("The user is not authorized!");
+            // this.other();
+            // console.dir(this.logout);
+            //logout();
+            //console.dir(this.logout);
+            this.main_logout();
+          }
         });
     },
   },

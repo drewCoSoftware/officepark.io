@@ -9,11 +9,11 @@
         <p>
           <!-- Name: <span>{{ activeSession.name }}</span> -->
         </p>
-        <a v-on:click="endSession">End Session</a>
+        <button v-on:click="endSession">End Session</button>
       </div>
       <div v-else>
         <p>There is no currently active session.</p>
-        <a v-on:click="beginSession">Begin Session</a>
+        <button v-on:click="beginSession">Begin Session</button>
       </div>
     </div>
     <div id="session-history">
@@ -27,10 +27,10 @@
 </template>
 
 <script lang="ts">
-// interface ITimeManSession {
-//   name: string;
-//   start: string;
-// }
+interface ITimeManSession {
+  name: string;
+  start: string;
+}
 
 // interface ISessionsModel {
 //   isHistoryLoading: false;
@@ -39,37 +39,18 @@
 
 // NOTE: defineComponent is not the ideal way to build these out.  Look into the component API
 // for future development.
-import Vue from "vue";
-export default Vue.defineComponent({
-  name: "Sessions",
-  data() {
-    return {
-      isHistoryLoading: false,
-      activeSession: null,
-    };
-  },
+import { Options, Vue } from "vue-class-component";
 
-  methods: {
-    beginSession: function () {
-      console.log("starting a new session!");
-      // Indicate loading / API status.
-      // Ping the server to start the session.
-      // Get the data:
-      // Display it!
-      // End the load stuff....
+@Options({
+  // mounted: function() {
+  //   alert('mounted!');
+  // }
+})
+export default class Sessions extends Vue {
+  isHistoryLoading: boolean = false;
+  activeSession: ITimeManSession | null = null;
 
-      // let sess: ITimeManSession = {
-      //   name: "my Session",
-      //   start: "now",
-      // };
-      //      this.activeSession = sess;
-    },
-    endSession: function () {
-      console.log("ending the session!");
-      this.activeSession = null;
-    },
-  },
-  mounted: function () {
+  mounted = function () {
     // Indicate loading / GET status.
     // Grab the currently active session.
     // diplay / end loading.
@@ -78,6 +59,27 @@ export default Vue.defineComponent({
     // let x = this.$refs;
     // this.isHistoryLoading = false;
     // this.isHistoryLoading = true;
-  },
-});
+  };
+
+  beginSession = () => {
+    console.log("starting a new session!");
+    // Indicate loading / API status.
+    // Ping the server to start the session.
+    // Get the data:
+    // Display it!
+    // End the load stuff....
+
+    let sess: ITimeManSession = {
+      name: "my Session",
+      start: "now",
+    };
+    this.activeSession = sess;
+  };
+
+  endSession = () => {
+    console.log("ending the session!");
+    this.activeSession = null;
+  };
+}
+
 </script>

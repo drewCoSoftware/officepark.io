@@ -31,7 +31,7 @@ namespace TimeManServer.ApiControllers
       DAL = InitDataAccess();
     }
 
-
+    // --------------------------------------------------------------------------------------------------------------------------
     private ITimeManDataAccess InitDataAccess()
     {
       // Check for the database file!
@@ -52,6 +52,33 @@ namespace TimeManServer.ApiControllers
   }
 
   // ============================================================================================================================
+  /// <summary>
+  /// This interface type should be implemented by all return types in the system.
+  /// The goal is to have common data to program against for messages, errors, auth status, etc.
+  /// </summary>
+  public interface IAPIResponse
+  {
+    /// <summary>
+    /// The user's current auth token.  If null, then the user is not currently
+    /// authorized and should login again.
+    /// </summary>
+    string? AuthToken { get; set; }
+
+    /// <summary>
+    /// Any old message that we want to send along.
+    /// </summary>
+    /// <value></value>
+    string? Message { get; set; }
+  }
+
+  // ============================================================================================================================
+  public class BasicResponse : IAPIResponse
+  {
+    public string? AuthToken { get; set; }
+    public string? Message { get; set; }
+  }
+
+  // ============================================================================================================================
   [ApiController]
   [Route("[controller]")]
   public class SessionsController : TimeManApiController
@@ -60,16 +87,39 @@ namespace TimeManServer.ApiControllers
     // --------------------------------------------------------------------------------------------------------------------------
     [HttpGet]
     [Route("/api/pingtest")]
-    public object PingTest()
+    public IAPIResponse PingTest()
     {
       string cookieval = Request.Cookies["cookie-3"] ?? "<null>";
-      return new
+      return new BasicResponse()
       {
-        cookieval = cookieval,
-        status = "ok"
+        AuthToken = null,
+        Message = "OK"
       };
     }
 
+
+    // -------------------------------------------------------------------------------------------------------------------------- 
+    /// <summary>
+    /// Begin a new session!
+    /// </summary>
+    [HttpPost]
+    [Route("/api/[controller]/begin")]
+    public object Begin()
+    {
+      return null;
+    }
+
+    // -------------------------------------------------------------------------------------------------------------------------- 
+    /// <summary>
+    /// End the currently active session, or do nothing if no session is active.
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost]
+    [Route("/api/[controller]/end")]
+    public object End()
+    {
+      return null;
+    }
 
     // --------------------------------------------------------------------------------------------------------------------------
     [HttpGet]
