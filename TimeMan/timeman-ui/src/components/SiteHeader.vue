@@ -1,22 +1,26 @@
 <template>
-  <div id="site-header">
-    <div>
-      <h1>TimeMan</h1>
-      <p>officepark.io</p>
-    </div>
-    <div v-if="!loginState.isLoggedIn">
-      <a>Login</a>
-    </div>
-  </div>
-
-  <div id="nav">
-    <router-link to="/">Home</router-link>
-    <router-link v-if="loginState.isLoggedIn" to="/sessions">Sessions</router-link>
-    <router-link to="/about">About</router-link>
-  </div>
-
   <div>
-    <button v-on:click="pingTest">Ping API</button>
+    <div id="site-header">
+      <div>
+        <h1>TimeMan</h1>
+        <p>officepark.io</p>
+      </div>
+      <div v-if="!loginState.isLoggedIn">
+        <a>Login</a>
+      </div>
+    </div>
+
+    <div id="nav">
+      <router-link to="/">Home</router-link>
+      <router-link v-if="loginState.isLoggedIn" to="/sessions"
+        >Sessions</router-link
+      >
+      <router-link to="/about">About</router-link>
+    </div>
+
+    <div>
+      <button v-on:click="pingTest">Ping API</button>
+    </div>
   </div>
 </template>
 
@@ -33,12 +37,18 @@ export default {
   methods: {
     // Ping some API provider, hopefully with cookie goodness.
     pingTest: function () {
-       this.$cookies.set("cookie-3", "a&h", undefined, undefined, 'august-harper.com')
+      this.$cookies.set(
+        "cookie-3",
+        "a&h",
+        undefined,
+        undefined,
+        "august-harper.com"
+      );
 
       // Let's call our API!
       // OPTIONS:
       fetch("https://localhost:7001/api/pingtest", {
-        credentials: 'include'
+        credentials: "include",
       })
         .then((response) => response.json())
         .then((data) => {
