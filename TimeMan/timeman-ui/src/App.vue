@@ -1,6 +1,6 @@
 <template>
   <SiteHeader v-bind:loginState="loginState" />
-  <router-view  />
+  <router-view />
   <button v-on:click="toggleLogin()">Toggle Login</button>
 </template>
 
@@ -30,19 +30,18 @@ import { Options, Vue } from "vue-class-component";
         this.$router.push("/sessions");
       }
     },
+
     // Log out any connected user, and redirect them to the homepage.
-    userID: "drew",
-  },
-  // Log out any connected user, and redirect them to the homepage.
-  logout: function () {
-    if (this.loginState) {
-      this.$router.push("/");
-    }
+    logout: function () {
+      if (this.loginState) {
+        this.$router.push("/");
+      }
+    },
   },
   provide() {
     return {
       toggleLogin: this.toggleLogin,
-      logout: this.logout,
+      main_logout: this.logout,
     };
   },
 })
