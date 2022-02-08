@@ -7,7 +7,6 @@
 <script lang="ts">
 import SiteHeader from "./components/SiteHeader.vue";
 import { Options, Vue } from "vue-class-component";
-// import HelloWorld from "./components/HelloWorld.vue";
 
 @Options({
   components: {
@@ -17,19 +16,31 @@ import { Options, Vue } from "vue-class-component";
   data() {
     return {
       loginState: {
-        isLoggedIn: true,
-        loginToken: null, // Special token to help with session tracking.
+        isLoggedIn: false,
+        loginToken: null,   // Special token to help with session tracking.
         userID: "drew",
       },
     };
   },
   methods: {
     toggleLogin: function () {
-      this.loginState.isLoggedIn = !this.loginState.isLoggedIn;
-      if (this.loginState.isLoggedIn) {
-        // NOTE: This is where we would grab some kind of redirect url....
-        this.$router.push("/sessions");
+      let loggedIn = this.$dtAuth.IsLoggedIn;
+      if (!loggedIn)
+      {
+        alert('no');
+        this.$dtAuth.Login();
       }
+      else
+      {
+        alert('yes');
+        this.$dtAuth.Logout();
+      }
+//      alert(loginStatus);
+      // this.loginState.isLoggedIn = !this.loginState.isLoggedIn;
+      // if (this.loginState.isLoggedIn) {
+      //   // NOTE: This is where we would grab some kind of redirect url....
+      //   this.$router.push("/sessions");
+      // }
     },
 
     // Log out any connected user, and redirect them to the homepage.
@@ -57,7 +68,19 @@ import { Options, Vue } from "vue-class-component";
     };
   },
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+
+  
+//  private _value : string;
+  // public get IsLoggedIn() : boolean {
+  //   return false;
+  //   //return this._value;
+  // }
+  // public set value(v : string) {
+  //   this._value = v;
+  // }
+  
+}
 </script>
 
 <style lang="less">
