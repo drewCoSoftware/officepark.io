@@ -27,14 +27,26 @@ import { Options, Vue } from "vue-class-component";
     toggleLogin: function () {
       this.loginState.isLoggedIn = !this.loginState.isLoggedIn;
       if (this.loginState.isLoggedIn) {
+        // NOTE: This is where we would grab some kind of redirect url....
         this.$router.push("/sessions");
       }
     },
 
     // Log out any connected user, and redirect them to the homepage.
-    logout: function () {
+    logout: function (forcedOut:boolean) {
       if (this.loginState) {
-        this.$router.push("/");
+        this.loginState.isLoggedIn = false;
+
+        if (forcedOut)
+        {
+          let redirectTo = this.$router.currentRoute.value.path;
+          console.log("We will redirect to: " + redirectTo + " on login....");
+          this.$router.push("/login?to=" + redirectTo);
+        }
+        else
+        {
+          this.$router.push("/");
+        }
       }
     },
   },

@@ -4,6 +4,7 @@ import App from './App.vue'
 import Home from "./components/Home.vue"
 import About from "./components/About.vue"
 import Sessions from "./components/Sessions.vue"
+import NotFound from "./components/NotFound.vue"
 
 import { createRouter, createWebHistory } from "vue-router";
 
@@ -26,6 +27,11 @@ const routes = [
     name: "Sessions",
     component: Sessions,
   },
+  {
+      path: "/:notfound(.*)",
+      name: "NotFound",
+      component: NotFound,
+  }
 ];
 
 const router = createRouter({
