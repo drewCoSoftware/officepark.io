@@ -64,10 +64,10 @@ router.beforeEach((to, from) => {
   if (to.meta.requiresAuth && !auth.IsLoggedIn) {
     //console.dir(app);
     alert('auth required!');
-    // return {
-    //   path: '/',
-    //   query: { to: to.fullPath }
-    // }
+    return {
+      path: '/',
+      query: { to: encodeURIComponent(to.fullPath) }
+    }
   }
 });
 

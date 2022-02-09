@@ -9,7 +9,7 @@ const thingy = {
 }
 
 class dtAuthHandler {
-  private _IsLoggedIn: boolean = true;
+  private _IsLoggedIn: boolean = false;
   public get IsLoggedIn(): boolean {
     return this._IsLoggedIn;
   }
@@ -40,6 +40,7 @@ export default class dtAuth {
   public get IsLoggedIn(): boolean {
     return this.authState.IsLoggedIn;
   }
+
 //   Login = () => {
 //     // NOTE: This is where we would want to bounce against the auth server I think...
 //     thingy.IsLoggedIn = true;
