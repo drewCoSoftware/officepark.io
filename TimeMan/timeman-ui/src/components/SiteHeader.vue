@@ -5,7 +5,7 @@
         <h1>TimeMan</h1>
         <p>officepark.io</p>
       </div>
-      <div v-if="!loginState.isLoggedIn">
+      <div v-if="!loginState.IsLoggedIn">
         <a>Login</a>
       </div>
     </div>

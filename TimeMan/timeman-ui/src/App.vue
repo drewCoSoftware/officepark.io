@@ -2,11 +2,13 @@
   <SiteHeader v-bind:loginState="loginState" />
   <router-view />
   <button v-on:click="toggleLogin()">Toggle Login</button>
+  <p>{{this.$dtAuth.IsLoggedIn}}</p>
 </template>
 
 <script lang="ts">
 import SiteHeader from "./components/SiteHeader.vue";
 import { Options, Vue } from "vue-class-component";
+//import { reactive} from 'vue'
 
 @Options({
   components: {
@@ -15,33 +17,28 @@ import { Options, Vue } from "vue-class-component";
 
   data() {
     return {
-      loginState: {
-        isLoggedIn: false,
-        loginToken: null,   // Special token to help with session tracking.
-        userID: "drew",
-      },
+      loginState: this.$dtAuth
+        // isLoggedIn: false,
+        // loginToken: null,   // Special token to help with session tracking.
+        // userID: "drew",
+      
     };
   },
   methods: {
     toggleLogin: function () {
-      let loggedIn = this.$dtAuth.IsLoggedIn;
-      if (!loggedIn)
-      {
-        alert('no');
-        this.$dtAuth.Login();
-      }
-      else
-      {
-        alert('yes');
-        this.$dtAuth.Logout();
-      }
-//      alert(loginStatus);
-      // this.loginState.isLoggedIn = !this.loginState.isLoggedIn;
-      // if (this.loginState.isLoggedIn) {
-      //   // NOTE: This is where we would grab some kind of redirect url....
-      //   this.$router.push("/sessions");
+        this.$dtAuth.IsLoggedIn = !this.$dtAuth.IsLoggedIn;
+
+      // let loggedIn = this.$dtAuth.IsLoggedIn;
+      // if (!loggedIn)
+      // {
+      //   this.$dtAuth.Login();
       // }
-    },
+      // else
+      // {
+      //   this.$dtAuth.Logout();
+      // }
+
+},
 
     // Log out any connected user, and redirect them to the homepage.
     logout: function (forcedOut:boolean) {

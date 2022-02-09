@@ -65,6 +65,11 @@ namespace TimeManServer.ApiControllers
     string? AuthToken { get; set; }
 
     /// <summary>
+    /// Indicates if the request in question requires authorization.
+    /// </summary>
+    bool AuthRequired { get; set; }
+
+    /// <summary>
     /// Any old message that we want to send along.
     /// </summary>
     /// <value></value>
@@ -75,6 +80,7 @@ namespace TimeManServer.ApiControllers
   public class BasicResponse : IAPIResponse
   {
     public string? AuthToken { get; set; }
+    public bool AuthRequired { get; set; } = true;
     public string? Message { get; set; }
   }
 
@@ -93,6 +99,7 @@ namespace TimeManServer.ApiControllers
       return new BasicResponse()
       {
         AuthToken = null,
+        AuthRequired = false,
         Message = "OK"
       };
     }
