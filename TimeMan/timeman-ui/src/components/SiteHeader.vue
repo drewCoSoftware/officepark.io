@@ -8,6 +8,9 @@
       <div v-if="!loginState.IsLoggedIn">
         <a>Login</a>
       </div>
+      <div v-else>
+        <button v-on:click="logout">Logout</button>
+      </div>
     </div>
 
     <div id="nav">
@@ -23,7 +26,6 @@
 </template>
 
 <script>
-// import { inject } from "vue";
 
 export default {
   name: "SiteHeader",
@@ -63,6 +65,12 @@ export default {
           }
         });
     },
+    logout: function() {
+      this.$dtAuth.Logout();
+
+      // NOTE: This isn't ideal, but I'm not sure how to do it otherwise....
+      this.$forceUpdate();
+    }
   },
 };
 </script>

@@ -16,6 +16,10 @@ class dtAuthHandler {
   public set IsLoggedIn(value:boolean)
   {
     this._IsLoggedIn = value;
+    if (!this._IsLoggedIn)
+    {
+        // Destroy cookies, etc.
+    }
   }
 
   Login = () => {

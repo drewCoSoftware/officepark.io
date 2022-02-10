@@ -77,7 +77,7 @@ export default { router, auth };
 const app = createApp(App);
 app.use(router);
 app.use(auth);
-//app.use(loginStatus);
+
 app.use(VueCookies, {
   expireTimes: "30d",
   path: "/",
