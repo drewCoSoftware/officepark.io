@@ -57,12 +57,8 @@ const router = createRouter({
   routes,
 });
 
-//export default auth;
-
-
 router.beforeEach((to, from) => {
   if (to.meta.requiresAuth && !auth.IsLoggedIn) {
-    //console.dir(app);
     alert('auth required!');
     return {
       path: '/',
@@ -72,7 +68,6 @@ router.beforeEach((to, from) => {
 });
 
 export default { router, auth };
-//export default dtAuth;
 
 const app = createApp(App);
 app.use(router);

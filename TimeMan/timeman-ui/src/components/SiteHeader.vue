@@ -5,8 +5,8 @@
         <h1>TimeMan</h1>
         <p>officepark.io</p>
       </div>
-      <div v-if="!loginState.IsLoggedIn">
-        <a>Login</a>
+      <div v-if="!loginState.State.IsLoggedIn">
+        <a v-on:click="login">Login</a>
       </div>
       <div v-else>
         <button v-on:click="logout">Logout</button>
@@ -15,7 +15,7 @@
 
     <div id="nav">
       <router-link to="/">Home</router-link>
-      <router-link v-if="loginState.IsLoggedIn" to="/sessions">Sessions</router-link>
+      <router-link v-if="loginState.State.IsLoggedIn" to="/sessions">Sessions</router-link>
       <router-link to="/about">About</router-link>
     </div>
 
@@ -34,9 +34,10 @@ export default {
   setup() {
   },
   methods: {
-    other: function () {
-      alert("other");
-    },
+    // logout: function()
+    // {
+    //     alert('i am header logout!');
+    // },
     pingTest: function () {
       this.$cookies.set(
         "cookie-3",
@@ -67,9 +68,11 @@ export default {
     },
     logout: function() {
       this.$dtAuth.Logout();
-
-      // NOTE: This isn't ideal, but I'm not sure how to do it otherwise....
-      this.$forceUpdate();
+      this.$router.push("/");
+    },
+    login: function() {
+      // alert('login!');
+      this.$dtAuth.Login("user", "ABCDEF");
     }
   },
 };

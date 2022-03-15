@@ -26,18 +26,15 @@ import { Options, Vue } from "vue-class-component";
   },
   methods: {
     toggleLogin: function () {
-        this.$dtAuth.IsLoggedIn = !this.$dtAuth.IsLoggedIn;
-
-      // let loggedIn = this.$dtAuth.IsLoggedIn;
-      // if (!loggedIn)
-      // {
-      //   this.$dtAuth.Login();
-      // }
-      // else
-      // {
-      //   this.$dtAuth.Logout();
-      // }
-
+        if(this.$dtAuth.State.IsLoggedIn)
+        {
+          this.$dtAuth.Logout();
+        }
+        else
+        {
+          this.$dtAuth.Login();
+        }
+//        this.$dtAuth.IsLoggedIn = !this.$dtAuth.IsLoggedIn;
 },
 
     // Log out any connected user, and redirect them to the homepage.
