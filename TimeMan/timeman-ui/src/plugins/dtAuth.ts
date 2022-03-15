@@ -9,6 +9,13 @@ class dtAuthState {
     this._IsLoggedIn = value;
   }
 
+  private _UserName: string = "";
+  public get UserName(): string {
+    return this._UserName;
+  }
+  public set UserName(value:string) {
+    this._UserName = value;
+  }
 }
 
 class dtAuthHandler {
@@ -23,18 +30,13 @@ class dtAuthHandler {
     // NOTE: This is where we would want to bounce against the auth server I think...
     this._UserName = username;
     this._UserToken = usertoken;
+
+    this.State.UserName = username;
     this.State.IsLoggedIn = true;
-
-
-    // alert('login');
-    // alert(this.State.IsLoggedIn);
-    //    this.IsLoggedIn = true;
   }
 
   Logout = () => {
     this.State.IsLoggedIn = false;
-    //    this.IsLoggedIn = false;
-    // alert('logout');
   }
 
 }

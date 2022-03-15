@@ -9,13 +9,15 @@
         <a v-on:click="login">Login</a>
       </div>
       <div v-else>
+        <p>Hello {{loginState.State.UserName}}!</p>
         <button v-on:click="logout">Logout</button>
       </div>
     </div>
 
     <div id="nav">
       <router-link to="/">Home</router-link>
-      <router-link v-if="loginState.State.IsLoggedIn" to="/sessions">Sessions</router-link>
+      <router-link v-if="loginState.State.IsLoggedIn" to="/sessions"
+        >Sessions</router-link>
       <router-link to="/about">About</router-link>
     </div>
 
@@ -26,13 +28,11 @@
 </template>
 
 <script>
-
 export default {
   name: "SiteHeader",
   props: ["loginState"],
   inject: ["toggleLogin", "main_logout"],
-  setup() {
-  },
+  setup() {},
   methods: {
     // logout: function()
     // {
@@ -44,20 +44,21 @@ export default {
         "a&h",
         undefined,
         undefined
-       // "august-harper.com"  <-- no argument to use the current domain.
+        // "august-harper.com"  <-- no argument to use the current domain.
       );
 
       // Let's call our API!
       // OPTIONS:
       fetch("https://localhost:7001/api/pingtest", {
         credentials: "include",
-      }).then((response) => response.json())
+      })
+        .then((response) => response.json())
         .then((data) => {
           // console.log("got some data....");
           // console.dir(data);
 
           if (data.AuthToken == null) {
-           // alert("The user is not authorized!");
+            // alert("The user is not authorized!");
             // this.other();
             // console.dir(this.logout);
             //logout();
@@ -66,14 +67,14 @@ export default {
           }
         });
     },
-    logout: function() {
+    logout: function () {
       this.$dtAuth.Logout();
       this.$router.push("/");
     },
-    login: function() {
-      // alert('login!');
-      this.$dtAuth.Login("user", "ABCDEF");
-    }
+    login: function () {
+      this.$router.push("/login");
+//      this.$dtAuth.Login("chickenman", "ABCDEF");
+    },
   },
 };
 </script>

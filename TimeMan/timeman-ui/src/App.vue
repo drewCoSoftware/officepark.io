@@ -1,14 +1,13 @@
 <template>
   <SiteHeader v-bind:loginState="loginState" />
   <router-view />
-  <button v-on:click="toggleLogin()">Toggle Login</button>
+  <!-- <button v-on:click="toggleLogin()">Toggle Login</button> -->
   <p>{{this.$dtAuth.IsLoggedIn}}</p>
 </template>
 
 <script lang="ts">
 import SiteHeader from "./components/SiteHeader.vue";
 import { Options, Vue } from "vue-class-component";
-//import { reactive} from 'vue'
 
 @Options({
   components: {
