@@ -8,10 +8,10 @@
       </div>
       <div>
         <label for="password">password</label>
-        <input v-model="password" type="text" />
+        <input v-model="password" type="password" />
       </div>
       <div>
-        <button v-on:click="loginUser">Login</button>
+        <button v-on:click="loginUser" :disabled="isLoggingIn">Login</button>
       </div>
     </div>
   </div>
@@ -20,17 +20,14 @@
 <script lang="ts">
 import { Options, Vue } from "vue-class-component";
 
-@Options({
-  // data() {
-  //   return {
-  //     isLoggingIn: false
-  //   }
-  // }
-})
-export default class Login extends Vue {
-  // data() {
-  // },
+interface LoginResponse {
+  LoginOK: boolean;
+  AuthToken: string;
+  AuthRequired: boolean;
+}
 
+@Options({})
+export default class Login extends Vue {
   username = "abc";
   password: string = "";
 
@@ -44,35 +41,38 @@ export default class Login extends Vue {
       method: "post",
     });
     p.then((response) => response.json())
-      .then((data) => {
-//        alert("the login happened!");
+      .then((data: LoginResponse) => {
         console.dir(data);
+        if (data.LoginOK) {
+          // We want to set the token and do any redirects
+          // to the appropriate page here......
+//          this.$dtAuth.
+          this.$router.push("/");
+        } else {
+          // This is where we can set some stuff on the UI
+          // to indicate that there was a bad name or password.
+          alert("bad name or password!");
+        }
       })
       .finally(() => {
-//        alert('then this');
         this.endLogin();
       });
-
-    // alert(this.username + " " + this.password);
-    // This is where we call some kind of login/membership service....
-    // Let's just fake it with a long delay for now... maybe a dummmy call to some HTTP service?
   }
 
   beginLogin() {
     this.isLoggingIn = true;
   }
   endLogin() {
-//    alert('login is over!');
     this.isLoggingIn = false;
   }
 }
 </script>
 
 <style lang="less">
-  .login-form {
-    background:green;
-  }
-  .login-form.active{
-    background:red;
-  }
+.login-form {
+  background: green;
+}
+.login-form.active {
+  background: red;
+}
 </style>
