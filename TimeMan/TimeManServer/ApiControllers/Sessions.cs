@@ -77,6 +77,12 @@ namespace TimeManServer.ApiControllers
   }
 
   // ============================================================================================================================
+  public class LoginResponse : BasicResponse
+  {
+    public bool LoginOK { get; set; }
+  }
+
+  // ============================================================================================================================
   public class BasicResponse : IAPIResponse
   {
     public string? AuthToken { get; set; }
@@ -104,6 +110,35 @@ namespace TimeManServer.ApiControllers
       };
     }
 
+    // -------------------------------------------------------------------------------------------------------------------------- 
+    [HttpPost]
+    [Route("/api/login")]
+    public LoginResponse Login()
+    {
+      // Simulate a long time....
+      Thread.Sleep(2000);
+
+      // This is where the creds are checked...
+      LoginResponse res = new LoginResponse()
+      {
+        LoginOK = true,
+      };
+      return res;
+    }
+
+    // -------------------------------------------------------------------------------------------------------------------------- 
+    [HttpGet]
+    [Route("/api/Logout")]
+    public BasicResponse Logout()
+    {
+      // Check cookies.
+      // Check IP.
+      // Log the user out, if they are still in.
+      return new BasicResponse()
+      {
+        Message = "OK"
+      };
+    }
 
     // -------------------------------------------------------------------------------------------------------------------------- 
     /// <summary>
