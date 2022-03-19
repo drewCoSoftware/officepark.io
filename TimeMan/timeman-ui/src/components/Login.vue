@@ -47,6 +47,8 @@ export default class Login extends Vue {
           // We want to set the token and do any redirects
           // to the appropriate page here......
 //          this.$dtAuth.
+    this.$dta.Login("abc", "123");
+    
           this.$router.push("/");
         } else {
           // This is where we can set some stuff on the UI

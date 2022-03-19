@@ -2,7 +2,7 @@
   <SiteHeader v-bind:loginState="loginState" />
   <router-view />
   <!-- <button v-on:click="toggleLogin()">Toggle Login</button> -->
-  <p>{{this.$dtAuth.IsLoggedIn}}</p>
+  <p>{{this.$dta.IsLoggedIn}}</p>
 </template>
 
 <script lang="ts">
@@ -16,7 +16,7 @@ import { Options, Vue } from "vue-class-component";
 
   data() {
     return {
-      loginState: this.$dtAuth
+      loginState: this.$dta
         // isLoggedIn: false,
         // loginToken: null,   // Special token to help with session tracking.
         // userID: "drew",
@@ -25,15 +25,15 @@ import { Options, Vue } from "vue-class-component";
   },
   methods: {
     toggleLogin: function () {
-        if(this.$dtAuth.State.IsLoggedIn)
+        if(this.$dta.State.IsLoggedIn)
         {
-          this.$dtAuth.Logout();
+          this.$dta.Logout();
         }
         else
         {
-          this.$dtAuth.Login();
+          this.$dta.Login();
         }
-//        this.$dtAuth.IsLoggedIn = !this.$dtAuth.IsLoggedIn;
+//        this.$dta.IsLoggedIn = !this.$dta.IsLoggedIn;
 },
 
     // Log out any connected user, and redirect them to the homepage.

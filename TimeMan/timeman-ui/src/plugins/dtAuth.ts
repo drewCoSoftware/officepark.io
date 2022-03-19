@@ -18,7 +18,7 @@ class dtAuthState {
   }
 }
 
-class dtAuthHandler {
+export class dtAuthHandler {
   public State: any;
 
   private _UserName: string = "";
@@ -49,7 +49,7 @@ export default class dtAuth {
   install = (app: App) => {
     this.handler.State = reactive(new dtAuthState());
 
-    app.config.globalProperties.$dtAuth = this.handler;
+    app.config.globalProperties.$dta = this.handler;
   }
 
   public get IsLoggedIn(): boolean {
