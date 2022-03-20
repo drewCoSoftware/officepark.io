@@ -13,35 +13,47 @@ class dtAuthState {
   public get UserName(): string {
     return this._UserName;
   }
-  public set UserName(value:string) {
+  public set UserName(value: string) {
     this._UserName = value;
   }
+
+  private _AuthToken: string = "";
+  public get AuthToken(): string {
+    return this._AuthToken;
+  }
+  public set AuthToken(value: string) {
+    this._AuthToken = value;
+  }
+
 }
 
 export class dtAuthHandler {
   public State: any;
 
-  private _UserName: string = "";
-  private _UserToken: string = "";
-  public get UserName(): string { return this._UserName; }
-  public get UserToken(): string { return this._UserToken; }
+  // private _UserName: string = "";
+  // private _UserToken: string = "";
+  // public get UserName(): string { return this._UserName; }
+  // public get UserToken(): string { return this._UserToken; }
 
   Login = (username: string, usertoken: string) => {
     // NOTE: This is where we would want to bounce against the auth server I think...
-    this._UserName = username;
-    this._UserToken = usertoken;
+    // this._UserName = username;
+    // this._UserToken = usertoken;
 
     this.State.UserName = username;
+    this.State.UserToken = usertoken;
     this.State.IsLoggedIn = true;
   }
 
   Logout = () => {
+    this.State.UserName = "null";
+    this.State.AuthToken = "";
     this.State.IsLoggedIn = false;
   }
 
 }
 
-export default class dtAuth {
+export class dtAuth {
 
   //  private authState = reactive(new dtAuthHandler());
   private handler = new dtAuthHandler();

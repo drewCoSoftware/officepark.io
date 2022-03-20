@@ -9,7 +9,7 @@ import Login from "./components/Login.vue"
 
 import { createRouter, createWebHistory } from "vue-router";
 
-import dtAuth from "./plugins/dtAuth"
+import { dtAuth } from "./plugins/dtAuth"
 
 // https://www.npmjs.com/package/vue3-cookies
 import VueCookies from 'vue3-cookies'
@@ -61,8 +61,8 @@ router.beforeEach((to, from) => {
   if (to.meta.requiresAuth && !auth.IsLoggedIn) {
     alert('auth required!');
     return {
-      path: '/',
-      query: { to: encodeURIComponent(to.fullPath) }
+      path: '/login',
+      query: { to: to.fullPath }
     }
   }
 });

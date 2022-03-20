@@ -9,15 +9,14 @@
         <a v-on:click="login">Login</a>
       </div>
       <div v-else>
-        <p>Hello {{loginState.State.UserName}}!</p>
+        <p>Hello {{ loginState.State.UserName }}!</p>
         <button v-on:click="logout">Logout</button>
       </div>
     </div>
 
     <div id="nav">
       <router-link to="/">Home</router-link>
-      <router-link v-if="loginState.State.IsLoggedIn" to="/sessions"
-        >Sessions</router-link>
+      <router-link v-if="loginState.State.IsLoggedIn" to="/sessions">Sessions</router-link>
       <router-link to="/about">About</router-link>
     </div>
 
@@ -34,10 +33,6 @@ export default {
   inject: ["toggleLogin", "main_logout"],
   setup() {},
   methods: {
-    // logout: function()
-    // {
-    //     alert('i am header logout!');
-    // },
     pingTest: function () {
       this.$cookies.set(
         "cookie-3",
@@ -68,12 +63,12 @@ export default {
         });
     },
     logout: function () {
-      this.$dtAuth.Logout();
+      this.$dta.Logout();
       this.$router.push("/");
     },
     login: function () {
       this.$router.push("/login");
-//      this.$dtAuth.Login("chickenman", "ABCDEF");
+      //      this.$dtAuth.Login("chickenman", "ABCDEF");
     },
   },
 };

@@ -1,7 +1,10 @@
 <template>
   <div>
     <h2>Login</h2>
-    <div class="form login-form" :class="{ active: isLoggingIn }">
+    <div
+      class="form login-form"
+      :class="{ active: isLoggingIn, 'has-error': loginError }"
+    >
       <div>
         <label for="username">username</label>
         <input v-model="username" type="text" />
@@ -21,9 +24,10 @@
 import { Options, Vue } from "vue-class-component";
 
 interface LoginResponse {
-  LoginOK: boolean;
-  AuthToken: string;
-  AuthRequired: boolean;
+  loginOK: boolean;
+  authToken: string;
+  authRequired: boolean;
+  username: string;
 }
 
 @Options({})
@@ -32,6 +36,8 @@ export default class Login extends Vue {
   password: string = "";
 
   isLoggingIn: boolean = false;
+  loginError: boolean = false;
+  isLoginOK: boolean = false;
 
   loginUser() {
     this.beginLogin();
@@ -42,14 +48,17 @@ export default class Login extends Vue {
     });
     p.then((response) => response.json())
       .then((data: LoginResponse) => {
-        console.dir(data);
-        if (data.LoginOK) {
+        if (data.loginOK) {
+
+          this.$dta.Login(data.username, data.authToken);
+          
           // We want to set the token and do any redirects
           // to the appropriate page here......
-//          this.$dtAuth.
-    this.$dta.Login("abc", "123");
-    
-          this.$router.push("/");
+          let to = this.$route.query["to"]?.toString();
+          if (to == null) {
+            to = "/";
+          }
+          this.$router.push(to);
         } else {
           // This is where we can set some stuff on the UI
           // to indicate that there was a bad name or password.
@@ -71,9 +80,11 @@ export default class Login extends Vue {
 </script>
 
 <style lang="less">
-.login-form {
-  background: green;
+.login-form.has-error {
+  //  background: green;
+  border: solid 1px red;
 }
+
 .login-form.active {
   background: red;
 }
