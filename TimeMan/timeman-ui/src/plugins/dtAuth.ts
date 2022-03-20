@@ -27,22 +27,39 @@ class dtAuthState {
 
 }
 
+interface LoginResponse {
+  loginOK: boolean;
+  authToken: string;
+  authRequired: boolean;
+  username: string;
+}
+
 export class dtAuthHandler {
   public State: any;
 
-  // private _UserName: string = "";
-  // private _UserToken: string = "";
-  // public get UserName(): string { return this._UserName; }
-  // public get UserToken(): string { return this._UserToken; }
+  Login = (username: string, usertoken: string) : Promise<boolean> => {
 
-  Login = (username: string, usertoken: string) => {
-    // NOTE: This is where we would want to bounce against the auth server I think...
-    // this._UserName = username;
-    // this._UserToken = usertoken;
+    const p = fetch("https://localhost:7001/api/login", {
+      credentials: "include",
+      method: "post",
+    });
 
-    this.State.UserName = username;
-    this.State.UserToken = usertoken;
-    this.State.IsLoggedIn = true;
+    const res = p.then((response) => response.json())
+      .then<boolean>((data) => {
+        if (data.loginOK) {
+          this.State.IsLoggedIn = true;
+          this.State.AuthToken = data.authToken;
+          this.State.UserName = data.username;
+
+          return true;
+        }
+        else {
+          this.Logout();
+          return false;
+        }
+      });
+
+      return res;
   }
 
   Logout = () => {
