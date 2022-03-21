@@ -9,6 +9,6 @@ declare module '*.vue' {
 
 // declare module '@vue/runtime-core' {
 //   export interface ComponentCustomProperties {
-//     $dta: typeof dtAuthHandler
+//     $.dtAuth: typeof dtAuthHandler
 //   }
 // }

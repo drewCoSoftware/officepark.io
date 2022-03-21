@@ -2,7 +2,7 @@
   <SiteHeader v-bind:loginState="loginState" />
   <router-view />
   <!-- <button v-on:click="toggleLogin()">Toggle Login</button> -->
-  <p>{{this.$dta.IsLoggedIn}}</p>
+  <p>{{ this.$dtAuth.IsLoggedIn }}</p>
 </template>
 
 <script lang="ts">
@@ -16,39 +16,20 @@ import { Options, Vue } from "vue-class-component";
 
   data() {
     return {
-      loginState: this.$dta
-        // isLoggedIn: false,
-        // loginToken: null,   // Special token to help with session tracking.
-        // userID: "drew",
-      
+      loginState: this.$dtAuth,
     };
   },
   methods: {
-    toggleLogin: function () {
-        if(this.$dta.State.IsLoggedIn)
-        {
-          this.$dta.Logout();
-        }
-        else
-        {
-          this.$dta.Login();
-        }
-//        this.$dta.IsLoggedIn = !this.$dta.IsLoggedIn;
-},
-
     // Log out any connected user, and redirect them to the homepage.
-    logout: function (forcedOut:boolean) {
+    logout: function (forcedOut: boolean) {
       if (this.loginState) {
         this.loginState.isLoggedIn = false;
 
-        if (forcedOut)
-        {
+        if (forcedOut) {
           let redirectTo = this.$router.currentRoute.value.path;
           console.log("We will redirect to: " + redirectTo + " on login....");
           this.$router.push("/login?to=" + redirectTo);
-        }
-        else
-        {
+        } else {
           this.$router.push("/");
         }
       }
@@ -62,9 +43,7 @@ import { Options, Vue } from "vue-class-component";
   },
 })
 export default class App extends Vue {
-
-  
-//  private _value : string;
+  //  private _value : string;
   // public get IsLoggedIn() : boolean {
   //   return false;
   //   //return this._value;
@@ -72,7 +51,6 @@ export default class App extends Vue {
   // public set value(v : string) {
   //   this._value = v;
   // }
-  
 }
 </script>
 

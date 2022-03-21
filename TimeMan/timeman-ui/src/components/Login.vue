@@ -37,7 +37,7 @@ export default class Login extends Vue {
   loginUser() {
     this.beginLogin();
 
-    this.$dta.Login(this.username, this.password).then((loginOK: boolean) => {
+    this.$dtAuth.Login(this.username, this.password).then((loginOK: boolean) => {
       if (loginOK) {
         // We want to set the token and do any redirects
         // to the appropriate page here......

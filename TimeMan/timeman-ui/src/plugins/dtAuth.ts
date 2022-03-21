@@ -103,7 +103,7 @@ export class dtAuth {
   install = (app: App) => {
     this.handler.State = reactive(new dtAuthState());
 
-    app.config.globalProperties.$dta = this.handler;
+    app.config.globalProperties.$dtAuth = this.handler;
   }
 
   public get IsLoggedIn(): boolean {

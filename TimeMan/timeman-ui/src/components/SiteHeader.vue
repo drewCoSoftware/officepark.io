@@ -63,12 +63,12 @@ export default {
         });
     },
     logout: function () {
-      this.$dta.Logout();
+      this.$dtAuth.Logout();
       this.$router.push("/");
     },
     login: function () {
       this.$router.push("/login");
-      //      this.$dtAuth.Login("chickenman", "ABCDEF");
+      //      this.$dtAuthuth.Login("chickenman", "ABCDEF");
     },
   },
 };
