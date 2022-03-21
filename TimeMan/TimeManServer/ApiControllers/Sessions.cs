@@ -1,4 +1,5 @@
-﻿using drewCo.Tools;
+﻿using System.Diagnostics;
+using drewCo.Tools;
 using Microsoft.AspNetCore.Mvc;
 using TimeManServer.Data;
 using IOFile = System.IO.File;
@@ -25,6 +26,7 @@ namespace TimeManServer.ApiControllers
     public string DatabaseFileName { get; private set; }
     private ITimeManDataAccess DAL = null!;
 
+    // --------------------------------------------------------------------------------------------------------------------------
     public TimeManApiController()
     {
       DatabaseFileName = Environment.GetEnvironmentVariable("TIMEMAN_DB_FILENAME") ?? "TimeManDB";
@@ -91,6 +93,16 @@ namespace TimeManServer.ApiControllers
   }
 
   // ============================================================================================================================
+  public class LoginModel
+  {
+    public string username { get; set; }
+    public string password { get; set; }
+
+    // public LoginModel() { }
+  }
+
+
+  // ============================================================================================================================
   [ApiController]
   [Route("[controller]")]
   public class SessionsController : TimeManApiController
@@ -110,18 +122,21 @@ namespace TimeManServer.ApiControllers
       };
     }
 
+
     // -------------------------------------------------------------------------------------------------------------------------- 
     [HttpPost]
     [Route("/api/login")]
-    public LoginResponse Login()
+//    public LoginResponse Login([FromForm] string username, [FromForm] string password)
+    public LoginResponse Login([FromForm]LoginModel data)
     {
       // Simulate a long time....
-      Thread.Sleep(2000);
+      // Console.WriteLine("password is: " + data.password);
+      // Console.WriteLine("username is: " + data.username);
 
       // This is where the creds are checked...
       LoginResponse res = new LoginResponse()
       {
-        LoginOK = true,
+        LoginOK = false,
       };
       return res;
     }

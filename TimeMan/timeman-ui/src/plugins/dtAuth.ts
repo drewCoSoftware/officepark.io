@@ -37,11 +37,42 @@ interface LoginResponse {
 export class dtAuthHandler {
   public State: any;
 
-  Login = (username: string, usertoken: string) : Promise<boolean> => {
+  Login = (username: string, password: string) : Promise<boolean> => {
+
+    // this can serialize form data automatically?
+    // const data = new URLSearchParams();
+    // for (const pair of new FormData(formElement)) {
+    //     data.append(pair[0], pair[1]);
+    // }
+
+    // or this:
+    // new URLSearchParams(new FormData(formElement))
+    
+
+    // const data = {
+    //   username : username,
+    //   password: password
+    // };
+    const data = new FormData();
+    data.append("username", username);
+    data.append("password", password);  
 
     const p = fetch("https://localhost:7001/api/login", {
       credentials: "include",
       method: "post",
+      // headers: {
+      //   "content-type": "multipart/form-data"
+      // },
+      // headers: {
+      //   "content-yype": "application/json"
+      // }, 
+      // headers: {
+      //   "accept": "application/json"
+      // },
+      // headers: {
+      //   "Content-Type": "multipart/form-data"
+      // },
+      body: data
     });
 
     const res = p.then((response) => response.json())
@@ -72,7 +103,6 @@ export class dtAuthHandler {
 
 export class dtAuth {
 
-  //  private authState = reactive(new dtAuthHandler());
   private handler = new dtAuthHandler();
 
   install = (app: App) => {
