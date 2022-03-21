@@ -9,7 +9,7 @@ import Login from "./components/Login.vue"
 
 import { createRouter, createWebHistory } from "vue-router";
 
-import { dtAuth } from "./plugins/dtAuth"
+import { dtAuth } from "./plugins/dtAuth/dtAuth"
 
 // https://www.npmjs.com/package/vue3-cookies
 import VueCookies from 'vue3-cookies'

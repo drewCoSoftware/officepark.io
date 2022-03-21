@@ -111,3 +111,10 @@ export class dtAuth {
   }
 
 }
+
+
+declare module '@vue/runtime-core' {
+  export interface ComponentCustomProperties {
+    $dtAuth: dtAuthHandler
+  }
+}
