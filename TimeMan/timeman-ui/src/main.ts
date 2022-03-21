@@ -51,7 +51,7 @@ const routes = [
 ];
 
 
-const authEndpoint = "https://localhost:7001/api/login"
+const authEndpoint = "https://localhost:7138/api/login"
 const auth = new dtAuth(authEndpoint);
 
 const router = createRouter({

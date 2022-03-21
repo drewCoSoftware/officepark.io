@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeManTester", "TimeManTes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeManServer", "TimeManServer\TimeManServer.csproj", "{B12C5B91-8967-4A89-A561-BA824EE490DC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTypes", "..\Common\CommonTypes\CommonTypes.csproj", "{2D877EA9-9451-49E5-B252-03D805E7CF03}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{B12C5B91-8967-4A89-A561-BA824EE490DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B12C5B91-8967-4A89-A561-BA824EE490DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B12C5B91-8967-4A89-A561-BA824EE490DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D877EA9-9451-49E5-B252-03D805E7CF03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D877EA9-9451-49E5-B252-03D805E7CF03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D877EA9-9451-49E5-B252-03D805E7CF03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D877EA9-9451-49E5-B252-03D805E7CF03}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

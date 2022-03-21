@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using drewCo.Tools;
 using Microsoft.AspNetCore.Mvc;
+using officepark.io.API;
 using TimeManServer.Data;
 using IOFile = System.IO.File;
 
@@ -53,53 +54,54 @@ namespace TimeManServer.ApiControllers
 
   }
 
-  // ============================================================================================================================
-  /// <summary>
-  /// This interface type should be implemented by all return types in the system.
-  /// The goal is to have common data to program against for messages, errors, auth status, etc.
-  /// </summary>
-  public interface IAPIResponse
-  {
-    /// <summary>
-    /// The user's current auth token.  If null, then the user is not currently
-    /// authorized and should login again.
-    /// </summary>
-    string? AuthToken { get; set; }
+  // // ============================================================================================================================
+  // /// <summary>
+  // /// This interface type should be implemented by all return types in the system.
+  // /// The goal is to have common data to program against for messages, errors, auth status, etc.
+  // /// </summary>
+  // public interface IAPIResponse
+  // {
+  //   /// <summary>
+  //   /// The user's current auth token.  If null, then the user is not currently
+  //   /// authorized and should login again.
+  //   /// </summary>
+  //   string? AuthToken { get; set; }
 
-    /// <summary>
-    /// Indicates if the request in question requires authorization.
-    /// </summary>
-    bool AuthRequired { get; set; }
+  //   /// <summary>
+  //   /// Indicates if the request in question requires authorization.
+  //   /// </summary>
+  //   bool AuthRequired { get; set; }
 
-    /// <summary>
-    /// Any old message that we want to send along.
-    /// </summary>
-    /// <value></value>
-    string? Message { get; set; }
-  }
+  //   /// <summary>
+  //   /// Any old message that we want to send along.
+  //   /// </summary>
+  //   /// <value></value>
+  //   string? Message { get; set; }
+  // }
 
-  // ============================================================================================================================
-  public class LoginResponse : BasicResponse
-  {
-    public bool LoginOK { get; set; }
-  }
+  // // ============================================================================================================================
+  // public class BasicResponse : IAPIResponse
+  // {
+  //   public string? AuthToken { get; set; }
+  //   public bool AuthRequired { get; set; } = true;
+  //   public string? Message { get; set; }
+  // }
 
-  // ============================================================================================================================
-  public class BasicResponse : IAPIResponse
-  {
-    public string? AuthToken { get; set; }
-    public bool AuthRequired { get; set; } = true;
-    public string? Message { get; set; }
-  }
+  // // ============================================================================================================================
+  // public class LoginResponse : BasicResponse
+  // {
+  //   public bool LoginOK { get; set; }
+  // }
 
-  // ============================================================================================================================
-  public class LoginModel
-  {
-    public string username { get; set; }
-    public string password { get; set; }
 
-    // public LoginModel() { }
-  }
+  // // ============================================================================================================================
+  // public class LoginModel
+  // {
+  //   public string username { get; set; }
+  //   public string password { get; set; }
+
+  //   // public LoginModel() { }
+  // }
 
 
   // ============================================================================================================================
@@ -123,37 +125,37 @@ namespace TimeManServer.ApiControllers
     }
 
 
-    // -------------------------------------------------------------------------------------------------------------------------- 
-    [HttpPost]
-    [Route("/api/login")]
-//    public LoginResponse Login([FromForm] string username, [FromForm] string password)
-    public LoginResponse Login(LoginModel data)
-    {
-      // Simulate a long time....
-      Console.WriteLine("password is: " + data.password);
-      Console.WriteLine("username is: " + data.username);
+//     // -------------------------------------------------------------------------------------------------------------------------- 
+//     [HttpPost]
+//     [Route("/api/login")]
+// //    public LoginResponse Login([FromForm] string username, [FromForm] string password)
+//     public LoginResponse Login(LoginModel data)
+//     {
+//       // Simulate a long time....
+//       Console.WriteLine("password is: " + data.password);
+//       Console.WriteLine("username is: " + data.username);
 
-      // This is where the creds are checked...
-      LoginResponse res = new LoginResponse()
-      {
-        LoginOK = false,
-      };
-      return res;
-    }
+//       // This is where the creds are checked...
+//       LoginResponse res = new LoginResponse()
+//       {
+//         LoginOK = false,
+//       };
+//       return res;
+//     }
 
-    // -------------------------------------------------------------------------------------------------------------------------- 
-    [HttpGet]
-    [Route("/api/Logout")]
-    public BasicResponse Logout()
-    {
-      // Check cookies.
-      // Check IP.
-      // Log the user out, if they are still in.
-      return new BasicResponse()
-      {
-        Message = "OK"
-      };
-    }
+    // // -------------------------------------------------------------------------------------------------------------------------- 
+    // [HttpGet]
+    // [Route("/api/Logout")]
+    // public BasicResponse Logout()
+    // {
+    //   // Check cookies.
+    //   // Check IP.
+    //   // Log the user out, if they are still in.
+    //   return new BasicResponse()
+    //   {
+    //     Message = "OK"
+    //   };
+    // }
 
     // -------------------------------------------------------------------------------------------------------------------------- 
     /// <summary>
