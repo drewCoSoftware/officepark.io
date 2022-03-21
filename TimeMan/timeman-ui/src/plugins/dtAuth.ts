@@ -1,5 +1,6 @@
 import { App, reactive } from 'vue';
 
+// ==============================================================================================
 class dtAuthState {
   private _IsLoggedIn: boolean = false;
   public get IsLoggedIn(): boolean {
@@ -27,6 +28,7 @@ class dtAuthState {
 
 }
 
+// ==============================================================================================
 interface LoginResponse {
   loginOK: boolean;
   authToken: string;
@@ -34,46 +36,32 @@ interface LoginResponse {
   username: string;
 }
 
+// ==============================================================================================
 export class dtAuthHandler {
   public State: any;
 
-  Login = (username: string, password: string) : Promise<boolean> => {
+  private _endPoint: string;
 
-    // this can serialize form data automatically?
-    // const data = new URLSearchParams();
-    // for (const pair of new FormData(formElement)) {
-    //     data.append(pair[0], pair[1]);
-    // }
+  constructor(endpoint: string) {
+    this._endPoint = endpoint;
+  }
 
-    // or this:
-    // new URLSearchParams(new FormData(formElement))
-    
+  Login = (username: string, password: string): Promise<boolean> => {
 
     const data = {
-      username : username,
+      username: username,
       password: password
     };
-    // const data = new FormData();
-    // data.append("username", username);
-    // data.append("password", password);  
 
-    const p = fetch("https://localhost:7001/api/login", {
+    // NOTE: This block of code could easily be wrapped up into a single function for 
+    // POSTing JSON data via cors/no-cors.
+    const p = fetch(this._endPoint, {
       credentials: "include",
       method: "post",
       mode: "cors",
-
-      // headers: {
-      //   "content-type": "multipart/form-data"
-      // },
       headers: {
         "content-type": "application/json"
-      }, 
-      // headers: {
-      //   "accept": "application/json"
-      // },
-      // headers: {
-      //   "Content-Type": "multipart/form-data"
-      // },
+      },
       body: JSON.stringify(data)
     });
 
@@ -92,7 +80,7 @@ export class dtAuthHandler {
         }
       });
 
-      return res;
+    return res;
   }
 
   Logout = () => {
@@ -103,9 +91,14 @@ export class dtAuthHandler {
 
 }
 
+// ==============================================================================================
 export class dtAuth {
 
-  private handler = new dtAuthHandler();
+  private handler: dtAuthHandler;
+
+  constructor(endpoint: string) {
+    this.handler = new dtAuthHandler(endpoint);
+  }
 
   install = (app: App) => {
     this.handler.State = reactive(new dtAuthState());
