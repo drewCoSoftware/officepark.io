@@ -49,30 +49,32 @@ export class dtAuthHandler {
     // new URLSearchParams(new FormData(formElement))
     
 
-    // const data = {
-    //   username : username,
-    //   password: password
-    // };
-    const data = new FormData();
-    data.append("username", username);
-    data.append("password", password);  
+    const data = {
+      username : username,
+      password: password
+    };
+    // const data = new FormData();
+    // data.append("username", username);
+    // data.append("password", password);  
 
     const p = fetch("https://localhost:7001/api/login", {
       credentials: "include",
       method: "post",
+      mode: "cors",
+
       // headers: {
       //   "content-type": "multipart/form-data"
       // },
-      // headers: {
-      //   "content-yype": "application/json"
-      // }, 
+      headers: {
+        "content-type": "application/json"
+      }, 
       // headers: {
       //   "accept": "application/json"
       // },
       // headers: {
       //   "Content-Type": "multipart/form-data"
       // },
-      body: data
+      body: JSON.stringify(data)
     });
 
     const res = p.then((response) => response.json())

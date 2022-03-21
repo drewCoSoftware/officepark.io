@@ -127,11 +127,11 @@ namespace TimeManServer.ApiControllers
     [HttpPost]
     [Route("/api/login")]
 //    public LoginResponse Login([FromForm] string username, [FromForm] string password)
-    public LoginResponse Login([FromForm]LoginModel data)
+    public LoginResponse Login(LoginModel data)
     {
       // Simulate a long time....
-      // Console.WriteLine("password is: " + data.password);
-      // Console.WriteLine("username is: " + data.username);
+      Console.WriteLine("password is: " + data.password);
+      Console.WriteLine("username is: " + data.username);
 
       // This is where the creds are checked...
       LoginResponse res = new LoginResponse()
