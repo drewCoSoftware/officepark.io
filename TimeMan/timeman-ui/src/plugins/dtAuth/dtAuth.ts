@@ -112,7 +112,8 @@ export class dtAuth {
 
 }
 
-
+// Putting the type declarations here does the trick.. Not sure why the d.ts file in the same folder
+// is being ignored.....
 declare module '@vue/runtime-core' {
   export interface ComponentCustomProperties {
     $dtAuth: dtAuthHandler
