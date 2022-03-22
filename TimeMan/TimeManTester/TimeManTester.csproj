@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="drewCo.Tools" Version="1.0.4" />
+    <PackageReference Include="drewCo.Tools" Version="1.0.8" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TimeManServer\TimeManServer.csproj" />
+    <ProjectReference Include="..\..\Common\DataHelpers\DataHelpers.csproj" />
   </ItemGroup>
 
 </Project>

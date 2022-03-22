@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
+using officepark.io.Data;
 
-namespace TimeManServer.Data
-{
+namespace TimeManServer.Data;
 
   // ============================================================================================================================
   public interface ITimeManDataAccess
@@ -47,34 +47,6 @@ namespace TimeManServer.Data
     void SaveSession(TimeManSession session);
   }
 
-
-  // ============================================================================================================================
-  public interface IHasPrimary
-  {
-    int ID { get; set; }
-  }
-
-  // ============================================================================================================================
-  /// <summary>
-  /// Used to indicate that the member in question has a relationship to some other data type.
-  /// This is like a foreign key in a database.
-  /// </summary>
-  [AttributeUsage(AttributeTargets.Property)]
-  public class Relationship : Attribute
-  {
-  }
-
-  // ============================================================================================================================
-  [AttributeUsage(AttributeTargets.Property)]
-  public class PrimaryKey : Attribute
-  {
-  }
-
-  //// ============================================================================================================================
-  //[AttributeUsage(AttributeTargets.Property)]
-  //public class PrimaryKey : Attribute
-  //{
-  //}
 
   // ============================================================================================================================
   public class TimeManSchema
@@ -134,7 +106,3 @@ namespace TimeManServer.Data
     /// </summary>
     public bool IsBillable { get; set; }
   }
-
-
-
-}

@@ -2,11 +2,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace TimeManServer.Data
-{
+
+namespace officepark.io.Data;
   // ============================================================================================================================
   /// <summary>
-  /// This is meant to mimick a table in a database, however this one is stored
+  /// /// This is meant to mimick a table in a database, however this one is stored
   /// on disk.
   /// </summary>
   public class DataTableFile<T> where T : class, IHasPrimary , new()
@@ -147,5 +147,3 @@ namespace TimeManServer.Data
       return res;
     }
   }
-
-}
