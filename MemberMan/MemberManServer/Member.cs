@@ -1,8 +1,15 @@
 using drewCo.Tools;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Hosting.Internal;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace officepark.io.Membership;
@@ -262,91 +269,6 @@ public class MembershipHelper
 
 
 
-// ============================================================================================================================
-/// <summary>
-/// This is how we talk to the members in the database, or otherwise!
-/// </summary>
-public class MemberAccess
-{
-  // OPTIONS:
-  const int WORK_FACTOR = 15;
-
-  // Cache!  This is something that would be invalidated when a new version of the data file was saved?
-  // We should also have some kind of 'cache provider' so that we can manually invalidate data as needed.
-  private static List<Member> _CachedMembers = null;
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  /// <summary>
-  /// Given the username and password, returns a member, or null if the username or password is incorrect.
-  /// </summary>
-  public static Member CheckLogin(string username, string password)
-  {
-    string hashed = BCrypt.Net.BCrypt.HashPassword(password, WORK_FACTOR);
-
-
-    Member m = GetMemberByName(username);
-    if (m == null)
-    {
-      // Console.WriteLine($"Could not find user: {username}!");
-      return null;
-    }
-
-    if (BCrypt.Net.BCrypt.Verify(password, m.Password))
-    {
-      return m;
-    }
-
-
-    //      if (m.Password == hashed) { return m; }
-    //    Console.WriteLine($"Bad password for user: {username}");
-    return null;
-  }
-
-  // ============================================================================================================================
-  /// <summary>
-  /// Get member ID
-  /// </summary>
-  public static Member? GetMemberByName(string name)
-  {
-    // NOTE: In a perfect world, this would be setup so that we could use a DB, FileSystem, etc.
-
-    List<Member> members = GetMemberList();
-    Member? member = (from x in members
-                     where x.Username == name
-                     select x)
-                     .SingleOrDefault();
-
-    return member;
-  }
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  private static List<Member> GetMemberList()
-  {
-    if (_CachedMembers != null) { return _CachedMembers; }
-
-    string dir = Path.Combine(FileTools.GetAppDir(), "data", "members");
-    string path = Path.Combine(dir, "members.json");
-
-    if (File.Exists(path))
-    {
-      try
-      {
-        string data = File.ReadAllText(path);
-        _CachedMembers = JsonSerializer.Deserialize<List<Member>>(data) ?? new List<Member>();
-        return _CachedMembers;
-      }
-      catch (Exception)
-      {
-        return new List<Member>();
-      }
-    }
-    else
-    {
-      return new List<Member>();
-    }
-  }
-
-}
 
 
 
