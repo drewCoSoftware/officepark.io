@@ -33,7 +33,7 @@ export default class Login extends Vue {
   loginError: boolean = false;
   isLoginOK: boolean = true;
 
-  formMsg = "Invalid username or password.";
+  formMsg = "";
 
   loginUser() {
     this.beginLogin();
