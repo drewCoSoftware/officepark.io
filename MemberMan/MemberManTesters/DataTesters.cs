@@ -2,7 +2,7 @@ using Xunit;
 
 namespace MemberManTesters
 {
-    public class UnitTest1
+    public class DataTesters
     {
         [Fact]
         public void Test1()
