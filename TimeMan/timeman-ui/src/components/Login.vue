@@ -3,7 +3,8 @@
     <h2>Login</h2>
     <div
       class="form login-form"
-      :class="{ active: isLoggingIn, 'has-error': loginError }">
+      :class="{ active: isLoggingIn, 'has-error': loginError }"
+    >
       <p class="form-msg">{{ formMsg }}</p>
       <div>
         <label for="username">username</label>
@@ -30,35 +31,44 @@ export default class Login extends Vue {
 
   isLoggingIn: boolean = false;
   loginError: boolean = false;
-  isLoginOK: boolean = false;
+  isLoginOK: boolean = true;
 
   formMsg = "Invalid username or password.";
 
   loginUser() {
     this.beginLogin();
 
-    this.$dtAuth.Login(this.username, this.password).then((loginOK: boolean) => {
-      if (loginOK) {
-        // We want to set the token and do any redirects
-        // to the appropriate page here......
-        this.isLoginOK = true;
+    this.$dtAuth
+      .Login(this.username, this.password)
+      .then((loginOK: boolean) => {
+        if (loginOK) {
+          // We want to set the token and do any redirects
+          // to the appropriate page here......
+          this.isLoginOK = true;
 
-        let to = this.$route.query["to"]?.toString();
-        if (to == null) {
-          to = "/";
+          let to = this.$route.query["to"]?.toString();
+          if (to == null) {
+            to = "/";
+          }
+          this.$router.push(to);
+        } else {
+          // This is where we can set some stuff on the UI
+          // to indicate that there was a bad name or password.
+          this.formMsg = "Invalid username or password!";
+          this.password = "";
+          this.isLoginOK = false;
+          this.loginError = true;
         }
-        this.$router.push(to);
-      } else {
-        // This is where we can set some stuff on the UI
-        // to indicate that there was a bad name or password.
-        alert("bad name or password!");
-        this.password = "";
-        this.isLoginOK = false;
-      }
-    })
-    .finally(() => {
-      this.endLogin();
-    });
+      })
+      .catch((error) => {
+        this.setError("There was a problem contacting the login server!");
+
+        // rethrow:
+        throw error;
+      })
+      .finally(() => {
+        this.endLogin();
+      });
   }
 
   beginLogin() {
@@ -67,12 +77,26 @@ export default class Login extends Vue {
   endLogin() {
     this.isLoggingIn = false;
   }
+
+  private setError = (msg:string) => {
+    this.isLoginOK = false;
+    this.password = "";
+    this.formMsg = msg;
+    this.loginError = true;
+
+  }
+
+  private clearError()
+  {
+      this.isLoginOK = true;
+      this.formMsg = "";
+  }
 }
 </script>
 
 <style lang="less">
-.login-form{
-  .form-msg { 
+.login-form {
+  .form-msg {
     display: none;
     color: red;
   }
@@ -81,10 +105,9 @@ export default class Login extends Vue {
   border: solid 1px red;
 
   .form-msg {
-    display:block;
+    display: block;
   }
 }
-
 
 .login-form.active {
   background: red;

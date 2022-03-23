@@ -64,8 +64,11 @@ export class dtAuthHandler {
       },
       body: JSON.stringify(data)
     });
-
+    
     const res = p.then((response) => response.json())
+      .catch(error => {
+        throw(error);
+      })
       .then<boolean>((data) => {
         if (data.loginOK) {
           this.State.IsLoggedIn = true;
