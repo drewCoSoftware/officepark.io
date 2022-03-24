@@ -22,7 +22,10 @@ public class Member : IHasPrimary
 {
   public int ID { get; set; }   
   
+  [Unique]
   public string Username { get; set; }
+
+  [Unique]
   public string Email { get; set; }
 
   public DateTimeOffset MemberSince { get; set; }

@@ -165,6 +165,9 @@ public class SchemaDefinition
         def += " PRIMARY KEY";
       }
 
+      // TEMP:
+      if (col.IsUnique) { throw new NotSupportedException("unique columns are not supported!"); }
+
       colDefs.Add(def);
 
       if (col.RelatedTableName != null)
@@ -257,6 +260,8 @@ public class TableDef
         }
       }
 
+      bool isUnique = ReflectionTools.HasAttribute<UniqueAttribute>(p);
+
       var dependent = ReflectionTools.GetAttribute<Relationship>(p);
       if (dependent != null)
       {
@@ -307,6 +312,7 @@ public class TableDef
         relatedDef._Columns.Add(new ColumnDef(colName,
                                    Schema.Flavor.TypeResolver.GetDataTypeName(fkType, false),
                                    false,
+                                   isUnique,
                                    fkTableName,
                                    nameof(IHasPrimary.ID)));
 
@@ -318,6 +324,7 @@ public class TableDef
         _Columns.Add(new ColumnDef(p.Name,
                                    Schema.Flavor.TypeResolver.GetDataTypeName(p.PropertyType, false),
                                    p.Name == nameof(IHasPrimary.ID),
+                                   isUnique,
                                    null,
                                    null));
       }
@@ -377,7 +384,7 @@ public class TableDef
 }
 
 // ============================================================================================================================
-public record ColumnDef(string Name, string DataType, bool IsPrimary, string? RelatedTableName, string? RelatedTableColumn);
+public record ColumnDef(string Name, string DataType, bool IsPrimary, bool IsUnique, string? RelatedTableName, string? RelatedTableColumn);
 
 // ============================================================================================================================
 /// <summary>

@@ -25,6 +25,25 @@ namespace MemberManTesters
         Assert.Equal(EXPECTED, insertQuery);
     }
 
+// --------------------------------------------------------------------------------------------------------------------------
+    /// <summary>
+    /// Shows that the username and email fields must be unique when adding users.
+    /// </summary>
+    [Fact]
+    public void CantDoubleAddUserByNameOrEmail()
+    {
+      const string USER1 = "USER 1";
+      const string USER2 = "USER 2";
+      const string EMAIL1 = "EMAIL2@EMAIL.COM";
+      const string EMAIL2 = "EMAIL2@EMAIL.COM";
+
+      // TODO: Remove the [uniques] from 'Members' and run this test, showing that it doesn't throw.
+      // Re-add the uniques to show that it will throw.
+
+      Assert.True(false);   // Fail on purpose.
+
+    }
+
     // --------------------------------------------------------------------------------------------------------------------------
     [Fact]
     public void CanCreateMember()
