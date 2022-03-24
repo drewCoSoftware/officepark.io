@@ -97,7 +97,7 @@ public class SqliteDataAccess<TSchema>
     // NOTE: Later we can find a way to validate schema versions or whatever....
     var conn = new SqliteConnection(ConnectionString);
     conn.Open();
-    string query = $"select * from sqlite_schema where type = 'table' AND tbl_name=@tableName";
+    string query = $"SELECT * from sqlite_schema where type = 'table' AND tbl_name=@tableName";
 
     var qr = conn.Query(query, new { tableName = tableName });
     bool res = qr.Count() > 0;

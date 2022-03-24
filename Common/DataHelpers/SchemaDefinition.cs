@@ -191,8 +191,9 @@ public class SchemaDefinition
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
   /// NOTE: This should happen when we are building out our defs.
+  /// NOTE: It should also be part of the current sql flavor too!
   /// </summary>
-  private string FormatName(string name)
+  public string FormatName(string name)
   {
     return name.ToLower();
   }
@@ -332,6 +333,47 @@ public class TableDef
     return res;
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  public string GetInsertQuery()
+  {
+    var colNames = new List<string>();
+    var colVals = new List<string>();
+    string? pkName = null;
+
+    foreach (var c in this.Columns)
+    {
+      string colName = Schema.FormatName(c.Name);
+      if (c.IsPrimary)
+      {
+        pkName = colName;
+        continue;
+      }
+
+      // NOTE: This makes no consideration for foreign keys, cols with defaults, etc.
+      // We just throw them all in.
+      colNames.Add(colName);
+      colVals.Add("@" + c.Name);  // NOTE: We are using the same casing as the original datatype for the value parameters!
+    }
+
+    StringBuilder sb = new StringBuilder(0x400);
+    sb.Append($"INSERT INTO {this.Name} (");
+    sb.Append(string.Join(",", colNames));
+
+    sb.Append(") VALUES (");
+    sb.Append(string.Join(",", colVals));
+
+    sb.Append(")");
+
+    // OPTIONS:
+    const bool RETURN_ID = true;
+    if (RETURN_ID && pkName != null)
+    {
+      sb.Append($" RETURNING {pkName}");
+    }
+
+    string res = sb.ToString();
+    return res;
+  }
 }
 
 // ============================================================================================================================

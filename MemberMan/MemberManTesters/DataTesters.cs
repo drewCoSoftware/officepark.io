@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using drewCo.Tools;
+using officepark.io.Data;
 using officepark.io.Membership;
 using Xunit;
 
@@ -8,6 +9,22 @@ namespace MemberManTesters
 {
   public class DataTesters
   {
+    // -------------------------------------------------------------------------------------------------------------------------- 
+    /// <summary>
+    /// Shows that we can automatically create an insert query for a table.
+    /// </summary>
+    [Fact]
+    public void CanCreateInsertQuery()
+    {
+        var schema  = new SchemaDefinition(new SqliteFlavor(), typeof(MemberManSchema));
+        TableDef memberTable = schema.TableDefs[0];
+
+        string insertQuery = memberTable.GetInsertQuery();
+
+        const string EXPECTED = "INSERT INTO Members (username,email,membersince,permissions,password) VALUES (@Username,@Email,@MemberSince,@Permissions,@Password) RETURNING id";
+        Assert.Equal(EXPECTED, insertQuery);
+    }
+
     // --------------------------------------------------------------------------------------------------------------------------
     [Fact]
     public void CanCreateMember()
