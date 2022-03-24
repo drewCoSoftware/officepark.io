@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using drewCo.Tools;
 using officepark.io.Membership;
 using Xunit;
 
@@ -27,7 +29,15 @@ namespace MemberManTesters
     // --------------------------------------------------------------------------------------------------------------------------
     private IMemberAccess GetMemberAccess()
     {
-      var res = new FileSystemMemberAccess();
+      string testDir = Path.Combine(FileTools.GetAppDir(), "TestData");
+      FileTools.CreateDirectory(testDir);
+
+      var res = new SqliteMemberAccess(testDir, "MemberMan"); //   FileSystemMemberAccess();
+      if (!File.Exists(res.DBFilePath))
+      {
+        res.SetupDatabase();
+      }
+
       return res;
     }
   }

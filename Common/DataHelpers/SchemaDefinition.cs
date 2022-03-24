@@ -2,6 +2,7 @@
 using System.Text;
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 
 namespace officepark.io.Data;
 
@@ -47,6 +48,7 @@ public class SchemaDefinition
     foreach (var prop in props)
     {
       if (!prop.CanWrite) { continue; }
+
       var useType = prop.PropertyType;
       if (ReflectionTools.HasInterface<IList>(useType))
       {
@@ -243,6 +245,16 @@ public class TableDef
     foreach (var p in ReflectionTools.GetProperties(DataType))
     {
       if (!p.CanWrite) { continue; }
+
+      // OPTIONS:
+      const bool USE_JSON_IGNORE = true;
+      if (USE_JSON_IGNORE)
+      {
+        if (ReflectionTools.HasAttribute<JsonIgnoreAttribute>(p))
+        {
+          continue;
+        }
+      }
 
       var dependent = ReflectionTools.GetAttribute<Relationship>(p);
       if (dependent != null)

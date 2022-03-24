@@ -5,27 +5,15 @@ using officepark.io.Data;
 namespace officepark.io.Membership;
 
 // ==========================================================================  
-public class SqliteMemberAccess : IMemberAccess
+public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAccess
 {
 
-  // NOTE: This is very similar, or if not the same as SqliteTimeManAccess.  Maybe
-  // we can create a base class or something at some point.
-  private string DBFilePath = null;
-  private string DataDirectory = null;
-  private string ConnectionString;
 
 
   // --------------------------------------------------------------------------------------------------------------------------
   public SqliteMemberAccess(string dataDir, string dbFileName)
-  {
-    DataDirectory = dataDir;
-    DBFilePath = Path.Combine(DataDirectory, $"{dbFileName}.sqlite");
-    ConnectionString = $"Data Source={DBFilePath};Mode=ReadWriteCreate";
-
-    SqlMapper.RemoveTypeMap(typeof(DateTimeOffset));
-    SqlMapper.AddTypeHandler<DateTimeOffset>(new DateTimeOffsetHandler());
-  }
-
+    : base(dataDir, dbFileName)
+  { }
 
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? CheckLogin(string username, string password)
