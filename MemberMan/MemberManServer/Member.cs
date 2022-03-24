@@ -110,12 +110,11 @@ public class MembershipHelper
 
   private static Dictionary<string, Member> LoggedInMembers = new Dictionary<string, Member>();
 
-
   // --------------------------------------------------------------------------------------------------------------------------
   public static bool IsLoginActive(string cookieVal, string ip)
   {
     string token = GetLoginToken(cookieVal, ip);
-    return LoggedInMembers.TryGetValue(token, out Member m);
+    return LoggedInMembers.TryGetValue(token, out Member? m);
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
