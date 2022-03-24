@@ -1,3 +1,4 @@
+using System;
 using officepark.io.Membership;
 using Xunit;
 
@@ -9,7 +10,7 @@ namespace MemberManTesters
     [Fact]
     public void CanCreateMember()
     {
-      IMemberAccess dal = new FileSystemMemberAccess();
+      IMemberAccess dal = GetMemberAccess();
 
       const string TEST_USER = nameof(CanCreateMember) + "_MEMBER";
       const string TEST_PASS = "123";
@@ -17,10 +18,17 @@ namespace MemberManTesters
       Member src = dal.CreateMember(TEST_USER, TEST_PASS);
       Assert.NotNull(src);
 
-      Member comp = dal.GetMemberByName(TEST_USER);
+      Member comp = dal.GetMemberByName(TEST_USER)!;
       Assert.NotNull(comp);
 
       Assert.Equal(src.MemberSince, comp.MemberSince);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    private IMemberAccess GetMemberAccess()
+    {
+      var res = new FileSystemMemberAccess();
+      return res;
     }
   }
 }

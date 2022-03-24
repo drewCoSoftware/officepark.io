@@ -10,9 +10,12 @@
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="drewCo.Tools" Version="1.0.8" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    <PackageReference Include="Dapper" Version="2.0.123" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.1" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Common\DataHelpers\DataHelpers.csproj" />
     <ProjectReference Include="..\..\Common\CommonTypes\CommonTypes.csproj" />
   </ItemGroup>
 

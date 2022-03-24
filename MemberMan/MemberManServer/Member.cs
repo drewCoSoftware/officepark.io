@@ -11,14 +11,17 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Web;
+using officepark.io.Data;
 
 namespace officepark.io.Membership;
 
 
 
 // ============================================================================================================================
-public class Member
+public class Member : IHasPrimary
 {
+  public int ID { get; set; }   
+  
   public string Username { get; set; }
   public string Email { get; set; }
 
