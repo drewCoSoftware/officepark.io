@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using drewCo.Tools;
+using Microsoft.Data.Sqlite;
 using officepark.io.Data;
 using officepark.io.Membership;
 using Xunit;
@@ -34,14 +35,26 @@ namespace MemberManTesters
     {
       const string USER1 = "USER 1";
       const string USER2 = "USER 2";
-      const string EMAIL1 = "EMAIL2@EMAIL.COM";
+      const string EMAIL1 = "EMAIL1@EMAIL.COM";
       const string EMAIL2 = "EMAIL2@EMAIL.COM";
 
-      // TODO: Remove the [uniques] from 'Members' and run this test, showing that it doesn't throw.
-      // Re-add the uniques to show that it will throw.
+      CleanupTestUser(USER1);
+      CleanupTestUser(USER2);
 
-      Assert.True(false);   // Fail on purpose.Í
+      IMemberAccess dal = GetMemberAccess();
+      dal.CreateMember(USER1, EMAIL1, "abc");
+      Assert.Throws<SqliteException>(() => {
+        dal.CreateMember(USER1, EMAIL1, "abc");
+      });
 
+      // This email address has already been used!
+      Assert.Throws<SqliteException>(() => {
+        dal.CreateMember(USER2, EMAIL1, "abc");
+      });
+
+      // New user + email combination will be OK!
+      Member m = dal.CreateMember(USER2, EMAIL2, "abc");
+      Assert.NotEqual(0, m.ID);
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
@@ -52,7 +65,7 @@ namespace MemberManTesters
 
       const string TEST_USER = nameof(CanCreateMember) + "_MEMBER";
       CleanupTestUser(TEST_USER);
-      
+
       const string TEST_PASS = "123";
       const string TEST_EMAIL = "abc@123.com";
 
