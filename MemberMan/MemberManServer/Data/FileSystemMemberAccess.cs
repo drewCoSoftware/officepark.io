@@ -19,7 +19,7 @@ public class FileSystemMemberAccess : IMemberAccess
   private object FSLock = new object();
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public Member CreateMember(string username, string password)
+  public Member CreateMember(string username, string email, string password)
   {
     // Check for existing user....
     // Explode if one exists...
@@ -47,6 +47,12 @@ public class FileSystemMemberAccess : IMemberAccess
     }
 
     return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------  
+  public void RemoveMember(string username)
+  {
+    throw new NotImplementedException();
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

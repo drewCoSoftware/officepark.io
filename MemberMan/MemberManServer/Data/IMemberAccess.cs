@@ -18,10 +18,11 @@ public interface IMemberAccess
     return hashed;
   }
 
-  Member? GetMemberByName(string name);
+  Member? GetMemberByName(string username);
   List<Member> GetMemberList();
 
-  Member CreateMember(string username, string password);
+  Member CreateMember(string username, string email, string password);
+  void RemoveMember(string username);
 
   /// <summary>
   /// A function to verify that the given password matches the matching password.

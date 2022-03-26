@@ -22,20 +22,44 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public Member CreateMember(string username, string password)
-  { 
-      throw new NotImplementedException();
-      string query = "insert into members (username, email, membersince, permissions, password) VALUES (%) RETURNING id";
-//       var conn = new SqliteConnection(ConnectionString);
-//       conn.Open();
-// //string query = $"insert into "
-//       conn.Close();
+  public Member CreateMember(string username, string email, string password)
+  {
+
+    string query = "INSERT INTO Members (username,email,membersince,permissions,password) VALUES (@Username,@Email,@MemberSince,@Permissions,@Password) RETURNING id";
+
+    IMemberAccess t = this;
+    string usePassword = t.GetPasswordHash(password);
+    var m = new Member()
+    {
+      Username = username,
+      Password = usePassword,
+      Email = email,
+      MemberSince = DateTimeOffset.UtcNow,
+      Permissions = "BASIC"
+    };
+    int id = RunSingleQuery<int>(query, m);
+
+    m.ID = id;
+    return m;
+    //      string query = "insert into members (username, email, membersince, permissions, password) VALUES (%) RETURNING id";
+    //       var conn = new SqliteConnection(ConnectionString);
+    //       conn.Open();
+    // //string query = $"insert into "
+    //       conn.Close();
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public Member? GetMemberByName(string name)
+  public void RemoveMember(string username)
   {
-    throw new NotImplementedException();
+      string query = "DELETE FROM members WHERE username = @username";
+      RunExecute(query, new { @username = username });
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public Member? GetMemberByName(string username)
+  {
+      Member? res = RunSingleQuery<Member>("SELECT * FROM members WHERE username = @username", new { username = username });
+      return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

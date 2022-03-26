@@ -166,7 +166,10 @@ public class SchemaDefinition
       }
 
       // TEMP:
-      if (col.IsUnique) { throw new NotSupportedException("unique columns are not supported!"); }
+      if (col.IsUnique)
+      {
+        def += " UNIQUE";
+      }
 
       colDefs.Add(def);
 

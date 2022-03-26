@@ -16,16 +16,16 @@ namespace MemberManTesters
     [Fact]
     public void CanCreateInsertQuery()
     {
-        var schema  = new SchemaDefinition(new SqliteFlavor(), typeof(MemberManSchema));
-        TableDef memberTable = schema.TableDefs[0];
+      var schema = new SchemaDefinition(new SqliteFlavor(), typeof(MemberManSchema));
+      TableDef memberTable = schema.TableDefs[0];
 
-        string insertQuery = memberTable.GetInsertQuery();
+      string insertQuery = memberTable.GetInsertQuery();
 
-        const string EXPECTED = "INSERT INTO Members (username,email,membersince,permissions,password) VALUES (@Username,@Email,@MemberSince,@Permissions,@Password) RETURNING id";
-        Assert.Equal(EXPECTED, insertQuery);
+      const string EXPECTED = "INSERT INTO Members (username,email,membersince,permissions,password) VALUES (@Username,@Email,@MemberSince,@Permissions,@Password) RETURNING id";
+      Assert.Equal(EXPECTED, insertQuery);
     }
 
-// --------------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------------
     /// <summary>
     /// Shows that the username and email fields must be unique when adding users.
     /// </summary>
@@ -40,7 +40,7 @@ namespace MemberManTesters
       // TODO: Remove the [uniques] from 'Members' and run this test, showing that it doesn't throw.
       // Re-add the uniques to show that it will throw.
 
-      Assert.True(false);   // Fail on purpose.
+      Assert.True(false);   // Fail on purpose.Í
 
     }
 
@@ -51,9 +51,12 @@ namespace MemberManTesters
       IMemberAccess dal = GetMemberAccess();
 
       const string TEST_USER = nameof(CanCreateMember) + "_MEMBER";
+      CleanupTestUser(TEST_USER);
+      
       const string TEST_PASS = "123";
+      const string TEST_EMAIL = "abc@123.com";
 
-      Member src = dal.CreateMember(TEST_USER, TEST_PASS);
+      Member src = dal.CreateMember(TEST_USER, TEST_EMAIL, TEST_PASS);
       Assert.NotNull(src);
 
       Member comp = dal.GetMemberByName(TEST_USER)!;
@@ -63,11 +66,19 @@ namespace MemberManTesters
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
+    private void CleanupTestUser(string username)
+    {
+      IMemberAccess dal = GetMemberAccess();
+      dal.RemoveMember(username);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
     private IMemberAccess GetMemberAccess()
     {
       string testDir = Path.Combine(FileTools.GetAppDir(), "TestData");
       FileTools.CreateDirectory(testDir);
 
+      // NOTE: We have nothing in here for username/password, and we really should for security purposes.
       var res = new SqliteMemberAccess(testDir, "MemberMan"); //   FileSystemMemberAccess();
       if (!File.Exists(res.DBFilePath))
       {

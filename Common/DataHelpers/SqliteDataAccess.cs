@@ -155,6 +155,19 @@ public class SqliteDataAccess<TSchema>
     return res;
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// Run a query where a single, or no result is expected.
+  /// </summary>
+  /// <remarks>
+  /// If the query returns more than one result, and exception will be thrown.
+  /// </remarks>
+  protected T? RunSingleQuery<T>(string query, object parameters)
+  {
+      IEnumerable<T> qr = RunQuery<T>(query, parameters);
+      T? res = qr.SingleOrDefault();
+      return res;
+  }
 
   // --------------------------------------------------------------------------------------------------------------------------
   protected void RunExecute(string query, object qParams)
