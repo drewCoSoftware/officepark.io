@@ -20,15 +20,22 @@ namespace officepark.io.Membership;
 // ============================================================================================================================
 public class Member : IHasPrimary
 {
-  public int ID { get; set; }   
-  
+  public int ID { get; set; }
+
   [Unique]
   public string Username { get; set; }
 
   [Unique]
   public string Email { get; set; }
 
-  public DateTimeOffset MemberSince { get; set; }
+  public DateTimeOffset CreatedOn { get; set; } = DateTime.MinValue;
+
+  public DateTimeOffset VerifiedOn { get; set; } = DateTime.MinValue;
+  public bool IsVerified { get { return VerifiedOn != DateTime.MinValue && VerifiedOn > CreatedOn; } }
+
+  // TODO:
+  // Indicates that the user should be prompted to change their password on the next login.
+  // public bool ResetPassword { get; set; } = true;
 
   /// <summary>
   /// Comma delimited list of permissions, to be interpreted by the application.

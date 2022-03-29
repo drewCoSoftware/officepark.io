@@ -1,8 +1,20 @@
 using System.Text.RegularExpressions;
+using drewCo.Tools;
+using officepark.io.Membership;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+// ENV:
+const string DATA_DIR = "data";
+const string DB_FILE = "member-man.sqlite";
+var memberAccess = new SqliteMemberAccess(DATA_DIR, DB_FILE);
+if (!File.Exists(memberAccess.DBFilePath))
+{
+  memberAccess.SetupDatabase();
+}
+
+builder.Services.AddSingleton<IMemberAccess>(memberAccess);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

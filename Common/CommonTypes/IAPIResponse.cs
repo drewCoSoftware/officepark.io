@@ -23,6 +23,12 @@
     /// </summary>
     /// <value></value>
     string? Message { get; set; }
+
+    /// <summary>
+    /// Extra response code, if any to indicate the result of the operation.
+    /// A repsonse code of zero indicates that everything is OK.
+    /// </summary>
+    int ResponseCode { get; set; }
   }
 
   // ============================================================================================================================
@@ -31,4 +37,5 @@
     public string? AuthToken { get; set; }
     public bool AuthRequired { get; set; } = true;
     public string? Message { get; set; }
+    public int ResponseCode { get; set; } = 0;  
   }

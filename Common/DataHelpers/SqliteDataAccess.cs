@@ -164,25 +164,26 @@ public class SqliteDataAccess<TSchema>
   /// </remarks>
   protected T? RunSingleQuery<T>(string query, object parameters)
   {
-      IEnumerable<T> qr = RunQuery<T>(query, parameters);
-      T? res = qr.SingleOrDefault();
-      return res;
+    IEnumerable<T> qr = RunQuery<T>(query, parameters);
+    T? res = qr.SingleOrDefault();
+    return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  protected void RunExecute(string query, object qParams)
+  protected int RunExecute(string query, object qParams)
   {
     using (var conn = new SqliteConnection(ConnectionString))
     {
       conn.Open();
-      RunExecute(conn, query, qParams);
+      return RunExecute(conn, query, qParams);
     }
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  protected void RunExecute(SqliteConnection conn, string query, object qParams)
+  protected int RunExecute(SqliteConnection conn, string query, object qParams)
   {
-    conn.Execute(query, qParams);
+    int res = conn.Execute(query, qParams);
+    return res;
   }
 
 }

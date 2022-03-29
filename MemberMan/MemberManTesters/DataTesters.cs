@@ -11,6 +11,30 @@ namespace MemberManTesters
   public class DataTesters
   {
     // -------------------------------------------------------------------------------------------------------------------------- 
+    [Fact]
+    public void CanCheckUsernameAvailability()
+    {
+      const string TEST_USER = "DavidDavis";
+      const string TEST_EMAIL = "dave@davis.com";
+      CleanupTestUser(TEST_USER);
+
+      var dal = GetMemberAccess();
+      {
+        MemberAvailability exists = dal.CheckAvailability(TEST_USER, TEST_EMAIL);
+        Assert.True(exists.IsUsernameAvailable && exists.IsEmailAvailable);
+      }
+
+      // Create a new user with name / email.
+      dal.CreateMember(TEST_USER, TEST_EMAIL, "abc");
+      {
+        MemberAvailability exists = dal.CheckAvailability(TEST_USER, TEST_EMAIL);
+        Assert.False(exists.IsUsernameAvailable);
+        Assert.False(exists.IsEmailAvailable);
+      }
+
+    }
+
+    // -------------------------------------------------------------------------------------------------------------------------- 
     /// <summary>
     /// Shows that we can automatically create an insert query for a table.
     /// </summary>
@@ -22,7 +46,7 @@ namespace MemberManTesters
 
       string insertQuery = memberTable.GetInsertQuery();
 
-      const string EXPECTED = "INSERT INTO Members (username,email,membersince,permissions,password) VALUES (@Username,@Email,@MemberSince,@Permissions,@Password) RETURNING id";
+      const string EXPECTED = "INSERT INTO Members (username,email,createdon,verifiedon,permissions,password) VALUES (@Username,@Email,@CreatedOn,@VerifiedOn,@Permissions,@Password) RETURNING id";
       Assert.Equal(EXPECTED, insertQuery);
     }
 
@@ -43,12 +67,14 @@ namespace MemberManTesters
 
       IMemberAccess dal = GetMemberAccess();
       dal.CreateMember(USER1, EMAIL1, "abc");
-      Assert.Throws<SqliteException>(() => {
+      Assert.Throws<SqliteException>(() =>
+      {
         dal.CreateMember(USER1, EMAIL1, "abc");
       });
 
       // This email address has already been used!
-      Assert.Throws<SqliteException>(() => {
+      Assert.Throws<SqliteException>(() =>
+      {
         dal.CreateMember(USER2, EMAIL1, "abc");
       });
 
@@ -75,7 +101,8 @@ namespace MemberManTesters
       Member comp = dal.GetMemberByName(TEST_USER)!;
       Assert.NotNull(comp);
 
-      Assert.Equal(src.MemberSince, comp.MemberSince);
+      Assert.Equal(src.CreatedOn, comp.CreatedOn);
+      Assert.False(comp.IsVerified);
     }
 
     // --------------------------------------------------------------------------------------------------------------------------

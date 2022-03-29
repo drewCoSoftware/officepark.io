@@ -1,10 +1,18 @@
 
 namespace officepark.io.Membership;
 
+// ==========================================================================
+public record MemberAvailability(bool IsUsernameAvailable, bool IsEmailAvailable);
 
 // ==========================================================================
 public interface IMemberAccess
 {
+  
+  MemberAvailability CheckAvailability(string username, string email);
+
+  /// <summary>
+  /// Check a user's login credentials.
+  /// </summary>
   Member? CheckLogin(string username, string password);
 
   // --------------------------------------------------------------------------------------------------------------------------

@@ -25,7 +25,7 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   public Member CreateMember(string username, string email, string password)
   {
 
-    string query = "INSERT INTO Members (username,email,membersince,permissions,password) VALUES (@Username,@Email,@MemberSince,@Permissions,@Password) RETURNING id";
+    string query = "INSERT INTO Members (username,email,createdon,verifiedon,permissions,password) VALUES (@Username,@Email,@CreatedOn,@VerifiedOn,@Permissions,@Password) RETURNING id";
 
     IMemberAccess t = this;
     string usePassword = t.GetPasswordHash(password);
@@ -34,38 +34,48 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
       Username = username,
       Password = usePassword,
       Email = email,
-      MemberSince = DateTimeOffset.UtcNow,
+      CreatedOn = DateTimeOffset.UtcNow,
+      VerifiedOn = DateTime.MinValue,
       Permissions = "BASIC"
     };
     int id = RunSingleQuery<int>(query, m);
 
     m.ID = id;
     return m;
-    //      string query = "insert into members (username, email, membersince, permissions, password) VALUES (%) RETURNING id";
-    //       var conn = new SqliteConnection(ConnectionString);
-    //       conn.Open();
-    // //string query = $"insert into "
-    //       conn.Close();
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
   public void RemoveMember(string username)
   {
-      string query = "DELETE FROM members WHERE username = @username";
-      RunExecute(query, new { @username = username });
+    string query = "DELETE FROM members WHERE username = @username";
+    int removed = RunExecute(query, new { @username = username });
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMemberByName(string username)
   {
-      Member? res = RunSingleQuery<Member>("SELECT * FROM members WHERE username = @username", new { username = username });
-      return res;
+    Member? res = RunSingleQuery<Member>("SELECT * FROM members WHERE username = @username", new { username = username });
+    return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
   public List<Member> GetMemberList()
   {
     throw new NotImplementedException();
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public MemberAvailability CheckAvailability(string username, string email)
+  {
+    var byName = "SELECT username FROM members WHERE username = @username";
+    var byNameRes = RunQuery<Member>(byName, new { username = username });
+
+    var byEmail = "SELECT email FROM members WHERE email = @email";
+    var byEmailRes = RunQuery<Member>(byEmail, new { email = email });
+
+    var res = new MemberAvailability(byNameRes.Count() == 0, byEmailRes.Count() == 0);
+    return res;
+
   }
 }
 

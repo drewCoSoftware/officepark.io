@@ -34,7 +34,8 @@ public class FileSystemMemberAccess : IMemberAccess
     {
       Username = username,
       Password = t.GetPasswordHash(password),
-      MemberSince = DateTimeOffset.UtcNow,
+      CreatedOn = DateTimeOffset.UtcNow,
+      VerifiedOn = DateTimeOffset.MinValue,
     };
 
     // Let's save it to disk!
@@ -154,4 +155,8 @@ public class FileSystemMemberAccess : IMemberAccess
     }
   }
 
+  public MemberAvailability CheckAvailability(string username, string email)
+  {
+    throw new NotImplementedException();
+  }
 }
