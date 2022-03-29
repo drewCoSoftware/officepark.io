@@ -10,6 +10,10 @@
         <label for="username">username</label>
         <input v-model="username" type="text" />
       </div>
+      <!-- <div>
+        <label for="email">email</label>
+        <input v-model="email" type="email" />
+      </div> -->
       <div>
         <label for="password">password</label>
         <input v-model="password" type="password" />

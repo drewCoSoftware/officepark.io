@@ -32,9 +32,11 @@ public class LoginController
 {
   // --------------------------------------------------------------------------------------------------------------------------
   private IMemberAccess _DAL = null;
-  public LoginController(IMemberAccess dal_)
+  private IEmailService _Email = null;
+  public LoginController(IMemberAccess dal_, IEmailService email_)
   {
     _DAL = dal_;
+    _Email = email_;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -67,12 +69,13 @@ public class LoginController
         Message = string.Join('\n', msgs)
       };
     }
+    
+    throw new InvalidOperationException();
 
     Member m = _DAL.CreateMember(login.username, login.email, login.password);
 
     // This is where we will send out the verification, etc. emails.
 
-    throw new InvalidOperationException();
 
     return new BasicResponse()
     {

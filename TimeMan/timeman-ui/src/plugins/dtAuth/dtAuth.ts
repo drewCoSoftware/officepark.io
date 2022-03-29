@@ -37,13 +37,57 @@ interface LoginResponse {
 }
 
 // ==============================================================================================
+export interface SignupResponse {
+  availability: MemberAvailability;
+  message: string;
+}
+
+// ==============================================================================================
+export interface MemberAvailability {
+  isUsernameAvailable: boolean;
+  isEmailAvailable: boolean;
+}
+
+
+// ==============================================================================================
 export class dtAuthHandler {
   public State: any;
 
-  private _endPoint: string;
+  private _loginEndPoint: string;
+  private _signupEndpoint: string;
 
-  constructor(endpoint: string) {
-    this._endPoint = endpoint;
+  constructor(loginEndpoint: string, signupEndpoint: string) {
+    this._loginEndPoint = loginEndpoint;
+    this._signupEndpoint = signupEndpoint;
+  }
+
+  Signup = (username: string, email: string, password: string): Promise<SignupResponse> => {
+    const data = {
+      username: username,
+      email: email,
+      password: password
+    };
+
+    const p = fetch(this._signupEndpoint,
+      {
+        credentials: "include",
+        method: "post",
+        mode: "cors",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+
+    const res = p.then((response) => response.json())
+      .catch(error => {
+        throw (error);
+      })
+      .then<SignupResponse>((data: SignupResponse) => {
+        return data;
+      });
+
+    return res;
   }
 
   Login = (username: string, password: string): Promise<boolean> => {
@@ -55,7 +99,7 @@ export class dtAuthHandler {
 
     // NOTE: This block of code could easily be wrapped up into a single function for 
     // POSTing JSON data via cors/no-cors.
-    const p = fetch(this._endPoint, {
+    const p = fetch(this._loginEndPoint, {
       credentials: "include",
       method: "post",
       mode: "cors",
@@ -64,10 +108,10 @@ export class dtAuthHandler {
       },
       body: JSON.stringify(data)
     });
-    
+
     const res = p.then((response) => response.json())
       .catch(error => {
-        throw(error);
+        throw (error);
       })
       .then<boolean>((data) => {
         if (data.loginOK) {
@@ -99,8 +143,8 @@ export class dtAuth {
 
   private handler: dtAuthHandler;
 
-  constructor(endpoint: string) {
-    this.handler = new dtAuthHandler(endpoint);
+  constructor(loginEndpoint: string, signupEndpoint: string) {
+    this.handler = new dtAuthHandler(loginEndpoint, signupEndpoint);
   }
 
   install = (app: App) => {

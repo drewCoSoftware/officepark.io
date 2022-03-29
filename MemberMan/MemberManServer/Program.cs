@@ -7,14 +7,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // ENV:
 const string DATA_DIR = "data";
-const string DB_FILE = "member-man.sqlite";
-var memberAccess = new SqliteMemberAccess(DATA_DIR, DB_FILE);
+const string DB_FILE = "member-man";
+var memberAccess = new SqliteMemberAccess(Path.Combine(FileTools.GetAppDir(), DATA_DIR), DB_FILE);
 if (!File.Exists(memberAccess.DBFilePath))
 {
   memberAccess.SetupDatabase();
 }
 
 builder.Services.AddSingleton<IMemberAccess>(memberAccess);
+builder.Services.AddSingleton<IEmailService>(new EmailService());
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -36,8 +37,8 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+  app.UseSwagger();
+  app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

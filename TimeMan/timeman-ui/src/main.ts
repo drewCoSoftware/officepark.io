@@ -6,6 +6,7 @@ import About from "./components/About.vue"
 import Sessions from "./components/Sessions.vue"
 import NotFound from "./components/NotFound.vue"
 import Login from "./components/Login.vue"
+import Signup from "./components/Signup.vue"
 
 import { createRouter, createWebHistory } from "vue-router";
 
@@ -44,6 +45,11 @@ const routes = [
     component: Login,
   },
   {
+    path: "/signup",
+    name: "Signup",
+    component: Signup,
+  },
+  {
     path: "/:notfound(.*)",
     name: "NotFound",
     component: NotFound,
@@ -52,7 +58,8 @@ const routes = [
 
 
 const authEndpoint = "https://localhost:7138/api/login"
-const auth = new dtAuth(authEndpoint);
+const signupEndpoint = "https://localhost:7138/api/signup"
+const auth = new dtAuth(authEndpoint, signupEndpoint);
 
 const router = createRouter({
   history: createWebHistory(),
