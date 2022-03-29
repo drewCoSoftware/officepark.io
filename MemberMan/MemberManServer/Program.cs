@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ENV:
 const string DATA_DIR = "data";
 const string DB_FILE = "member-man";
-var memberAccess = new SqliteMemberAccess(Path.Combine(FileTools.GetAppDir(), DATA_DIR), DB_FILE);
+var memberAccess = new SqliteMemberAccess(DATA_DIR, DB_FILE);
 if (!File.Exists(memberAccess.DBFilePath))
 {
   memberAccess.SetupDatabase();

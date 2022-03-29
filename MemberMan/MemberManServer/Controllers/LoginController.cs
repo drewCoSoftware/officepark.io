@@ -28,7 +28,7 @@ public class SignupResponse : BasicResponse
 // ============================================================================================================================
 [ApiController]
 [Route("[controller]")]
-public class LoginController
+public class LoginController : ControllerBase
 {
   // --------------------------------------------------------------------------------------------------------------------------
   private IMemberAccess _DAL = null;
@@ -48,7 +48,7 @@ public class LoginController
   [HttpPost]
   [Route("/api/signup")]
   public IAPIResponse Signup(LoginModel login)
-  {
+  {    
     MemberAvailability availability = _DAL.CheckAvailability(login.username, login.email);
     bool isAvailable = availability.IsUsernameAvailable && availability.IsEmailAvailable;
     if (!isAvailable)
@@ -69,7 +69,7 @@ public class LoginController
         Message = string.Join('\n', msgs)
       };
     }
-    
+
     throw new InvalidOperationException();
 
     Member m = _DAL.CreateMember(login.username, login.email, login.password);
