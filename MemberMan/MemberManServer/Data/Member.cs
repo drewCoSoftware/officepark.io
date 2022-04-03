@@ -23,15 +23,24 @@ public class Member : IHasPrimary
   public int ID { get; set; }
 
   [Unique]
-  public string Username { get; set; }
+  public string Username { get; set; } = string.Empty;
 
   [Unique]
-  public string Email { get; set; }
+  public string Email { get; set; } = string.Empty;
 
   public DateTimeOffset CreatedOn { get; set; } = DateTime.MinValue;
 
-  public DateTimeOffset VerifiedOn { get; set; } = DateTime.MinValue;
-  public bool IsVerified { get { return VerifiedOn != DateTime.MinValue && VerifiedOn > CreatedOn; } }
+  [Unique]
+  [IsNullable]
+  public string? VerificationCode { get; set; } = null;
+
+  [IsNullable]
+  public DateTimeOffset? VerificationExpiration { get; set; } = null;
+
+  [IsNullable]
+  public DateTimeOffset? VerifiedOn { get; set; } = null;
+
+  public bool IsVerified { get { return VerifiedOn != null && VerifiedOn > CreatedOn; } }
 
   // TODO:
   // Indicates that the user should be prompted to change their password on the next login.
@@ -40,7 +49,7 @@ public class Member : IHasPrimary
   /// <summary>
   /// Comma delimited list of permissions, to be interpreted by the application.
   /// </summary>
-  public string Permissions { get; set; }
+  public string Permissions { get; set; } 
 
   /// <summary>
   /// The hashed password.

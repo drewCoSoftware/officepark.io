@@ -11,6 +11,8 @@ public class EmailSendResult
 public class Email
 {
   // CONTENT TBD.
+  public string Body { get; set; } = string.Empty;
+  public bool IsHtml { get; set; } = false;
 }
 
 // ==========================================================================      

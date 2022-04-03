@@ -13,17 +13,9 @@ public class SqliteFlavor : ISqlFlavor
 // ============================================================================================================================
 public class SqliteDataTypeResolver : IDataTypeResolver
 {
-  public string GetDataTypeName(Type t, bool forceNull)
+  public string GetDataTypeName(Type t)
   {
     string res = "";
-
-    bool isNull = false;
-    if (ReflectionTools.IsNullable(t))
-    {
-      isNull = true;
-      t = t.GetGenericArguments()[0];
-    }
-    isNull = isNull | forceNull;
 
     if (t == typeof(Int32) || t == typeof(Int64))
     {
@@ -37,7 +29,8 @@ public class SqliteDataTypeResolver : IDataTypeResolver
     {
       res = "TEXT";
     }
-    else if (t == typeof(DateTimeOffset))
+    else if (t == typeof(DateTimeOffset) ||
+             t == typeof(DateTimeOffset?))
     {
       // Sqlite is too stupid to have the concept of date and time, so it punts and tries to make it something else.
       // TEXT as ISO8601 strings("YYYY-MM-DD HH:MM:SS.SSS")
@@ -52,8 +45,6 @@ public class SqliteDataTypeResolver : IDataTypeResolver
     {
       throw new NotSupportedException($"The data type {t} is not supported!");
     }
-
-    if (!isNull) { res += " NOT NULL"; }
 
     return res;
   }

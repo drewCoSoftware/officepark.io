@@ -1,4 +1,5 @@
 
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using officepark.io.API;
 using officepark.io.Membership;
@@ -14,9 +15,9 @@ public class LoginResponse : BasicResponse
 // ============================================================================================================================
 public class LoginModel
 {
-  public string? username { get; set; }
-  public string? email { get; set; }
-  public string? password { get; set; }
+  public string username { get; set; } = string.Empty;
+  public string email { get; set; } = string.Empty;
+  public string password { get; set; } = string.Empty;
 }
 
 // ==========================================================================
@@ -47,8 +48,8 @@ public class LoginController : ControllerBase
   /// </summary>
   [HttpPost]
   [Route("/api/signup")]
-  public IAPIResponse Signup(LoginModel login)
-  {    
+  public SignupResponse Signup(LoginModel login)
+  {
     MemberAvailability availability = _DAL.CheckAvailability(login.username, login.email);
     bool isAvailable = availability.IsUsernameAvailable && availability.IsEmailAvailable;
     if (!isAvailable)
@@ -70,14 +71,14 @@ public class LoginController : ControllerBase
       };
     }
 
-    throw new InvalidOperationException();
-
     Member m = _DAL.CreateMember(login.username, login.email, login.password);
 
     // This is where we will send out the verification, etc. emails.
+    Email email = CreateVerificationEmail(m);
+    this._Email.SendEmail(email);
 
 
-    return new BasicResponse()
+    return new SignupResponse()
     {
       AuthRequired = false,
       Message = "Signup OK!"
@@ -85,6 +86,53 @@ public class LoginController : ControllerBase
 
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  private Email CreateVerificationEmail(Member m)
+  {
+    var sb = new StringBuilder();
+
+    const string DOMAIN = "";
+    sb.Append($"<p>Your verification code is: <a class=\"verify-link\" href=\"/{DOMAIN}/api/verifyuser?code={m.VerificationCode}\">Click Here to Verify your Account</a></p>");
+    var res = new Email()
+    {
+      Body = sb.ToString()
+    };
+    return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  [HttpGet]
+  [Route("/api/verifyuser")]
+  public IAPIResponse VerifyUser(string code)
+  {
+    var res = new BasicResponse()
+    {
+      ResponseCode = 0,
+      Message = "OK"
+    };
+
+    Member? m = _DAL.GetMemberByVerification(code);
+    if (m == null)
+    {
+      res.ResponseCode = 1;
+      res.Message = "Invalid verification code";
+    }
+    else
+    {
+      DateTimeOffset now = DateTimeOffset.UtcNow;
+      if (m.VerificationExpiration == null || now > m.VerificationExpiration)
+      {
+        res.ResponseCode = 2;
+        res.Message = "Verification is expired";
+      }
+
+      _DAL.CompleteVerification(m, now);
+      res.ResponseCode = 0;
+      res.Message = "OK";
+    }
+
+    return res;
+  }
 
   // --------------------------------------------------------------------------------------------------------------------------
   [HttpPost]

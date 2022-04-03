@@ -1,4 +1,5 @@
 using Dapper;
+using drewCo.Tools;
 using Microsoft.Data.Sqlite;
 using officepark.io.Data;
 
@@ -25,7 +26,7 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   public Member CreateMember(string username, string email, string password)
   {
 
-    string query = "INSERT INTO Members (username,email,createdon,verifiedon,permissions,password) VALUES (@Username,@Email,@CreatedOn,@VerifiedOn,@Permissions,@Password) RETURNING id";
+    string query = "INSERT INTO Members (username,email,createdon,verificationcode,permissions,password) VALUES (@Username,@Email,@CreatedOn,@VerificationCode,@Permissions,@Password) RETURNING id";
 
     IMemberAccess t = this;
     string usePassword = t.GetPasswordHash(password);
@@ -35,8 +36,8 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
       Password = usePassword,
       Email = email,
       CreatedOn = DateTimeOffset.UtcNow,
-      VerifiedOn = DateTime.MinValue,
-      Permissions = "BASIC"
+      Permissions = "BASIC",
+      VerificationCode = StringTools.ComputeMD5(RandomTools.GetAlphaNumericString(16))
     };
     int id = RunSingleQuery<int>(query, m);
 
@@ -77,6 +78,34 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     return res;
 
   }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public Member? GetMemberByVerification(string code)
+  {
+    var byVerification = "SELECT username, verificationexpiration FROM members WHERE verificationcode = @verificationcode";
+    var byVerify = RunSingleQuery<Member>(byVerification, new { @verificationcode = code });
+    return byVerify;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public void CompleteVerification(Member m, DateTimeOffset date)
+  {
+    // NOTE: Using the transaction here will lock the database.
+    // This is because not passing 'conn' as the first argument to the query function will
+    // try to open a new connection, etc.  Obviously we need some way to determine if a connection
+    // is already open and use it.  Maybe we can do something with the thread id / locks to better automate
+    // this, or at least indicate to the user in debug mode that something is off.
+    // Transaction((conn) =>
+    // {
+      var updateVerification = "UPDATE members SET verifiedon = @date, verificationexpiration = null, verificationcode = null WHERE username = @username";
+      int affected = RunExecute(updateVerification, new { date = date, username = m.Username });
+      if (affected == 0)
+      {
+        Console.WriteLine($"Update query for user {m.Username} did not have an effect!");
+      }
+//    });
+  }
+
 }
 
 // ==========================================================================

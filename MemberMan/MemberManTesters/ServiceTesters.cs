@@ -1,9 +1,11 @@
-
-
 using System;
+using HtmlAgilityPack;
+using MemberMan;
+using officepark.io.Membership;
 using Xunit;
 
-public class ServiceTesters
+// ==========================================================================
+public class ServiceTesters : TestBase
 {
   // --------------------------------------------------------------------------------------------------------------------------
   [Fact]
@@ -14,14 +16,47 @@ public class ServiceTesters
     const string PASS = "ABC";
 
     // Remove the test user.
+    CleanupTestUser(NAME);
+
     // Create the login controller.
     // Signup the user + validate availability.
+    SimEmailService emailSvc = GetEmailService();
+    var ctl = new LoginController(GetMemberAccess(), emailSvc);
+    SignupResponse response = ctl.Signup(new LoginModel()
+    {
+      username = NAME,
+      email = EMAIL,
+      password = PASS
+    });
+    Assert.Equal(0, response.ResponseCode);
+
     // Confirm that an email was sent + get its content.
+    Assert.NotNull(emailSvc.LastSendResult);
+    Assert.True(emailSvc.LastSendResult!.SendOK);
+
+    Email? mail = emailSvc.LastEmailSent;
+    Assert.NotNull(mail);
 
     // Visit the verification URL (from the email)
-    // Confirm that the user is now verified in the DB.
+    var doc = new HtmlDocument();
+    doc.LoadHtml(mail!.Body);
+    var verificationLink = doc.DocumentNode.SelectSingleNode("//a[@class='verify-link']");
+    Assert.NotNull(verificationLink);
 
-    throw new NotImplementedException("Please finish this test!");
+    string href = verificationLink.GetAttributeValue("href", null);
+    string verifyCode = href.Split("?code=")[1];    // <-- We should probably parse the url + extract querystring properly.
+
+    var verifyResult = ctl.VerifyUser(verifyCode);
+    Assert.Equal(0, verifyResult.ResponseCode);
+
+    // Confirm that the user is now verified in the DB.
+    var dal = GetMemberAccess();
+    Member? check = dal.GetMemberByName(NAME)!;
+    Assert.NotNull(check);
+    Assert.NotNull(check.VerifiedOn);
+    Assert.Null(check.VerificationExpiration);
+    Assert.Null(check.VerificationCode);
+
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

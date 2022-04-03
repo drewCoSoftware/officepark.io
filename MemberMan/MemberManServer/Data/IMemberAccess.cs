@@ -42,5 +42,8 @@ public interface IMemberAccess
     bool res = BCrypt.Net.BCrypt.Verify(password, match);
     return res;
   }
+
+  Member? GetMemberByVerification(string verificationCode);
+  void CompleteVerification(Member member, DateTimeOffset date);
 }
 

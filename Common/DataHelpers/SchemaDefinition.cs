@@ -165,7 +165,15 @@ public class SchemaDefinition
         def += " PRIMARY KEY";
       }
 
-      // TEMP:
+      if (!col.IsNullable)
+      {
+          def += " NOT NULL";
+      }
+      else
+      {
+        def += " NULL";
+      }
+
       if (col.IsUnique)
       {
         def += " UNIQUE";
@@ -264,6 +272,7 @@ public class TableDef
       }
 
       bool isUnique = ReflectionTools.HasAttribute<UniqueAttribute>(p);
+      bool isNullable = ReflectionTools.HasAttribute<IsNullableAttribute>(p);
 
       var dependent = ReflectionTools.GetAttribute<Relationship>(p);
       if (dependent != null)
@@ -312,10 +321,12 @@ public class TableDef
           Def = fkTableDef,
         });
 
+
         relatedDef._Columns.Add(new ColumnDef(colName,
-                                   Schema.Flavor.TypeResolver.GetDataTypeName(fkType, false),
+                                   Schema.Flavor.TypeResolver.GetDataTypeName(fkType),
                                    false,
                                    isUnique,
+                                   isNullable,
                                    fkTableName,
                                    nameof(IHasPrimary.ID)));
 
@@ -325,9 +336,10 @@ public class TableDef
         // This is a normal column.
         // NOTE: Non-related lists can't be represented.... should we make it so that lists are always included?
         _Columns.Add(new ColumnDef(p.Name,
-                                   Schema.Flavor.TypeResolver.GetDataTypeName(p.PropertyType, false),
+                                   Schema.Flavor.TypeResolver.GetDataTypeName(p.PropertyType),
                                    p.Name == nameof(IHasPrimary.ID),
                                    isUnique,
+                                   isNullable,
                                    null,
                                    null));
       }
@@ -387,7 +399,7 @@ public class TableDef
 }
 
 // ============================================================================================================================
-public record ColumnDef(string Name, string DataType, bool IsPrimary, bool IsUnique, string? RelatedTableName, string? RelatedTableColumn);
+public record ColumnDef(string Name, string DataType, bool IsPrimary, bool IsUnique, bool IsNullable, string? RelatedTableName, string? RelatedTableColumn);
 
 // ============================================================================================================================
 /// <summary>

@@ -8,7 +8,9 @@ using Xunit;
 
 namespace MemberManTesters
 {
-  public class DataTesters
+
+  // ==========================================================================
+  public class DataTesters : TestBase
   {
     // -------------------------------------------------------------------------------------------------------------------------- 
     [Fact]
@@ -46,7 +48,7 @@ namespace MemberManTesters
 
       string insertQuery = memberTable.GetInsertQuery();
 
-      const string EXPECTED = "INSERT INTO Members (username,email,createdon,verifiedon,permissions,password) VALUES (@Username,@Email,@CreatedOn,@VerifiedOn,@Permissions,@Password) RETURNING id";
+      const string EXPECTED = "INSERT INTO Members (username,email,createdon,verificationcode,verificationexpiration,verifiedon,permissions,password) VALUES (@Username,@Email,@CreatedOn,@VerificationCode,@VerificationExpiration,@VerifiedOn,@Permissions,@Password) RETURNING id";
       Assert.Equal(EXPECTED, insertQuery);
     }
 
@@ -97,6 +99,7 @@ namespace MemberManTesters
 
       Member src = dal.CreateMember(TEST_USER, TEST_EMAIL, TEST_PASS);
       Assert.NotNull(src);
+      Assert.NotNull(src.VerificationCode);
 
       Member comp = dal.GetMemberByName(TEST_USER)!;
       Assert.NotNull(comp);
@@ -105,27 +108,6 @@ namespace MemberManTesters
       Assert.False(comp.IsVerified);
     }
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    private void CleanupTestUser(string username)
-    {
-      IMemberAccess dal = GetMemberAccess();
-      dal.RemoveMember(username);
-    }
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    private IMemberAccess GetMemberAccess()
-    {
-      string testDir = Path.Combine(FileTools.GetAppDir(), "TestData");
-      FileTools.CreateDirectory(testDir);
-
-      // NOTE: We have nothing in here for username/password, and we really should for security purposes.
-      var res = new SqliteMemberAccess(testDir, "MemberMan"); //   FileSystemMemberAccess();
-      if (!File.Exists(res.DBFilePath))
-      {
-        res.SetupDatabase();
-      }
-
-      return res;
-    }
   }
 }

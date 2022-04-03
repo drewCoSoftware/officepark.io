@@ -7,3 +7,9 @@ namespace officepark.io.Data;
 [AttributeUsage(AttributeTargets.Property)]
 public class UniqueAttribute : Attribute
 { }
+
+
+// ==========================================================================
+[AttributeUsage(AttributeTargets.Property)]
+public class IsNullableAttribute : Attribute
+{ }

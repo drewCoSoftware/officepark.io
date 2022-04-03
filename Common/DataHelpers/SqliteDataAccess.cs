@@ -144,8 +144,10 @@ public class SqliteDataAccess<TSchema>
     using (var conn = new SqliteConnection(ConnectionString))
     {
       conn.Open();
-      return RunQuery<T>(conn, query, qParams);
+      var res = RunQuery<T>(conn, query, qParams);
+      return res;
     }
+
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -175,7 +177,8 @@ public class SqliteDataAccess<TSchema>
     using (var conn = new SqliteConnection(ConnectionString))
     {
       conn.Open();
-      return RunExecute(conn, query, qParams);
+      int res = RunExecute(conn, query, qParams);
+      return res;
     }
   }
 

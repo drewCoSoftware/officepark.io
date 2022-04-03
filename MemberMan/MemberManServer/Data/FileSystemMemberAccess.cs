@@ -14,7 +14,7 @@ public class FileSystemMemberAccess : IMemberAccess
 
   // Cache!  This is something that would be invalidated when a new version of the data file was saved?
   // We should also have some kind of 'cache provider' so that we can manually invalidate data as needed.
-  private List<Member> _CachedMembers = null;
+  private List<Member> _CachedMembers = new List<Member>();
 
   private object FSLock = new object();
 
@@ -156,6 +156,16 @@ public class FileSystemMemberAccess : IMemberAccess
   }
 
   public MemberAvailability CheckAvailability(string username, string email)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Member? GetMemberByVerification(string verificationCode)
+  {
+    throw new NotImplementedException();
+  }
+
+  public void CompleteVerification(Member member, DateTimeOffset date)
   {
     throw new NotImplementedException();
   }
