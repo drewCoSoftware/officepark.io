@@ -33,6 +33,11 @@ public interface IMemberAccess
   void RemoveMember(string username);
 
   /// <summary>
+  /// Change the verification code and expiration date.
+  /// </summary>
+  Member RefreshVerification(string username);
+
+  /// <summary>
   /// A function to verify that the given password matches the matching password.
   /// The matching password -> match algorithm can be anything you like, but
   /// is plaintext -> bcrypt hash by default.

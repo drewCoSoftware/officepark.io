@@ -9,8 +9,6 @@ namespace officepark.io.Membership;
 public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAccess
 {
 
-
-
   // --------------------------------------------------------------------------------------------------------------------------
   public SqliteMemberAccess(string dataDir, string dbFileName)
     : base(dataDir, dbFileName)
@@ -26,7 +24,7 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   public Member CreateMember(string username, string email, string password)
   {
 
-    string query = "INSERT INTO Members (username,email,createdon,verificationcode,permissions,password) VALUES (@Username,@Email,@CreatedOn,@VerificationCode,@Permissions,@Password) RETURNING id";
+    string query = "INSERT INTO Members (username,email,createdon,verificationcode,verificationexpiration,permissions,password) VALUES (@Username,@Email,@CreatedOn,@VerificationCode,@VerificationExpiration,@Permissions,@Password) RETURNING id";
 
     IMemberAccess t = this;
     string usePassword = t.GetPasswordHash(password);
@@ -37,12 +35,19 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
       Email = email,
       CreatedOn = DateTimeOffset.UtcNow,
       Permissions = "BASIC",
-      VerificationCode = StringTools.ComputeMD5(RandomTools.GetAlphaNumericString(16))
     };
+    SetVerificationProps(m);
     int id = RunSingleQuery<int>(query, m);
 
     m.ID = id;
     return m;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private void SetVerificationProps(Member m)
+  {
+    m.VerificationCode = StringTools.ComputeMD5(RandomTools.GetAlphaNumericString(16));
+    m.VerificationExpiration = DateTimeOffset.Now + TimeSpan.FromHours(24);
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -97,15 +102,38 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     // this, or at least indicate to the user in debug mode that something is off.
     // Transaction((conn) =>
     // {
-      var updateVerification = "UPDATE members SET verifiedon = @date, verificationexpiration = null, verificationcode = null WHERE username = @username";
-      int affected = RunExecute(updateVerification, new { date = date, username = m.Username });
-      if (affected == 0)
-      {
-        Console.WriteLine($"Update query for user {m.Username} did not have an effect!");
-      }
-//    });
+    var updateVerification = "UPDATE members SET verifiedon = @date, verificationexpiration = null, verificationcode = null WHERE username = @username";
+    int affected = RunExecute(updateVerification, new { date = date, username = m.Username });
+    if (affected == 0)
+    {
+      Console.WriteLine($"Update query for user {m.Username} did not have an effect!");
+    }
+    //    });
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  public Member RefreshVerification(string username)
+  {
+    Member? m = GetMemberByName(username);
+    if (m == null)
+    {
+        throw new InvalidOperationException($"The user with name: {username} does not exist!");
+    }
+    SetVerificationProps(m);
+
+    string query = "UPDATE members SET verificationcode = @code, verificationexpiration = @expires WHERE username = @name";
+    int updated = RunExecute(query, new { 
+      code = m.VerificationCode,
+      expires = m.VerificationExpiration,
+      name = m.Username
+    });
+    if (updated != 1)
+    {
+        throw new InvalidOperationException("Verification data could not be refreshed!");
+    }
+
+    return m;
+  }
 }
 
 // ==========================================================================

@@ -5,8 +5,16 @@ using Microsoft.Data.Sqlite;
 
 namespace officepark.io.Data;
 
+// ==========================================================================
+public interface IDataAccess
+{
+  IEnumerable<T> RunQuery<T>(string query, object qParams);
+  int RunExecute(string query, object qParams);
+  T? RunSingleQuery<T>(string query, object parameters);
+}
+
 // ========================================================================== 
-public class SqliteDataAccess<TSchema>
+public class SqliteDataAccess<TSchema> : IDataAccess
 {
   // This is the ISO8601 format mentioned in:
   // https://www.sqlite.org/datatype3.html
@@ -137,7 +145,7 @@ public class SqliteDataAccess<TSchema>
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  protected IEnumerable<T> RunQuery<T>(string query, object qParams)
+  public IEnumerable<T> RunQuery<T>(string query, object qParams)
   {
     // NOTE: This connection object could be abstracted more so that we could handle
     // connection pooling, etc. as neeed.
@@ -164,7 +172,7 @@ public class SqliteDataAccess<TSchema>
   /// <remarks>
   /// If the query returns more than one result, and exception will be thrown.
   /// </remarks>
-  protected T? RunSingleQuery<T>(string query, object parameters)
+  public T? RunSingleQuery<T>(string query, object parameters)
   {
     IEnumerable<T> qr = RunQuery<T>(query, parameters);
     T? res = qr.SingleOrDefault();
@@ -172,7 +180,7 @@ public class SqliteDataAccess<TSchema>
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  protected int RunExecute(string query, object qParams)
+  public int RunExecute(string query, object qParams)
   {
     using (var conn = new SqliteConnection(ConnectionString))
     {

@@ -31,6 +31,9 @@ public class SignupResponse : BasicResponse
 [Route("[controller]")]
 public class LoginController : ControllerBase
 {
+  public const int INVALID_VERIFICATION = 1;
+  public const int VERIFICATION_EXPIRED = 2;
+
   // --------------------------------------------------------------------------------------------------------------------------
   private IMemberAccess _DAL = null;
   private IEmailService _Email = null;
@@ -74,9 +77,7 @@ public class LoginController : ControllerBase
     Member m = _DAL.CreateMember(login.username, login.email, login.password);
 
     // This is where we will send out the verification, etc. emails.
-    Email email = CreateVerificationEmail(m);
-    this._Email.SendEmail(email);
-
+    SendVerificationMessage(m);
 
     return new SignupResponse()
     {
@@ -84,6 +85,13 @@ public class LoginController : ControllerBase
       Message = "Signup OK!"
     };
 
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private void SendVerificationMessage(Member m)
+  {
+    Email email = CreateVerificationEmail(m);
+    this._Email.SendEmail(email);
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -103,7 +111,7 @@ public class LoginController : ControllerBase
   // --------------------------------------------------------------------------------------------------------------------------
   [HttpGet]
   [Route("/api/verifyuser")]
-  public IAPIResponse VerifyUser(string code)
+  public BasicResponse VerifyUser(string code)
   {
     var res = new BasicResponse()
     {
@@ -114,7 +122,7 @@ public class LoginController : ControllerBase
     Member? m = _DAL.GetMemberByVerification(code);
     if (m == null)
     {
-      res.ResponseCode = 1;
+      res.ResponseCode = INVALID_VERIFICATION;
       res.Message = "Invalid verification code";
     }
     else
@@ -122,8 +130,14 @@ public class LoginController : ControllerBase
       DateTimeOffset now = DateTimeOffset.UtcNow;
       if (m.VerificationExpiration == null || now > m.VerificationExpiration)
       {
-        res.ResponseCode = 2;
-        res.Message = "Verification is expired";
+        m = _DAL.RefreshVerification(m.Username);
+
+        res.ResponseCode = VERIFICATION_EXPIRED;
+        res.Message = "Verification is expired.  A new verification email will be sent.";
+
+        SendVerificationMessage(m);
+
+        return res;
       }
 
       _DAL.CompleteVerification(m, now);

@@ -169,4 +169,9 @@ public class FileSystemMemberAccess : IMemberAccess
   {
     throw new NotImplementedException();
   }
+
+  public Member RefreshVerification(string username)
+  {
+    throw new NotImplementedException();
+  }
 }
