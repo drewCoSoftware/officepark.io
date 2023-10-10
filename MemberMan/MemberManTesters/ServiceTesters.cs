@@ -1,10 +1,13 @@
 using System;
+using DataHelpers.Data;
 using HtmlAgilityPack;
 using MemberMan;
 using officepark.io.API;
-using officepark.io.Data;
+
 using officepark.io.Membership;
 using Xunit;
+
+namespace MemberManTesters;
 
 // ==========================================================================
 public class ServiceTesters : TestBase
