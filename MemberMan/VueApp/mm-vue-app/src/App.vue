@@ -1,11 +1,26 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
+import type { IStatusData } from "./fetchy.js";
+import { useLoginStore } from './stores/login';
+import type { ILoginState } from "./stores/login";
+
+const _Login = useLoginStore();
+
+let loginState:ILoginState = _Login.GetState();
+//console.log(loginState.IsLoggedIn + " " + loginState.DisplayName);
+
 </script>
+
+
 
 <template>
   <header>
-    <div class="wrapper">
+    <p>This is where the current login status will go + logout links, etc.</p>
+  </header>
+
+  <main>
+    <div class="title">
       <!-- <HelloWorld msg="You did it!" /> -->
       <h1>Member Man Tester</h1>
       <nav>
@@ -13,8 +28,25 @@ import HelloWorld from './components/HelloWorld.vue'
         <RouterLink to="/about">About</RouterLink>
       </nav>
     </div>
-  </header>
 
+    <div class="login">
+      <form>
+        <div class="input">
+          <label for="username">Username</label>
+          <input type="text" name="username" />
+        </div>
+        <div class="input">
+          <label for="username">Password</label>
+          <input type="password" name="password" />
+        </div>
+        <button type="button">Login</button>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+
+  </footer>
   <!-- <RouterView /> -->
 </template>
 
