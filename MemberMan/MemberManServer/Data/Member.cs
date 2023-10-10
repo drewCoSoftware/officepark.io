@@ -50,12 +50,12 @@ public class Member : IHasPrimary
   /// <summary>
   /// Comma delimited list of permissions, to be interpreted by the application.
   /// </summary>
-  public string Permissions { get; set; } 
+  public string? Permissions { get; set; } = null;
 
   /// <summary>
   /// The hashed password.
   /// </summary>
-  public string Password { get; set; }
+  public string Password { get; set; } = string.Empty;
 
   // This data is used with the current session.
   [JsonIgnore]
