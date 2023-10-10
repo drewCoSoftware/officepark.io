@@ -1,4 +1,4 @@
-﻿namespace TimeManServer.Data
+﻿namespace officepark.io.Data
 {
 
   // ============================================================================================================================
@@ -15,6 +15,6 @@
   // ============================================================================================================================
   public interface IDataTypeResolver
   {
-    string GetDataTypeName(Type t, bool forceNull);
+    string GetDataTypeName(Type t);
   }
 }

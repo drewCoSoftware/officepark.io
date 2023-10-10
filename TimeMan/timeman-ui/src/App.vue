@@ -1,14 +1,17 @@
 <template>
   <SiteHeader v-bind:loginState="loginState" />
   <router-view />
+<<<<<<< HEAD
   <button v-on:click="toggleLogin()">Toggle Login</button>
+=======
+  <!-- <button v-on:click="toggleLogin()">Toggle Login</button> -->
+>>>>>>> 560751569757979d570415466f7542c1b9dda146
   <p>{{ this.$dtAuth.IsLoggedIn }}</p>
 </template>
 
 <script lang="ts">
 import SiteHeader from "./components/SiteHeader.vue";
 import { Options, Vue } from "vue-class-component";
-//import { reactive} from 'vue'
 
 @Options({
   components: {
@@ -18,6 +21,7 @@ import { Options, Vue } from "vue-class-component";
   data() {
     return {
       loginState: this.$dtAuth,
+<<<<<<< HEAD
       // isLoggedIn: false,
       // loginToken: null,   // Special token to help with session tracking.
       // userID: "drew",
@@ -40,6 +44,11 @@ import { Options, Vue } from "vue-class-component";
       //this.$forceUpdate();
     },
 
+=======
+    };
+  },
+  methods: {
+>>>>>>> 560751569757979d570415466f7542c1b9dda146
     // Log out any connected user, and redirect them to the homepage.
     logout: function (forcedOut: boolean) {
       if (this.loginState) {

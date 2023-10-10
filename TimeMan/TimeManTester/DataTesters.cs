@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TimeManServer.Data;
 using Xunit;
+using officepark.io.Data;
 
 namespace TimeManTester
 {
@@ -25,6 +26,7 @@ namespace TimeManTester
     /// <summary>
     /// Shows that our schema generator can detect and properly model an implicit one-to-many relationship.
     /// </summary>
+    /// <remarks>This belongs in a different test project!</remarks>
     [Fact]
     public void CanDetectOneToManyRelationship()
     {

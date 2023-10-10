@@ -13,6 +13,7 @@ builder.Services.AddCors((ops) =>
   {
     builder.SetIsOriginAllowed(IsOriginAllowed);
     builder.AllowCredentials();
+    builder.WithHeaders("content-type");
 //    builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
   });
 });

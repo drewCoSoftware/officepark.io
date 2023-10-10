@@ -6,10 +6,11 @@ import About from "./components/About.vue"
 import Sessions from "./components/Sessions.vue"
 import NotFound from "./components/NotFound.vue"
 import Login from "./components/Login.vue"
+import Signup from "./components/Signup.vue"
 
 import { createRouter, createWebHistory } from "vue-router";
 
-import dtAuth from "./plugins/dtAuth"
+import { dtAuth } from "./plugins/dtAuth/dtAuth"
 
 // https://www.npmjs.com/package/vue3-cookies
 import VueCookies from 'vue3-cookies'
@@ -44,40 +45,43 @@ const routes = [
     component: Login,
   },
   {
+    path: "/signup",
+    name: "Signup",
+    component: Signup,
+  },
+  {
     path: "/:notfound(.*)",
     name: "NotFound",
     component: NotFound,
   }
 ];
 
-const auth = new dtAuth();
+
+const authEndpoint = "https://localhost:7138/api/login"
+const signupEndpoint = "https://localhost:7138/api/signup"
+const auth = new dtAuth(authEndpoint, signupEndpoint);
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
 });
 
-//export default auth;
-
-
 router.beforeEach((to, from) => {
   if (to.meta.requiresAuth && !auth.IsLoggedIn) {
-    //console.dir(app);
     alert('auth required!');
     return {
-      path: '/',
-      query: { to: encodeURIComponent(to.fullPath) }
+      path: '/login',
+      query: { to: to.fullPath }
     }
   }
 });
 
 export default { router, auth };
-//export default dtAuth;
 
 const app = createApp(App);
 app.use(router);
 app.use(auth);
-//app.use(loginStatus);
+
 app.use(VueCookies, {
   expireTimes: "30d",
   path: "/",

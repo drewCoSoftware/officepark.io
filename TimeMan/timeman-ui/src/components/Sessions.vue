@@ -49,7 +49,7 @@ import { Options, Vue } from "vue-class-component";
 export default class Sessions extends Vue {
   isHistoryLoading: boolean = false;
   activeSession: ITimeManSession | null = null;
-
+  
   mounted = function () {
     // Indicate loading / GET status.
     // Grab the currently active session.
