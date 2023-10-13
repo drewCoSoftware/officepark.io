@@ -4,19 +4,58 @@ import HelloWorld from './components/HelloWorld.vue'
 import type { IStatusData } from "./fetchy.js";
 import { useLoginStore } from './stores/login';
 import type { ILoginState } from "./stores/login";
+import {ref} from 'vue';
 
 const _Login = useLoginStore();
 
-let loginState:ILoginState = _Login.GetState();
-//console.log(loginState.IsLoggedIn + " " + loginState.DisplayName);
+// For each page, or every so often we want to update the login status...
+// NOTE: The back-end of the application is responsible for evauluating the
+// permissions of the current user.
+const loginState = _Login._CurrentState;
+//  ?? 
+//   ref({
+//     IsLoggedIn:false,
+//     DisplayName: "x",
+//     Avatar: "x"
+//   });
+
+function updateLogin() {
+
+//  alert('doing login...');
+  const res = _Login.LoginUser("x", "y");
+  if (!res[0]) {
+    alert('there was a login error!');
+  }
+  else{
+    // I dunno.......
+  }
+  // // NOTE: This approach will correctly update the state...
+  // console.log('updating');
+  // loginState.value = {
+  //   IsLoggedIn : true,
+  //   DisplayName : "wow",
+  //   Avatar: "some-avatar.jpg"
+  // }
+}
 
 </script>
 
 
 
 <template>
-  <header>
-    <p>This is where the current login status will go + logout links, etc.</p>
+  <header class="login-header">
+    <div v-if="loginState?.IsLoggedIn">
+      <img :src="loginState.Avatar" alt="avatar image" /> 
+      <p>{{loginState.DisplayName}}</p>
+      <button class="link" @click="_Login.Logout">Log Out</button>
+    </div>
+    <div v-else>
+      <p>Not Logged In</p>
+      <button @click="updateLogin">Push Me</button>
+    </div>
+    <!-- <p>{{loginState.DisplayName}}</p>
+    <button @click="updateLogin">Push Me</button> -->
+    <!-- <p>This is where the current login status will go + logout links, etc.</p> -->
   </header>
 
   <main>
