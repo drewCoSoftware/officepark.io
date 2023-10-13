@@ -11,7 +11,7 @@ const _Login = useLoginStore();
 // For each page, or every so often we want to update the login status...
 // NOTE: The back-end of the application is responsible for evauluating the
 // permissions of the current user.
-const loginState = _Login._CurrentState;
+const loginState = ref(_Login.GetState()); // _Login._CurrentState;
 //  ?? 
 //   ref({
 //     IsLoggedIn:false,
@@ -22,13 +22,22 @@ const loginState = _Login._CurrentState;
 function updateLogin() {
 
 //  alert('doing login...');
-  const res = _Login.LoginUser("x", "y");
-  if (!res[0]) {
-    alert('there was a login error!');
+// NOTE: The login call needs to be async, and we need to have some kind
+// of loading state in our UI, I think.....
+  const res = _Login.Login("x", "y");
+  if (!res.success || res.value == null) {
+    alert('login or other error!');
   }
-  else{
-    // I dunno.......
-  }
+  loginState.value = res.value ?? {
+    IsLoggedIn: false
+  };
+
+  // if (!res[0]) {
+  //   alert('there was a login error!');
+  // }
+  // else{
+  //   // I dunno.......
+  // }
   // // NOTE: This approach will correctly update the state...
   // console.log('updating');
   // loginState.value = {
