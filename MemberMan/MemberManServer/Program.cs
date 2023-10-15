@@ -17,7 +17,16 @@ if (!File.Exists(memberAccess.DBFilePath))
 builder.Services.AddSingleton<IMemberAccess>(memberAccess);
 builder.Services.AddSingleton<IEmailService>(new EmailService());
 
-builder.Services.AddControllers();
+
+var ctl = builder.Services.AddControllers();
+ctl.AddJsonOptions((ops) =>
+{
+  ops.JsonSerializerOptions.PropertyNamingPolicy = null;
+
+  // var enumConverter = new JsonStringEnumConverter();
+  // ops.JsonSerializerOptions.Converters.Add(enumConverter);
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -31,6 +40,7 @@ builder.Services.AddCors((ops) =>
     builder.WithHeaders("content-type");
   });
 });
+
 
 var app = builder.Build();
 

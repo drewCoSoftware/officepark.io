@@ -35,7 +35,7 @@ public class ServiceTesters : TestBase
     string verifyCode = GetVerificationCodeFromEmail(mail);
 
     var verifyResult = ctl.VerifyUser(verifyCode);
-    Assert.Equal(0, verifyResult.ResponseCode);
+    Assert.Equal(0, verifyResult.Code);
 
     // Confirm that the user is now verified in the DB.
     var dal = GetMemberAccess();
@@ -75,7 +75,7 @@ public class ServiceTesters : TestBase
       email = EMAIL,
       password = PASS
     });
-    Assert.Equal(0, response.ResponseCode);
+    Assert.Equal(0, response.Code);
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ public class ServiceTesters : TestBase
 
     // Visit Verification URL.
     BasicResponse response = ctl.VerifyUser(oldCode);
-    Assert.Equal(LoginController.VERIFICATION_EXPIRED, response.ResponseCode);
+    Assert.Equal(LoginController.VERIFICATION_EXPIRED, response.Code);
 
     // --> Verify that we have another email with a new code.
     var newEmail = emailSvc.LastEmailSent;

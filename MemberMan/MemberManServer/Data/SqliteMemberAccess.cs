@@ -18,7 +18,16 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? CheckLogin(string username, string password)
   {
-    throw new NotImplementedException();
+    string hash = (this as IMemberAccess).GetPasswordHash(password);
+
+    string query = "SELECT * FROM Members WHERE username = @username AND password = @hashed";
+    var res = RunSingleQuery<Member>(query, new
+    {
+      username = username,
+      hashed = hash
+    });
+
+    return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -118,19 +127,20 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     Member? m = GetMemberByName(username);
     if (m == null)
     {
-        throw new InvalidOperationException($"The user with name: {username} does not exist!");
+      throw new InvalidOperationException($"The user with name: {username} does not exist!");
     }
     SetVerificationProps(m);
 
     string query = "UPDATE members SET verificationcode = @code, verificationexpiration = @expires WHERE username = @name";
-    int updated = RunExecute(query, new { 
+    int updated = RunExecute(query, new
+    {
       code = m.VerificationCode,
       expires = m.VerificationExpiration,
       name = m.Username
     });
     if (updated != 1)
     {
-        throw new InvalidOperationException("Verification data could not be refreshed!");
+      throw new InvalidOperationException("Verification data could not be refreshed!");
     }
 
     return m;

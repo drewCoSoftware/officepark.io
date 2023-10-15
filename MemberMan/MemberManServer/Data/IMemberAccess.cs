@@ -7,7 +7,9 @@ public record MemberAvailability(bool IsUsernameAvailable, bool IsEmailAvailable
 // ==========================================================================
 public interface IMemberAccess
 {
-  
+  // OPTIONS / PRE-PROCESSOER:
+  public const int DEFAULT_WORK_FACTOR = 15;
+
   MemberAvailability CheckAvailability(string username, string email);
 
   /// <summary>
@@ -17,12 +19,9 @@ public interface IMemberAccess
 
   // --------------------------------------------------------------------------------------------------------------------------
   // Cool.  With default implementations, we complete the loop and have ABCs! Lol, j/k.
-  string GetPasswordHash(string password)
+  string GetPasswordHash(string password, int workFactor = DEFAULT_WORK_FACTOR)
   {
-    // OPTIONS / PRE-PROCESSOER:
-    const int WORK_FACTOR = 15;
-
-    string hashed = BCrypt.Net.BCrypt.HashPassword(password, WORK_FACTOR);
+    string hashed = BCrypt.Net.BCrypt.HashPassword(password, workFactor);
     return hashed;
   }
 

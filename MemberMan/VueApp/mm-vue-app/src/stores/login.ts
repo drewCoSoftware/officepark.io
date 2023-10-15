@@ -22,7 +22,7 @@ export interface ILoginState {
 }
 
 interface LoginResponse extends IApiResponse {
-  LoginOK: boolean,
+  IsLoggedIn: boolean,
   DisplayName: string,
   Avatar?: string
 }
@@ -55,36 +55,16 @@ export const useLoginStore = defineStore('login', () => {
       headers: { "Content-Type": 'application/json' }
     });
 
-    if (p.Success) {
-      return {
-        success: true,
-        data: {
-          IsLoggedIn: true,
-          DisplayName: p.Data?.DisplayName,
-          Avatar: p.Data?.Avatar
-        }
-      }
+    if (p.Error) {
+      throw Error("Network or other unhandled error!  Write some code to deal with this scenario...");
     }
     else {
-      if (p.Error) {
-        throw Error("Network or other unhandled error!");
-      }
-      else {
-        console.log('not success!');
-        return {
-          success: false,
-          message: p.Data?.Message
-        }
+      return {
+        success: p.Success,
+        data: p.Data
       }
     }
 
-    //     export interface IResult<T> {
-    //   value?: T,
-    //   success: boolean,
-    //   message?: string    // Success / error / etc. messages. 
-    // }
-
-    // // On error the first index can be null?
   }
 
   // ----------------------------------------------------------------------

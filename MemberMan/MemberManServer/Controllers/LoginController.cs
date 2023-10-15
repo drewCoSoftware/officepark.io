@@ -176,7 +176,7 @@ public class LoginController : ApiController
   {
 
     // TEMP:
-    return NotFound<LoginResponse>("Invalid username or password!");
+    // return NotFound<LoginResponse>("Invalid username or password!");
 
     // Reach into the DAL to look for active user + password.
     Member? member = _DAL.CheckLogin(login.username, login.password);

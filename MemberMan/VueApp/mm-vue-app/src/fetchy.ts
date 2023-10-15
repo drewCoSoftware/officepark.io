@@ -21,7 +21,6 @@ export interface IApiResponse {
 
 export interface FetchyResponse<T extends IApiResponse> {
   Success: boolean;
-  //Fail: boolean;
   Data: T | null;
   Error: any | null;
 
@@ -69,12 +68,9 @@ export async function fetchy<T extends IApiResponse>(url: string, ops: FetchyOpt
 
       // Errors happen when there is some kind of network issue.
       res.Success = false;
-    //  res.Fail = true;
       res.Error = error
     });
 
-  // console.log('res is: ');
-  // console.log(res.Data);
   return res;
 }
 
