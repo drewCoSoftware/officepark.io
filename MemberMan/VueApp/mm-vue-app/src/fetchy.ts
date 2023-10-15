@@ -8,66 +8,71 @@ export interface IStatusData {
   Message: string
 }
 
-export interface FetchyOptions
-{
-  Method: string | undefined
+export interface FetchyOptions {
+  method: string | undefined,
+  body?: any,
+  headers?: {}
 }
 
-export interface IApiResponse { 
+export interface IApiResponse {
   Code: number;
   Message: string;
 }
 
-export interface FetchyResponse<T extends IApiResponse>
-{
+export interface FetchyResponse<T extends IApiResponse> {
   Success: boolean;
-  Fail: boolean;
+  //Fail: boolean;
   Data: T | null;
   Error: any | null;
-  
+
   // TODO: We can care about headers, etc. later.
 }
 
 
 // ----------------------------------------------------------------------------------------------------------
-export async function fetchy<T extends IApiResponse>(url:string, ops: FetchyOptions | null = null) : Promise<FetchyResponse<T>>
-{
+export async function fetchy<T extends IApiResponse>(url: string, ops: FetchyOptions | null = null): Promise<FetchyResponse<T>> {
   // Populate default as needed.....
   if (ops == null) {
     ops = {
-      Method: 'GET'
+      method: 'GET'
     }
   }
 
-  let res:FetchyResponse<T> = {
+  let res: FetchyResponse<T> = {
     Success: false,
-    Fail:false,
     Data: null,
     Error: null
   }
 
   let p = fetch(url, {
-    method: ops.Method
+    method: ops.method,
+    body: ops.body,
+    headers: ops.headers
   })
 
-  await p.then(response => response.json())
-  .then(data => {
+  let success = true;
+  await p.then(response => {
+    success = response.status == 200;   // OPTIONS: We could configure to pass/not other status codes.
+    const res = response.json();
+    return res;
+  }).then(data => {
 
-    // NOTE: This will not deserialize the date strings into proper
-    // Date instances for typescript.
-    // We may have to look at our intended property types from <T>
-    // and find ways to convert from there.  Definitiely NOT something that
-    // we want to mess with at this time.
-    res.Data = <T>data;
-    res.Success = true;
-    res.Fail = false;
+      // NOTE: This will not deserialize the date strings into proper
+      // Date instances for typescript.
+      // We may have to look at our intended property types from <T>
+      // and find ways to convert from there.  Definitiely NOT something that
+      // we want to mess with at this time.
+      res.Data = <T>data;
+      res.Success = success;
 
-  }).catch((error) => {
-    res.Success = false;
-    res.Fail = true;
-    res.Error = error
-  });
-  
+    }).catch((error) => {
+
+      // Errors happen when there is some kind of network issue.
+      res.Success = false;
+    //  res.Fail = true;
+      res.Error = error
+    });
+
   // console.log('res is: ');
   // console.log(res.Data);
   return res;

@@ -4,48 +4,42 @@ import HelloWorld from './components/HelloWorld.vue'
 import type { IStatusData } from "./fetchy.js";
 import { useLoginStore } from './stores/login';
 import type { ILoginState } from "./stores/login";
-import {ref} from 'vue';
+import { ref } from 'vue';
 
 const _Login = useLoginStore();
 
 // For each page, or every so often we want to update the login status...
 // NOTE: The back-end of the application is responsible for evauluating the
 // permissions of the current user.
-const loginState = ref(_Login.GetState()); // _Login._CurrentState;
-//  ?? 
-//   ref({
-//     IsLoggedIn:false,
-//     DisplayName: "x",
-//     Avatar: "x"
-//   });
+const loginState = ref(_Login.GetState());
 
-function updateLogin() {
+// Form properties.
+let username = "";
+let password = "";
+const isWorking = ref(false);
 
-//  alert('doing login...');
-// NOTE: The login call needs to be async, and we need to have some kind
-// of loading state in our UI, I think.....
-  const res = _Login.Login("x", "y");
-  if (!res.success || res.value == null) {
-    alert('login or other error!');
+async function tryLogin() {
+  if (username != "" && password != "" && !isWorking.value) {
+    // console.log(username + " " + password);
+    isWorking.value = true;
+
+    await _Login.Login(username, password).then((res) => {
+      if (res.success && res.data?.IsLoggedIn) {
+        alert('update the current login state!');
+      }
+      else {
+        alert("login failed!" + res.message);
+      }
+      isWorking.value = false;
+    });
   }
-  loginState.value = res.value ?? {
-    IsLoggedIn: false
-  };
-
-  // if (!res[0]) {
-  //   alert('there was a login error!');
-  // }
-  // else{
-  //   // I dunno.......
-  // }
-  // // NOTE: This approach will correctly update the state...
-  // console.log('updating');
-  // loginState.value = {
-  //   IsLoggedIn : true,
-  //   DisplayName : "wow",
-  //   Avatar: "some-avatar.jpg"
-  // }
+  else {
+    alert('no!');
+  }
 }
+
+
+//const formDisabled = ref(
 
 </script>
 
@@ -54,17 +48,13 @@ function updateLogin() {
 <template>
   <header class="login-header">
     <div v-if="loginState?.IsLoggedIn">
-      <img :src="loginState.Avatar" alt="avatar image" /> 
-      <p>{{loginState.DisplayName}}</p>
+      <img :src="loginState.Avatar" alt="avatar image" />
+      <p>{{ loginState.DisplayName }}</p>
       <button class="link" @click="_Login.Logout">Log Out</button>
     </div>
     <div v-else>
       <p>Not Logged In</p>
-      <button @click="updateLogin">Push Me</button>
     </div>
-    <!-- <p>{{loginState.DisplayName}}</p>
-    <button @click="updateLogin">Push Me</button> -->
-    <!-- <p>This is where the current login status will go + logout links, etc.</p> -->
   </header>
 
   <main>
@@ -80,14 +70,14 @@ function updateLogin() {
     <div class="login">
       <form>
         <div class="input">
-          <label for="username">Username</label>
-          <input type="text" name="username" />
+          <!-- <label for="username">Username</label> -->
+          <input type="text" name="username" v-model="username" placeholder="Username" />
         </div>
         <div class="input">
-          <label for="username">Password</label>
-          <input type="password" name="password" />
+          <!-- <label for="username">Password</label> -->
+          <input type="password" name="password" v-model="password" placeholder="Password" />
         </div>
-        <button type="button">Login</button>
+        <button type="button" @click="tryLogin">Login</button>
       </form>
     </div>
   </main>

@@ -1,6 +1,8 @@
 
+using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using officepark.io.API;
 using officepark.io.Membership;
 
@@ -10,13 +12,31 @@ namespace MemberMan;
 public class LoginResponse : BasicResponse
 {
   public bool LoginOK { get; set; }
+
+  /// <summary>
+  /// The name that should be displayed in a UI.  This doesn't have to be the same thing
+  /// as the username used on login.
+  /// </summary>
+  public string DisplayName { get; set; } = default!;
+
+  /// <summary>
+  /// Url to user avatar.  Can be an image, gravatar, whatever....
+  /// </summary>
+  public string? Avatar { get; set; } = null;
 }
 
 // ============================================================================================================================
 public class LoginModel
 {
-  public string username { get; set; } = string.Empty;
+  /// <summary>
+  /// All users have an associated email address so that there is at least one way to attempt contact.
+  /// It is perfectly acceptable to use the email address as the user name.  In theses cases, simply
+  /// set username == email.
+  /// </summary>
+  /// <remarks>We may remove email from this model class.... It technically isn't used for logins....</remarks>
   public string email { get; set; } = string.Empty;
+
+  public string username { get; set; } = string.Empty;
   public string password { get; set; } = string.Empty;
 }
 
@@ -26,10 +46,11 @@ public class SignupResponse : BasicResponse
   public MemberAvailability Availability { get; set; }
 }
 
+
 // ============================================================================================================================
 [ApiController]
 [Route("[controller]")]
-public class LoginController : ControllerBase
+public class LoginController : ApiController
 {
   public const int INVALID_VERIFICATION = 1;
   public const int VERIFICATION_EXPIRED = 2;
@@ -115,14 +136,14 @@ public class LoginController : ControllerBase
   {
     var res = new BasicResponse()
     {
-      ResponseCode = 0,
+      Code = 0,
       Message = "OK"
     };
 
     Member? m = _DAL.GetMemberByVerification(code);
     if (m == null)
     {
-      res.ResponseCode = INVALID_VERIFICATION;
+      res.Code = INVALID_VERIFICATION;
       res.Message = "Invalid verification code";
     }
     else
@@ -132,7 +153,7 @@ public class LoginController : ControllerBase
       {
         m = _DAL.RefreshVerification(m.Username);
 
-        res.ResponseCode = VERIFICATION_EXPIRED;
+        res.Code = VERIFICATION_EXPIRED;
         res.Message = "Verification is expired.  A new verification email will be sent.";
 
         SendVerificationMessage(m);
@@ -141,7 +162,7 @@ public class LoginController : ControllerBase
       }
 
       _DAL.CompleteVerification(m, now);
-      res.ResponseCode = 0;
+      res.Code = 0;
       res.Message = "OK";
     }
 
@@ -151,22 +172,34 @@ public class LoginController : ControllerBase
   // --------------------------------------------------------------------------------------------------------------------------
   [HttpPost]
   [Route("/api/login")]
-  public IAPIResponse Login(LoginModel login)
+  public LoginResponse Login(LoginModel login)
   {
+
+    // TEMP:
+    return NotFound<LoginResponse>("Invalid username or password!");
+
+    // Reach into the DAL to look for active user + password.
+    Member? member = _DAL.CheckLogin(login.username, login.password);
+    if (member == null)
+    {
+      // NOTE: This should return a 404!
+      var res = NotFound<LoginResponse>("Invalid username or password");
+      return res;
+      //return new LoginResponse()
+      //{
+      //  LoginOK = false,
+      //  AuthRequired = true,
+      //  Message = "Invalid username or password!"
+      //};
+    }
+
     return new LoginResponse()
     {
-      LoginOK = false,
-      AuthRequired = false,
-      Message = "This is not fully implemented!"
+      LoginOK = true,
+      AuthRequired = true,
+      Message = "OK",
+      DisplayName = login.username, 
     };
-    // We need to take the input creds, and bounce them against our internal database/filestore/whatever.
-    // That means that we need some way to configure those services.....
-    // var login = new LoginModel()
-    // {
-    //     username = "abc",
-    //     password = "def123"
-    // };
-    // return new { username = login.username, password = login.password, message = "gravy!" };
   }
 
 

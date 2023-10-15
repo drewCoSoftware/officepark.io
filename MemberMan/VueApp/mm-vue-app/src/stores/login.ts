@@ -5,9 +5,10 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { InlineConfig } from 'vitest';
+import { fetchy, type IApiResponse } from '@/fetchy';
 
 export interface IResult<T> {
-  value?: T,
+  data?: T | null,
   success: boolean,
   message?: string    // Success / error / etc. messages. 
 }
@@ -17,6 +18,12 @@ export interface IResult<T> {
 export interface ILoginState {
   IsLoggedIn: boolean,
   DisplayName?: string,
+  Avatar?: string
+}
+
+interface LoginResponse extends IApiResponse {
+  LoginOK: boolean,
+  DisplayName: string,
   Avatar?: string
 }
 
@@ -36,23 +43,48 @@ export const useLoginStore = defineStore('login', () => {
   };
 
   // ----------------------------------------------------------------------
-  function Login(username: string, password: string): IResult<ILoginState> {
-    _CurrentState = {
-      IsLoggedIn: true,
-      DisplayName: "state-test",
-      Avatar: "some-icon.jpg"
-    };
+  async function Login(username: string, password: string): Promise<IResult<ILoginState>> {
 
-    // Just assume that everything is good to go!
-    return {
-      value : _CurrentState,
-      success:true
-    };
-    //   _CurrentState,
-    //   "LoginOK!"      // NOTE: The string is where the error message would go!
-    // ];
+    const url = "https://localhost:7138/api/login";
+    let p = await fetchy<LoginResponse>(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        username: username,
+        password: password
+      }),
+      headers: { "Content-Type": 'application/json' }
+    });
 
-    // On error the first index can be null?
+    if (p.Success) {
+      return {
+        success: true,
+        data: {
+          IsLoggedIn: true,
+          DisplayName: p.Data?.DisplayName,
+          Avatar: p.Data?.Avatar
+        }
+      }
+    }
+    else {
+      if (p.Error) {
+        throw Error("Network or other unhandled error!");
+      }
+      else {
+        console.log('not success!');
+        return {
+          success: false,
+          message: p.Data?.Message
+        }
+      }
+    }
+
+    //     export interface IResult<T> {
+    //   value?: T,
+    //   success: boolean,
+    //   message?: string    // Success / error / etc. messages. 
+    // }
+
+    // // On error the first index can be null?
   }
 
   // ----------------------------------------------------------------------
