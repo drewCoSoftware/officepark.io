@@ -4,7 +4,9 @@ import HelloWorld from './components/HelloWorld.vue'
 import type { IStatusData } from "./fetchy.js";
 import { useLoginStore } from './stores/login';
 import type { ILoginState } from "./stores/login";
-import { ref } from 'vue';
+import { initCustomFormatter, ref } from 'vue';
+
+import type { LoginResponse } from './stores/login';
 
 const _Login = useLoginStore();
 
@@ -17,29 +19,41 @@ const loginState = ref(_Login.GetState());
 let username = "";
 let password = "";
 const isWorking = ref(false);
+const isFormValid = ref(false);
 
 async function tryLogin() {
   if (username != "" && password != "" && !isWorking.value) {
-    // console.log(username + " " + password);
     isWorking.value = true;
 
     await _Login.Login(username, password).then((res) => {
-      if (res.success && res.data?.IsLoggedIn) {
-        alert('update the current login state!');
+      if (res.Error) {
+        alert('some fuckin error.....');
       }
       else {
-        alert("login failed!" + res.message);
+        const data: LoginResponse = res.Data!;
+        if (res.Success && data?.IsLoggedIn) {
+          alert('update the current login state!');
+        }
+        else {
+          alert("login failed!" + data?.Message);
+        }
       }
+
       isWorking.value = false;
     });
   }
   else {
-    alert('no!');
+    alert('login not available!');
   }
 }
 
 
-//const formDisabled = ref(
+function updateForm() {
+  // Revalidate the form.....
+  const isValid = username != "" && password != "";
+  isFormValid.value = isValid;
+
+}
 
 </script>
 
@@ -67,17 +81,16 @@ async function tryLogin() {
       </nav>
     </div>
 
-    <div class="login">
+    <div :class="isWorking ? 'login working' : 'login'">
       <form>
         <div class="input">
-          <!-- <label for="username">Username</label> -->
-          <input type="text" name="username" v-model="username" placeholder="Username" />
+          <input type="text" name="username" v-model="username" placeholder="Username" :disabled="isWorking" />
         </div>
         <div class="input">
-          <!-- <label for="username">Password</label> -->
-          <input type="password" name="password" v-model="password" placeholder="Password" />
+          <input type="password" name="password" v-model="password" placeholder="Password" :disabled="isWorking"
+            @input="updateForm" />
         </div>
-        <button type="button" @click="tryLogin">Login</button>
+        <button type="button" @click="tryLogin" :disabled="!isFormValid || isWorking">Login</button>
       </form>
     </div>
   </main>
@@ -94,60 +107,7 @@ header {
   max-height: 100vh;
 }
 
-/* .logo {
-  display: block;
-  margin: 0 auto 2rem;
+.login.working {
+  background: red;
 }
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  } 
-} */
 </style>

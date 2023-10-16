@@ -175,24 +175,16 @@ public class LoginController : ApiController
   public LoginResponse Login(LoginModel login)
   {
 
-    // TEMP:
-    // return NotFound<LoginResponse>("Invalid username or password!");
-
     // Reach into the DAL to look for active user + password.
     Member? member = _DAL.CheckLogin(login.username, login.password);
     if (member == null)
     {
       // NOTE: This should return a 404!
-      var res = NotFound<LoginResponse>("Invalid username or password");
+      var res = NotFound<LoginResponse>("Invalid username or password!");
       return res;
-      //return new LoginResponse()
-      //{
-      //  LoginOK = false,
-      //  AuthRequired = true,
-      //  Message = "Invalid username or password!"
-      //};
     }
 
+    // Set the auth token cookie too?
     return new LoginResponse()
     {
       LoginOK = true,

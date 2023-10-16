@@ -5,13 +5,14 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { InlineConfig } from 'vitest';
-import { fetchy, type IApiResponse } from '@/fetchy';
+import { fetchy, type FetchyResponse, type IApiResponse } from '@/fetchy';
 
-export interface IResult<T> {
-  data?: T | null,
-  success: boolean,
-  message?: string    // Success / error / etc. messages. 
-}
+// // NOTE: This can just be the fetchy result interface.....
+// export interface IResult<T> {
+//   data?: T | null,
+//   success: boolean,
+//   message?: string    // Success / error / etc. messages. 
+// }
 
 // Describes the current login state for the user.
 // Values for DisplayName and Avatar only make sense if the user is logged in.
@@ -21,7 +22,7 @@ export interface ILoginState {
   Avatar?: string
 }
 
-interface LoginResponse extends IApiResponse {
+export interface LoginResponse extends IApiResponse {
   IsLoggedIn: boolean,
   DisplayName: string,
   Avatar?: string
@@ -43,7 +44,7 @@ export const useLoginStore = defineStore('login', () => {
   };
 
   // ----------------------------------------------------------------------
-  async function Login(username: string, password: string): Promise<IResult<ILoginState>> {
+  async function Login(username: string, password: string): Promise<FetchyResponse<LoginResponse>> {
 
     const url = "https://localhost:7138/api/login";
     let p = await fetchy<LoginResponse>(url, {
@@ -55,15 +56,16 @@ export const useLoginStore = defineStore('login', () => {
       headers: { "Content-Type": 'application/json' }
     });
 
-    if (p.Error) {
-      throw Error("Network or other unhandled error!  Write some code to deal with this scenario...");
-    }
-    else {
-      return {
-        success: p.Success,
-        data: p.Data
-      }
-    }
+    return p; 
+    // if (p.Error) {
+    //   throw Error("Network or other unhandled error!  Write some code to deal with this scenario...");
+    // }
+    // else {
+    //   return {
+    //     success: p.Success,
+    //     data: p.Data
+    //   }
+    // }
 
   }
 

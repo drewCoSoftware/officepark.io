@@ -19,12 +19,15 @@ export interface IApiResponse {
   Message: string;
 }
 
+// This wraps an IApiResponse with a bit of extra data that summarizes success conditions,
+// as well as any errors that may have been encountered while processing the request.
+// NOTE: 'Error' data member does not pertain to things like 404, 500, etc. status codes.
 export interface FetchyResponse<T extends IApiResponse> {
-  Success: boolean;
   Data: T | null;
+  Success: boolean;
   Error: any | null;
 
-  // TODO: We can care about headers, etc. later.
+  // TODO: We can care about headers, etc. later??
 }
 
 
