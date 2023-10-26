@@ -7,6 +7,7 @@ import type { ILoginState } from "./stores/login";
 import { initCustomFormatter, ref } from 'vue';
 
 import type { LoginResponse } from './stores/login';
+import { buildErrorMessage } from 'vite';
 
 const _Login = useLoginStore();
 
@@ -20,6 +21,8 @@ let username = "";
 let password = "";
 const isWorking = ref(false);
 const isFormValid = ref(false);
+const hasError = ref(false);
+const errMsg = ref("error message");
 
 async function tryLogin() {
   if (username != "" && password != "" && !isWorking.value) {
@@ -27,7 +30,8 @@ async function tryLogin() {
 
     await _Login.Login(username, password).then((res) => {
       if (res.Error) {
-        alert('some fuckin error.....');
+        hasError.value = true;
+        errMsg.value = "Could not log in at this time.  Please try again later.";
       }
       else {
         const data: LoginResponse = res.Data!;
@@ -35,7 +39,8 @@ async function tryLogin() {
           alert('update the current login state!');
         }
         else {
-          alert("login failed!" + data?.Message);
+          hasError.value = true;
+          errMsg.value = data?.Message;
         }
       }
 
@@ -82,7 +87,10 @@ function updateForm() {
     </div>
 
     <div :class="isWorking ? 'login working' : 'login'">
-      <form>
+      <form :class="hasError ? 'has-error' : ''">
+        <div class="messages">
+          <p>{{errMsg}}</p>
+        </div>
         <div class="input">
           <input type="text" name="username" v-model="username" placeholder="Username" :disabled="isWorking" />
         </div>
@@ -110,4 +118,14 @@ header {
 .login.working {
   background: red;
 }
+
+form .messages p {
+  color:red;
+  display:none;
+}
+
+form.has-error .messages p {
+  display:block;
+}
+
 </style>
