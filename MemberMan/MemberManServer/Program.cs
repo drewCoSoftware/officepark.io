@@ -38,6 +38,11 @@ builder.Services.AddCors((ops) =>
     builder.SetIsOriginAllowed(IsOriginAllowed);
     builder.AllowCredentials();
     builder.WithHeaders("content-type");
+
+    // TODO: Use environment variable for this.
+#if DEBUG
+    builder.WithHeaders("x-test-api-call");
+#endif
   });
 });
 

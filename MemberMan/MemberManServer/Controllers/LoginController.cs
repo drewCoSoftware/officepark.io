@@ -40,10 +40,11 @@ public class LoginModel
   public string password { get; set; } = string.Empty;
 }
 
-// ==========================================================================
+// ============================================================================================================================
 public class SignupResponse : BasicResponse
 {
-  public MemberAvailability Availability { get; set; }
+  public bool IsUsernameAvailable { get; set; }
+  public bool IsEmailAvailable { get; set; }
 }
 
 
@@ -56,10 +57,13 @@ public class LoginController : ApiController
   public const int VERIFICATION_EXPIRED = 2;
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private IMemberAccess _DAL = null;
-  private IEmailService _Email = null;
+  private IMemberAccess _DAL = default!;
+  private IEmailService _Email = default!;
   public LoginController(IMemberAccess dal_, IEmailService email_)
   {
+    if (dal_ == null) { throw new ArgumentNullException("dal_"); }
+    if (email_ == null) { throw new ArgumentNullException("email_"); }
+
     _DAL = dal_;
     _Email = email_;
   }
@@ -74,6 +78,8 @@ public class LoginController : ApiController
   [Route("/api/signup")]
   public SignupResponse Signup(LoginModel login)
   {
+    ValidateLoginData(login);
+
     MemberAvailability availability = _DAL.CheckAvailability(login.username, login.email);
     bool isAvailable = availability.IsUsernameAvailable && availability.IsEmailAvailable;
     if (!isAvailable)
@@ -90,22 +96,38 @@ public class LoginController : ApiController
 
       return new SignupResponse()
       {
-        Availability = availability,
+        IsUsernameAvailable = isAvailable,
         Message = string.Join('\n', msgs)
       };
     }
 
-    Member m = _DAL.CreateMember(login.username, login.email, login.password);
+    // In test scenarios we don't actually create the user account.
+    if (!Request.Headers.ContainsKey("X-Test-Api-Call"))
+    {
 
-    // This is where we will send out the verification, etc. emails.
-    SendVerificationMessage(m);
+      Member m = _DAL.CreateMember(login.username, login.email, login.password);
+
+      // This is where we will send out the verification, etc. emails.
+      SendVerificationMessage(m);
+    }
 
     return new SignupResponse()
     {
+      IsUsernameAvailable = true,
       AuthRequired = false,
-      Message = "Signup OK!"
+      Message = "Signup OK!",
     };
 
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  protected void ValidateLoginData(LoginModel login)
+  {
+    login.username= login.email;
+    if (!StringTools_Local.IsValidEmail(login.email))
+    {
+      throw new InvalidOperationException("Invalid email address!");
+    }
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -190,10 +212,47 @@ public class LoginController : ApiController
       LoginOK = true,
       AuthRequired = true,
       Message = "OK",
-      DisplayName = login.username, 
+      DisplayName = login.username,
     };
   }
 
 
+
+  // ============================================================================================================================
+  // TODO: Move this functionality to drewCo.Tools.
+  public class StringTools_Local
+  {
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    /// <summary>
+    /// Tells us if the given email address is valid or not.
+    /// </summary>
+    /// <remarks>
+    /// Email addres validation is difficult.  This function may not cover all cases.
+    /// Please report any valid email address that causes this function to return false.
+    /// </remarks>
+    public static bool IsValidEmail(string email)
+    {
+      // Thanks Internet!
+      // Original version from:
+      // https://stackoverflow.com/questions/1365407/c-sharp-code-to-validate-email-address
+
+      var trimmedEmail = email.Trim();
+
+      if (trimmedEmail.EndsWith("."))
+      {
+        return false; // suggested by @TK-421
+      }
+      try
+      {
+        var addr = new System.Net.Mail.MailAddress(email);
+        return addr.Address == trimmedEmail;
+      }
+      catch
+      {
+        return false;
+      }
+    }
+  }
 
 }

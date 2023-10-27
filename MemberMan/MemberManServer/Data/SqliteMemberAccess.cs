@@ -1,8 +1,9 @@
 using Dapper;
 using DataHelpers.Data;
 using drewCo.Tools;
+using Microsoft.AspNetCore.Razor.Runtime.TagHelpers;
 using Microsoft.Data.Sqlite;
-
+using static MemberMan.LoginController;
 
 namespace officepark.io.Membership;
 
@@ -33,6 +34,10 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   // --------------------------------------------------------------------------------------------------------------------------
   public Member CreateMember(string username, string email, string password)
   {
+    if (!StringTools_Local.IsValidEmail(email))
+    {
+      throw new InvalidOperationException("Invalid email address!");
+    }
 
     string query = "INSERT INTO Members (username,email,createdon,verificationcode,verificationexpiration,permissions,password) VALUES (@Username,@Email,@CreatedOn,@VerificationCode,@VerificationExpiration,@Permissions,@Password) RETURNING id";
 

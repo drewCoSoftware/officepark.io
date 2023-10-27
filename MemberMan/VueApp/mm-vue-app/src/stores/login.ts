@@ -22,6 +22,11 @@ export interface ILoginState {
   Avatar?: string
 }
 
+export interface SignupResponse extends IApiResponse {
+  IsUsernameAvailable:boolean,
+  IsEmailAvailable:boolean,
+}
+
 export interface LoginResponse extends IApiResponse {
   IsLoggedIn: boolean,
   DisplayName: string,
@@ -43,6 +48,30 @@ export const useLoginStore = defineStore('login', () => {
     Avatar: "DefaultLogoutIcon.png"
   };
 
+
+    // ----------------------------------------------------------------------
+    async function SignUp(username: string, emailAddr:string, password: string) {
+      const url = "https://localhost:7138/api/signup";
+      let headers :Headers = new Headers(); 
+      headers.append("Content-Type", "application/json");
+
+
+      // TODO: Use Environment var:
+      headers.append("X-Test-Api-Call", "true");
+
+      let p = await fetchy<LoginResponse>(url, {
+        method: 'POST',
+        body: JSON.stringify({
+          username: username,
+          email: emailAddr,
+          password: password
+        }),
+        headers: headers
+      });
+  
+      return p;
+    }
+  
   // ----------------------------------------------------------------------
   async function Login(username: string, password: string): Promise<FetchyResponse<LoginResponse>> {
 
@@ -56,7 +85,7 @@ export const useLoginStore = defineStore('login', () => {
       headers: { "Content-Type": 'application/json' }
     });
 
-    return p; 
+    return p;
   }
 
   // ----------------------------------------------------------------------
@@ -77,5 +106,5 @@ export const useLoginStore = defineStore('login', () => {
     throw Error("Not implemented!");
   }
 
-  return { GetState, Login, Logout };
+  return { GetState, Login, Logout, SignUp };
 });

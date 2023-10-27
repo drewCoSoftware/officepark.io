@@ -46,7 +46,7 @@ const loginState = ref(_Login.GetState());
   </footer>
 </template>
 
-<style scoped lang="less">
+<style lang="less">
 header {
   line-height: 1.5;
   max-height: 100vh;
