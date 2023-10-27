@@ -4,61 +4,13 @@ import HelloWorld from './components/HelloWorld.vue'
 import type { IStatusData } from "./fetchy.js";
 import { useLoginStore } from './stores/login';
 import type { ILoginState } from "./stores/login";
-import { initCustomFormatter, ref } from 'vue';
-
-import type { LoginResponse } from './stores/login';
-import { buildErrorMessage } from 'vite';
-
-const _Login = useLoginStore();
+import {  ref } from 'vue';
 
 // For each page, or every so often we want to update the login status...
 // NOTE: The back-end of the application is responsible for evauluating the
 // permissions of the current user.
+const _Login = useLoginStore();
 const loginState = ref(_Login.GetState());
-
-// Form properties.
-let username = "";
-let password = "";
-const isWorking = ref(false);
-const isFormValid = ref(false);
-const hasError = ref(false);
-const errMsg = ref("error message");
-
-async function tryLogin() {
-  if (username != "" && password != "" && !isWorking.value) {
-    isWorking.value = true;
-
-    await _Login.Login(username, password).then((res) => {
-      if (res.Error) {
-        hasError.value = true;
-        errMsg.value = "Could not log in at this time.  Please try again later.";
-      }
-      else {
-        const data: LoginResponse = res.Data!;
-        if (res.Success && data?.IsLoggedIn) {
-          alert('update the current login state!');
-        }
-        else {
-          hasError.value = true;
-          errMsg.value = data?.Message;
-        }
-      }
-
-      isWorking.value = false;
-    });
-  }
-  else {
-    alert('login not available!');
-  }
-}
-
-
-function updateForm() {
-  // Revalidate the form.....
-  const isValid = username != "" && password != "";
-  isFormValid.value = isValid;
-
-}
 
 </script>
 
@@ -78,38 +30,23 @@ function updateForm() {
 
   <main>
     <div class="title">
-      <!-- <HelloWorld msg="You did it!" /> -->
       <h1>Member Man Tester</h1>
       <nav>
         <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
+        <RouterLink to="/register">Register</RouterLink>
       </nav>
     </div>
 
-    <div :class="isWorking ? 'login working' : 'login'">
-      <form :class="hasError ? 'has-error' : ''">
-        <div class="messages">
-          <p>{{errMsg}}</p>
-        </div>
-        <div class="input">
-          <input type="text" name="username" v-model="username" placeholder="Username" :disabled="isWorking" />
-        </div>
-        <div class="input">
-          <input type="password" name="password" v-model="password" placeholder="Password" :disabled="isWorking"
-            @input="updateForm" />
-        </div>
-        <button type="button" @click="tryLogin" :disabled="!isFormValid || isWorking">Login</button>
-      </form>
-    </div>
+    <RouterView />
+
   </main>
 
   <footer>
 
   </footer>
-  <!-- <RouterView /> -->
 </template>
 
-<style scoped>
+<style scoped lang="less">
 header {
   line-height: 1.5;
   max-height: 100vh;
@@ -120,12 +57,13 @@ header {
 }
 
 form .messages p {
-  color:red;
-  display:none;
+  color: red;
+  display: none;
 }
 
-form.has-error .messages p {
-  display:block;
+form.has-error {
+  .messages p {
+    display: block;
+  }
 }
-
 </style>

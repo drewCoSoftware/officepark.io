@@ -57,16 +57,6 @@ export const useLoginStore = defineStore('login', () => {
     });
 
     return p; 
-    // if (p.Error) {
-    //   throw Error("Network or other unhandled error!  Write some code to deal with this scenario...");
-    // }
-    // else {
-    //   return {
-    //     success: p.Success,
-    //     data: p.Data
-    //   }
-    // }
-
   }
 
   // ----------------------------------------------------------------------
