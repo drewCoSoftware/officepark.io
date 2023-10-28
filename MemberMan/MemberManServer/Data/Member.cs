@@ -24,10 +24,10 @@ public class Member : IHasPrimary
   public int ID { get; set; }
 
   [Unique]
-  public string Username { get; set; } = string.Empty;
+  public string Username { get; set; } = null!;
 
   [Unique]
-  public string Email { get; set; } = string.Empty;
+  public string Email { get; set; } = null!;
 
   public DateTimeOffset CreatedOn { get; set; } = DateTime.MinValue;
 
@@ -55,7 +55,7 @@ public class Member : IHasPrimary
   /// <summary>
   /// The hashed password.
   /// </summary>
-  public string Password { get; set; } = string.Empty;
+  public string Password { get; set; } = null!;
 
   // This data is used with the current session.
   [JsonIgnore]

@@ -82,13 +82,15 @@ public class LoginController : ApiController
 
     MemberAvailability availability = _DAL.CheckAvailability(login.username, login.email);
     bool isAvailable = availability.IsUsernameAvailable && availability.IsEmailAvailable;
+    
     if (!isAvailable)
     {
       var msgs = new List<string>();
-      if (!availability.IsUsernameAvailable)
-      {
-        msgs.Add($"The username '{login.username}' is in use!");
-      }
+      // NOTE: By default we only report when an email address is not available.
+      //if (!availability.IsUsernameAvailable)
+      //{
+      //  msgs.Add($"The username '{login.username}' is in use!");
+      //}
       if (!availability.IsEmailAvailable)
       {
         msgs.Add($"The email address '{login.email}' is in use!");

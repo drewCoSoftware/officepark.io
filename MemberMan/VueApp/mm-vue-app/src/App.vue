@@ -4,7 +4,7 @@ import HelloWorld from './components/HelloWorld.vue'
 import type { IStatusData } from "./fetchy.js";
 import { useLoginStore } from './stores/login';
 import type { ILoginState } from "./stores/login";
-import {  ref } from 'vue';
+import { ref } from 'vue';
 
 // For each page, or every so often we want to update the login status...
 // NOTE: The back-end of the application is responsible for evauluating the
@@ -47,6 +47,8 @@ const loginState = ref(_Login.GetState());
 </template>
 
 <style lang="less">
+@linkColor: #0000FF;
+
 header {
   line-height: 1.5;
   max-height: 100vh;
@@ -65,5 +67,19 @@ form.has-error {
   .messages p {
     display: block;
   }
+}
+
+button.link-button {
+  background: none;
+  border: none;
+  text-decoration: underline;
+
+  color: @linkColor;
+  margin:0;
+  padding: 0;
+}
+
+button.link-button:hover {
+  cursor: pointer;
 }
 </style>

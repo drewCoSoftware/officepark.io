@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using drewCo.Tools;
+using MemberManServer;
 using officepark.io.Membership;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,6 +64,11 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.UseCors("corsPolicy");
+
+
+// Error Handler / Logger:
+// Arguments can be added to the constructor here so that configurations can be made as needed...
+app.UseMiddleware(typeof(ErrorHandler));
 
 app.Run();
 
