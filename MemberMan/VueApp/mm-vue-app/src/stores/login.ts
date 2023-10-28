@@ -5,7 +5,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { InlineConfig } from 'vitest';
-import { fetchy, type FetchyResponse, type IApiResponse } from '@/fetchy';
+import { fetchy, fetchyPost, type FetchyResponse, type IApiResponse } from '@/fetchy';
 
 // // NOTE: This can just be the fetchy result interface.....
 // export interface IResult<T> {
@@ -23,8 +23,8 @@ export interface ILoginState {
 }
 
 export interface SignupResponse extends IApiResponse {
-  IsUsernameAvailable:boolean,
-  IsEmailAvailable:boolean,
+  IsUsernameAvailable: boolean,
+  IsEmailAvailable: boolean,
 }
 
 export interface LoginResponse extends IApiResponse {
@@ -49,29 +49,44 @@ export const useLoginStore = defineStore('login', () => {
   };
 
 
-    // ----------------------------------------------------------------------
-    async function SignUp(username: string, emailAddr:string, password: string) {
-      const url = "https://localhost:7138/api/signup";
-      let headers :Headers = new Headers(); 
-      headers.append("Content-Type", "application/json");
+  // ----------------------------------------------------------------------
+  async function RequestVerification(username: string) {
 
+    const url = "https://localhost:7138/api/verify";
 
-      // TODO: Use Environment var:
-      headers.append("X-Test-Api-Call", "true");
+    let headers: Headers = new Headers();
+    headers.append("Content-Type", "application/json");
 
-      let p = await fetchy<LoginResponse>(url, {
-        method: 'POST',
-        body: JSON.stringify({
-          username: username,
-          email: emailAddr,
-          password: password
-        }),
-        headers: headers
-      });
-  
-      return p;
-    }
-  
+    // TODO: Use Environment var:
+    headers.append("X-Test-Api-Call", "true");
+
+    let p = fetchyPost(url, { username: username, x:124 }, headers);
+    return p;
+  }
+
+  // ----------------------------------------------------------------------
+  async function SignUp(username: string, emailAddr: string, password: string): Promise<FetchyResponse<SignupResponse>> {
+    const url = "https://localhost:7138/api/signup";
+
+    let headers: Headers = new Headers();
+    headers.append("Content-Type", "application/json");
+
+    // TODO: Use Environment var:
+    headers.append("X-Test-Api-Call", "true");
+
+    let p = await fetchy<SignupResponse>(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        username: username,
+        email: emailAddr,
+        password: password
+      }),
+      headers: headers
+    });
+
+    return p;
+  }
+
   // ----------------------------------------------------------------------
   async function Login(username: string, password: string): Promise<FetchyResponse<LoginResponse>> {
 
@@ -106,5 +121,5 @@ export const useLoginStore = defineStore('login', () => {
     throw Error("Not implemented!");
   }
 
-  return { GetState, Login, Logout, SignUp };
+  return { GetState, Login, Logout, SignUp, RequestVerification };
 });

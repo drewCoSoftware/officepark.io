@@ -39,6 +39,14 @@ const loginState = ref(_Login.GetState());
 
     <RouterView />
 
+    
+  <div class="todo">
+    <h2>TODO</h2>
+    <ul>
+      <li>Interpret failed registration for existing email address + display some kind of resend link?</li>
+    </ul>
+  </div>
+
   </main>
 
   <footer>
@@ -82,4 +90,12 @@ button.link-button {
 button.link-button:hover {
   cursor: pointer;
 }
+
+.todo {
+  margin-top: 2rem;
+  border: solid 1px pink;
+  padding: 1rem;
+  text-align: left !important;
+}
+
 </style>

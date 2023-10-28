@@ -30,6 +30,17 @@ export interface FetchyResponse<T extends IApiResponse> {
   // TODO: We can care about headers, etc. later??
 }
 
+// ----------------------------------------------------------------------------------------------------------
+export async function fetchyPost<T extends IApiResponse>(url: string, data: any | null, headers: {} | undefined): Promise<FetchyResponse<T>> {
+
+  let p = fetchy<T>(url, {
+    method: 'POST',
+    body: data == null ? null : JSON.stringify(data),
+    headers: headers
+  });
+
+  return p;
+}
 
 // ----------------------------------------------------------------------------------------------------------
 export async function fetchy<T extends IApiResponse>(url: string, ops: FetchyOptions | null = null): Promise<FetchyResponse<T>> {
@@ -59,20 +70,20 @@ export async function fetchy<T extends IApiResponse>(url: string, ops: FetchyOpt
     return res;
   }).then(data => {
 
-      // NOTE: This will not deserialize the date strings into proper
-      // Date instances for typescript.
-      // We may have to look at our intended property types from <T>
-      // and find ways to convert from there.  Definitiely NOT something that
-      // we want to mess with at this time.
-      res.Data = <T>data;
-      res.Success = success;
+    // NOTE: This will not deserialize the date strings into proper
+    // Date instances for typescript.
+    // We may have to look at our intended property types from <T>
+    // and find ways to convert from there.  Definitiely NOT something that
+    // we want to mess with at this time.
+    res.Data = <T>data;
+    res.Success = success;
 
-    }).catch((error) => {
+  }).catch((error) => {
 
-      // Errors happen when there is some kind of network issue.
-      res.Success = false;
-      res.Error = error
-    });
+    // Errors happen when there is some kind of network issue.
+    res.Success = false;
+    res.Error = error
+  });
 
   return res;
 }

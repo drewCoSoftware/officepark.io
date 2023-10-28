@@ -5,6 +5,7 @@ using System.Text.Json;
 namespace MemberManServer
 {
   // ============================================================================================================================
+  // TODO: This needs a real name, and it needs to live in shared space so that other web-apps can make use of it.
   public class ErrorHandler
   {
     private readonly RequestDelegate next;

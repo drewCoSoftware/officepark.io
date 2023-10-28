@@ -70,6 +70,38 @@ public class LoginController : ApiController
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
+  /// M$FT hates us and makes model binding as hard as possible.
+  /// We can't just bind single properties from a POST request, we instead have to make a composite type.
+  /// </summary>
+  public class VerificationArgs
+  {
+    public string Username { get; set; } = default!;
+    public string? VerificationCode { get; set; } = default!;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// This will request that the system re-send the verification email (or whatever).
+  /// The response is always 200 as this function is not meant to indicate whether the user actually exists or not.
+  /// </summary>
+  [HttpPost]
+  [Route("/api/verify")]
+  public IAPIResponse RequestVerification([FromBody] VerificationArgs args)
+  {
+    var member = _DAL.GetMemberByName(args.Username);
+    if (member != null)
+    {
+      SendVerificationMessage(member);
+    }
+
+    return new BasicResponse()
+    {
+      Message = "OK"
+    };
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
   /// This will create a new, unverifed user in the system.
   /// An email or something will be sent out so that the user may verify.
   /// NOTE: We could also get into that cellphone verification stuff too!
@@ -82,7 +114,7 @@ public class LoginController : ApiController
 
     MemberAvailability availability = _DAL.CheckAvailability(login.username, login.email);
     bool isAvailable = availability.IsUsernameAvailable && availability.IsEmailAvailable;
-    
+
     if (!isAvailable)
     {
       var msgs = new List<string>();
@@ -125,7 +157,7 @@ public class LoginController : ApiController
   // --------------------------------------------------------------------------------------------------------------------------
   protected void ValidateLoginData(LoginModel login)
   {
-    login.username= login.email;
+    login.username = login.email;
     if (!StringTools_Local.IsValidEmail(login.email))
     {
       throw new InvalidOperationException("Invalid email address!");
@@ -133,9 +165,9 @@ public class LoginController : ApiController
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private void SendVerificationMessage(Member m)
+  private void SendVerificationMessage(Member member)
   {
-    Email email = CreateVerificationEmail(m);
+    Email email = CreateVerificationEmail(member);
     this._Email.SendEmail(email);
   }
 
