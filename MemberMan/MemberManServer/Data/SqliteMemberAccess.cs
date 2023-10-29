@@ -19,15 +19,37 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? CheckLogin(string username, string password)
   {
-    string hash = (this as IMemberAccess).GetPasswordHash(password);
+    // string hash = (this as IMemberAccess).GetPasswordHash(password);
 
-    string query = "SELECT * FROM Members WHERE username = @username AND password = @hashed";
+    //// We need to get the stored password first...
+    //string storedHash = GetStoredHash(username);
+    //noo
+
+    string query = "SELECT * FROM Members WHERE username = @username";
     var res = RunSingleQuery<Member>(query, new
     {
       username = username,
-      hashed = hash
     });
 
+    // Check to see if the password is OK....
+    // If not, return null.
+    if (res != null)
+    {
+      bool passOK = (this as IMemberAccess).CheckPassword(password, res.Password);
+      if (!passOK)
+      {
+        return null;
+      }
+    }
+
+    return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private string? GetStoredHash(string username)
+  {
+    string query = "SELECT password FROM members WHERE username = @username";
+    string? res = RunSingleQuery<string?>(query, new { username = username });
     return res;
   }
 
@@ -68,8 +90,15 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   // --------------------------------------------------------------------------------------------------------------------------
   public void RemoveMember(string username)
   {
+    // TODO: We don't actually want to be able to perma-delete users!
+    // If anything we should deactivate them, or move their entries to some kind
+    // of deactivated table.
     string query = "DELETE FROM members WHERE username = @username";
     int removed = RunExecute(query, new { @username = username });
+    if (removed != 1)
+    {
+      throw new InvalidOperationException($"Unable to remove the member: {username}");
+    }
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -149,6 +178,37 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     }
 
     return m;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  internal string SetPermissions(string username, string permissions)
+  {
+    string query = "UPDATE members SET permissions = @permissions WHERE username = @username";
+    int updated = RunExecute(query, new
+    {
+      permissions = permissions,
+      username = username
+    });
+
+    if (updated != 1)
+    {
+      throw new InvalidOperationException($"Unable to set permissions for member: {username}!");
+    }
+
+    return permissions;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  internal void UpdateMember(Member m)
+  {
+    var def = this.SchemaDef.GetTableDef(typeof(Member)); // nameof(Member))!;
+    string query = def.GetUpdateQuery();
+
+    int updated = RunExecute(query, m);
+    if (updated != 1)
+    {
+      throw new InvalidOperationException($"Unable to update data for member: {m.Username}!");
+    }
   }
 }
 

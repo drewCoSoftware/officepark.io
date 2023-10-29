@@ -1,4 +1,7 @@
 
+using BC = BCrypt.Net.BCrypt;
+
+
 namespace officepark.io.Membership;
 
 // ==========================================================================
@@ -21,8 +24,18 @@ public interface IMemberAccess
   // Cool.  With default implementations, we complete the loop and have ABCs! Lol, j/k.
   string GetPasswordHash(string password, int workFactor = DEFAULT_WORK_FACTOR)
   {
-    string hashed = BCrypt.Net.BCrypt.HashPassword(password, workFactor);
+    string hashed = BC.HashPassword(password, workFactor);
     return hashed;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// Compares the given password to the hash.  This will tell us if the password is actually correct or not.
+  /// </summary>
+  bool CheckPassword(string password, string hash)
+  {
+    bool res = BC.Verify(password, hash);
+    return res;
   }
 
   Member? GetMemberByName(string username);

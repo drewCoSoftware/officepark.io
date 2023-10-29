@@ -42,8 +42,15 @@ const loginState = ref(_Login.GetState());
     
   <div class="todo">
     <h2>TODO</h2>
+    
+    <h3>Back End</h3>
     <ul>
-      <li>Interpret failed registration for existing email address + display some kind of resend link?</li>
+      <li>We need a way to create a new DB with some kind of super-admin account. (CLI) Otherwise we can't really test the full gamut of feautures...??</li>
+    </ul>
+    <h3>Front-end</h3>
+    <ul>
+      <li>Forgot Password?</li>
+      <li>Interpret unverified account and post a re-verify link</li>
     </ul>
   </div>
 

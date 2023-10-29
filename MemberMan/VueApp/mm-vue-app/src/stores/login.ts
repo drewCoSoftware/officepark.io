@@ -58,7 +58,7 @@ export const useLoginStore = defineStore('login', () => {
     headers.append("Content-Type", "application/json");
 
     // TODO: Use Environment var:
-    headers.append("X-Test-Api-Call", "true");
+    // headers.append("X-Test-Api-Call", "true");
 
     let p = fetchyPost(url, { username: username, x:124 }, headers);
     return p;
@@ -72,7 +72,7 @@ export const useLoginStore = defineStore('login', () => {
     headers.append("Content-Type", "application/json");
 
     // TODO: Use Environment var:
-    headers.append("X-Test-Api-Call", "true");
+    // headers.append("X-Test-Api-Call", "true");
 
     let p = await fetchy<SignupResponse>(url, {
       method: 'POST',
