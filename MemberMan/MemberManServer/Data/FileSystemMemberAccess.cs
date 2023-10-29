@@ -51,7 +51,7 @@ public class FileSystemMemberAccess : IMemberAccess
   }
 
   // --------------------------------------------------------------------------------------------------------------------------  
-  public void RemoveMember(string username)
+  public void RemoveMember(string username, bool mustExist = true)
   {
     throw new NotImplementedException();
   }

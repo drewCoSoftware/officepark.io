@@ -11,7 +11,16 @@ namespace MemberMan;
 // ============================================================================================================================
 public class LoginResponse : BasicResponse
 {
-  public bool LoginOK { get; set; }
+  /// <summary>
+  /// Is the user logged in?
+  /// </summary>
+  public bool IsLoggedIn { get; set; }
+
+  /// <summary>
+  /// Is this a verified user?  Depending on the application, the user may or may not be allowed to 
+  /// access certain features or even the entire system.
+  /// </summary>
+  public bool IsVerified { get; set; }
 
   /// <summary>
   /// The name that should be displayed in a UI.  This doesn't have to be the same thing
@@ -131,12 +140,15 @@ public class LoginController : ApiController
       return new SignupResponse()
       {
         IsUsernameAvailable = isAvailable,
-        Message = string.Join('\n', msgs)
+        Message = string.Join('\n', msgs),
+        Code = 409    // (use 409 response code too?)
       };
     }
 
     // In test scenarios we don't actually create the user account.
-    if (!Request.Headers.ContainsKey("X-Test-Api-Call"))
+    // NOTE: 'Request' is null when we are running unit tests.  There may be a better way to wrap the
+    // code that gets the headers so that we can test them too.
+    if (!HasHeader("X-Test-Api-Call"))
     {
 
       Member m = _DAL.CreateMember(login.username, login.email, login.password);
@@ -152,6 +164,14 @@ public class LoginController : ApiController
       Message = "Signup OK!",
     };
 
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  protected bool HasHeader(string headerName)
+  {
+    if (Request == null) { return false; }
+    bool res = Request.Headers.ContainsKey(headerName);
+    return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -241,11 +261,22 @@ public class LoginController : ApiController
     }
 
     // Set the auth token cookie too?
+    // NOTE: Here we can interprt options to decide if the user can be logged in, even if they aren't verifed.
+    string msg = "OK";
+    bool isVerified = member.VerifiedOn != null;
+    if (!isVerified)
+    {
+      msg = $"User: {member.Username} is not verified.";
+    }
+
+    bool isLoggedIn = isVerified;
+
     return new LoginResponse()
     {
-      LoginOK = true,
+      IsLoggedIn = isLoggedIn,
+      IsVerified = isVerified,
       AuthRequired = true,
-      Message = "OK",
+      Message = msg,
       DisplayName = login.username,
     };
   }

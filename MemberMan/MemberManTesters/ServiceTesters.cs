@@ -16,8 +16,8 @@ public class ServiceTesters : TestBase
   [Fact]
   public void CanSignupAndVerifyNewUser()
   {
-    const string NAME = nameof(CanSignupAndVerifyNewUser);
-    const string EMAIL = NAME + "@test.com";
+    const string NAME = nameof(CanSignupAndVerifyNewUser) + "@test.com";
+    const string EMAIL = NAME;
     const string PASS = "ABC";
 
     SimEmailService emailSvc;
@@ -60,10 +60,10 @@ public class ServiceTesters : TestBase
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private void SignupNewUser(string NAME, string EMAIL, string PASS, out SimEmailService emailSvc, out LoginController ctl)
+  private void SignupNewUser(string username, string email, string password, out SimEmailService emailSvc, out LoginController ctl)
   {
     // Remove the test user.
-    CleanupTestUser(NAME);
+    CleanupTestUser(username);
 
     // Create the login controller.
     // Signup the user + validate availability.
@@ -71,9 +71,9 @@ public class ServiceTesters : TestBase
     ctl = new LoginController(GetMemberAccess(), emailSvc);
     SignupResponse response = ctl.Signup(new LoginModel()
     {
-      username = NAME,
-      email = EMAIL,
-      password = PASS
+      username = username,
+      email = email,
+      password = password
     });
     Assert.Equal(0, response.Code);
   }
@@ -89,8 +89,8 @@ public class ServiceTesters : TestBase
     // Create unverified user.
     // Expire the verification (manually, probably)?
     // --> We can just get access to some internal process / service that sets this up, probably in the DAL?
-    const string NAME = nameof(ExpiredVerificationWillResendEmail);
-    const string EMAIL = NAME + "@test.com";
+    const string NAME = nameof(ExpiredVerificationWillResendEmail) + "@test.com";
+    const string EMAIL = NAME;
     const string PASS = "ABC";
 
     SimEmailService emailSvc;

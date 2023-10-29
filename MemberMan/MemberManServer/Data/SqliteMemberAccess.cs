@@ -88,14 +88,16 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public void RemoveMember(string username)
+  public void RemoveMember(string username, bool mustExist = true)
   {
     // TODO: We don't actually want to be able to perma-delete users!
     // If anything we should deactivate them, or move their entries to some kind
     // of deactivated table.
     string query = "DELETE FROM members WHERE username = @username";
     int removed = RunExecute(query, new { @username = username });
-    if (removed != 1)
+
+    // NOTE: This is misleading because a failed removal doesn't necessarily mean that the user didn't exist.  There could be a differnt reason...
+    if (removed != 1 && mustExist)
     {
       throw new InvalidOperationException($"Unable to remove the member: {username}");
     }

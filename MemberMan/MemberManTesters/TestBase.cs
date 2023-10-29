@@ -10,7 +10,7 @@ public class TestBase
   protected void CleanupTestUser(string username)
   {
     IMemberAccess dal = GetMemberAccess();
-    dal.RemoveMember(username);
+    dal.RemoveMember(username, false);
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

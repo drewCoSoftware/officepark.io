@@ -42,7 +42,7 @@ public interface IMemberAccess
   List<Member> GetMemberList();
 
   Member CreateMember(string username, string email, string password);
-  void RemoveMember(string username);
+  void RemoveMember(string username, bool mustExist = true);
 
   /// <summary>
   /// Change the verification code and expiration date.
