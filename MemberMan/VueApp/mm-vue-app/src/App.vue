@@ -79,14 +79,17 @@ h6 {
   background: red;
 }
 
-form .messages p {
+form .messages {
+  min-height: 1.5rem;
   color: red;
-  display: none;
+  opacity: 0;
+  transition: all linear 0.125s;
+  margin-bottom: 0.5rem;
 }
 
 form.has-error {
-  .messages p {
-    display: block;
+  .messages {
+    opacity: 1;
   }
 }
 

@@ -274,8 +274,13 @@ public class LoginController : ApiController
       code = LoginController.NOT_VERFIED;
     }
 
-    bool isLoggedIn = isVerified;
-
+    // TODO: OPTIONS:
+    bool isLoggedIn = true;
+    bool ALLOW_UNVERIFIED_LOGIN = false;
+    if (!isVerified && !ALLOW_UNVERIFIED_LOGIN)
+    {
+      isLoggedIn = false;
+    }
     return new LoginResponse()
     {
       IsLoggedIn = isLoggedIn,
