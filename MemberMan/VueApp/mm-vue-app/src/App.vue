@@ -39,20 +39,17 @@ const loginState = ref(_Login.GetState());
 
     <RouterView />
 
-    
-  <div class="todo">
-    <h2>TODO</h2>
-    
-    <h3>Back End</h3>
-    <ul>
-      <li>We need a way to create a new DB with some kind of super-admin account. (CLI) Otherwise we can't really test the full gamut of feautures...??</li>
-    </ul>
-    <h3>Front-end</h3>
-    <ul>
-      <li>Forgot Password?</li>
-      <li>Interpret unverified account and post a re-verify link</li>
-    </ul>
-  </div>
+
+    <div class="todo">
+      <h2>TODO</h2>
+
+      <h3>Back End</h3>
+      <h3>Front-end</h3>
+      <ul>
+        <li>Interpret unverified account and post a re-verify link (login page)</li>
+        <li>Forgot Password?</li>
+      </ul>
+    </div>
 
   </main>
 
@@ -67,6 +64,15 @@ const loginState = ref(_Login.GetState());
 header {
   line-height: 1.5;
   max-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-align: center;
 }
 
 .login.working {
@@ -90,7 +96,7 @@ button.link-button {
   text-decoration: underline;
 
   color: @linkColor;
-  margin:0;
+  margin: 0;
   padding: 0;
 }
 
@@ -103,6 +109,14 @@ button.link-button:hover {
   border: solid 1px pink;
   padding: 1rem;
   text-align: left !important;
-}
 
-</style>
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    text-align: initial;
+  }
+
+}</style>

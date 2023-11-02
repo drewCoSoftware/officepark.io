@@ -62,8 +62,10 @@ public class SignupResponse : BasicResponse
 [Route("[controller]")]
 public class LoginController : ApiController
 {
-  public const int INVALID_VERIFICATION = 1;
-  public const int VERIFICATION_EXPIRED = 2;
+  public const int INVALID_VERIFICATION = 0x11;
+  public const int VERIFICATION_EXPIRED = 0x12;
+  public const int NOT_VERFIED = 0x13;
+  public const int LOGIN_FAILED = 0x14;
 
   // --------------------------------------------------------------------------------------------------------------------------
   private IMemberAccess _DAL = default!;
@@ -257,16 +259,19 @@ public class LoginController : ApiController
     {
       // NOTE: This should return a 404!
       var res = NotFound<LoginResponse>("Invalid username or password!");
+      res.Code = LoginController.LOGIN_FAILED;
       return res;
     }
 
     // Set the auth token cookie too?
     // NOTE: Here we can interprt options to decide if the user can be logged in, even if they aren't verifed.
     string msg = "OK";
+    int code = 0;
     bool isVerified = member.VerifiedOn != null;
     if (!isVerified)
     {
       msg = $"User: {member.Username} is not verified.";
+      code = LoginController.NOT_VERFIED;
     }
 
     bool isLoggedIn = isVerified;
@@ -278,6 +283,7 @@ public class LoginController : ApiController
       AuthRequired = true,
       Message = msg,
       DisplayName = login.username,
+      Code = code
     };
   }
 
