@@ -48,6 +48,7 @@ const loginState = ref(_Login.GetState());
       <ul>
         <li>Interpret unverified account and post a re-verify link (login page)</li>
         <li>Forgot Password?</li>
+        <li>Proper load spinny....</li>
       </ul>
     </div>
 
@@ -75,23 +76,41 @@ h6 {
   text-align: center;
 }
 
-.login.working {
-  background: red;
+.ez-form {
+  .login {}
+
+  .login.working {
+    background: red;
+  }
+
+  .messages {
+    min-height: 1.5rem;
+    color: red;
+    opacity: 0;
+    transition: all linear 0.125s;
+    margin-bottom: 0.5rem;
+  }
 }
 
-form .messages {
-  min-height: 1.5rem;
-  color: red;
-  opacity: 0;
-  transition: all linear 0.125s;
-  margin-bottom: 0.5rem;
-}
-
-form.has-error {
+.ez-form.has-error {
   .messages {
     opacity: 1;
   }
 }
+
+// form .messages {
+//   min-height: 1.5rem;
+//   color: red;
+//   opacity: 0;
+//   transition: all linear 0.125s;
+//   margin-bottom: 0.5rem;
+// }
+
+// form.has-error {
+//   .messages {
+//     opacity: 1;
+//   }
+// }
 
 button.link-button {
   background: none;
@@ -122,4 +141,5 @@ button.link-button:hover {
     text-align: initial;
   }
 
-}</style>
+}
+</style>
