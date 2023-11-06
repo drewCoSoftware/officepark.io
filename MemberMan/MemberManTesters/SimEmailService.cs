@@ -1,5 +1,7 @@
 
 // ==========================================================================
+using MemberManServer;
+
 public class SimEmailService : IEmailService
 {
   /// <summary>

@@ -1,16 +1,34 @@
 using System.Diagnostics;
+using System.Net;
 using System.Text.RegularExpressions;
 using drewCo.Tools;
 using MemberManServer;
 using officepark.io.Membership;
+using static MemberManServer.Mailer;
 
 internal class Program
 {
   static SqliteMemberAccess memberAccess = default!;
 
+  // OPTIONS:
+  const string EMAIL_FROM = "info@august-harper.com";
+  const string SMTP_SERVER = "mx-s3.vivawebhost.com";
+  const int SMTP_PORT = 465;
+
+
   // --------------------------------------------------------------------------------------------------------------------------
   private static int Main(string[] args)
   {
+    // TEMP: We are testing some email features....
+    Email mail = new Email(EMAIL_FROM, "drew@august-harper.com", "test", "This is a test!", false);
+
+    const string PASSWORD = "your password here!";
+    var creds = new NetworkCredential(EMAIL_FROM, PASSWORD);
+
+    Mailer.SendMail(mail, SMTP_SERVER, SMTP_PORT, false, creds);
+
+    return 0;
+
     memberAccess = InitDatabase();
 
     if (HandleCommandLine(args, out int exitCode))

@@ -2,10 +2,12 @@ using System;
 using DataHelpers.Data;
 using HtmlAgilityPack;
 using MemberMan;
+using MemberManServer;
 using officepark.io.API;
 
 using officepark.io.Membership;
 using Xunit;
+using static MemberManServer.Mailer;
 
 namespace MemberManTesters;
 

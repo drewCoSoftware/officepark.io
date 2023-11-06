@@ -1,10 +1,12 @@
 
 using System.Runtime.CompilerServices;
 using System.Text;
+using MemberManServer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using officepark.io.API;
 using officepark.io.Membership;
+using static MemberManServer.Mailer;
 
 namespace MemberMan;
 
@@ -196,15 +198,16 @@ public class LoginController : ApiController
   // --------------------------------------------------------------------------------------------------------------------------
   private Email CreateVerificationEmail(Member m)
   {
-    var sb = new StringBuilder();
+    throw new NotImplementedException();
+    //var sb = new StringBuilder();
 
-    const string DOMAIN = "";
-    sb.Append($"<p>Your verification code is: <a class=\"verify-link\" href=\"/{DOMAIN}/api/verifyuser?code={m.VerificationCode}\">Click Here to Verify your Account</a></p>");
-    var res = new Email()
-    {
-      Body = sb.ToString()
-    };
-    return res;
+    //const string DOMAIN = "";
+    //sb.Append($"<p>Your verification code is: <a class=\"verify-link\" href=\"/{DOMAIN}/api/verifyuser?code={m.VerificationCode}\">Click Here to Verify your Account</a></p>");
+    //var res = new Email()
+    //{
+    //  Body = sb.ToString()
+    //};
+    //return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

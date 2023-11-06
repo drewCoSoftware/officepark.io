@@ -1,5 +1,6 @@
-
+using MemberManServer;
 using System.Diagnostics;
+using static MemberManServer.Mailer;
 
 // ==========================================================================      
 public class EmailSendResult
@@ -7,13 +8,13 @@ public class EmailSendResult
   public bool SendOK = false;
 }
 
-// ==========================================================================      
-public class Email
-{
-  // CONTENT TBD.
-  public string Body { get; set; } = string.Empty;
-  public bool IsHtml { get; set; } = false;
-}
+//// ==========================================================================      
+//public class Email
+//{
+//  // CONTENT TBD.
+//  public string Body { get; set; } = string.Empty;
+//  public bool IsHtml { get; set; } = false;
+//}
 
 // ==========================================================================      
 public interface IEmailService
