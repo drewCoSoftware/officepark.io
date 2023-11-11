@@ -74,15 +74,16 @@ public class LoginController : ApiController
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
-  /// This will create a new, unverifed user in the system.
-  /// An email or something will be sent out so that the user may verify.
+  /// This will create a new, unverifed member in the system.
+  /// An email or something will be sent out so that the member may verify their account.
   /// NOTE: We could also get into that cellphone verification stuff too!
   /// </summary>
   [HttpPost]
   [Route("/api/signup")]
   public SignupResponse Signup(LoginModel login)
   {
-    // TODO: A logged in user should get a 404 or some other error for this...
+    // TODO: A logged in user should get a 404 or some other error for this... (is there a 200 level code that can articulate this correctly?  are we getting ballz deep into semantics?)
+    // The return code should also indicate that the user is already logged in.....
 
     ValidateLoginData(login);
 

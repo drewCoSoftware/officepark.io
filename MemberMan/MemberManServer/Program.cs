@@ -25,25 +25,7 @@ internal class Program
   // --------------------------------------------------------------------------------------------------------------------------
   private static int Main(string[] args)
   {
-    // TEMP: We are testing some email features....
-    //Email mail = new Email(EMAIL_FROM, "drew@august-harper.com", "test", "This is a test!", false);
-
-    //const string PASSWORD = "your password here!";
-    //var creds = new NetworkCredential(EMAIL_FROM, PASSWORD);
-
-    //Mailer.SendMail(mail, SMTP_SERVER, SMTP_PORT, false, creds);
-
-    //string templateText = File.ReadAllText(Path.Combine(FileTools.GetLocalDir("EmailTemplates"), "Verification.html"));
-    //var model = new { VerificationCode = "123" };
-
-    //var t = Template.Parse(templateText);
-    //string final = t.Render(Hash.FromAnonymousObject(new { model = model }));
-
-    //Console.WriteLine(final);
-
-    // return 0;
-
-    memberAccess = InitDatabase();
+     memberAccess = InitDatabase();
 
     if (HandleCommandLine(args, out int exitCode))
     {

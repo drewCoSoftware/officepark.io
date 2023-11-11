@@ -76,9 +76,9 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     };
     SetVerificationProps(m, verifyWindow);
 
-    // NOTE: This should be 'RunExecute'!
-    int id = RunSingleQuery<int>(query, m);
-    m.ID = id;    // We should not set this!
+    // HINT: The query is a 'returns' query, so we expect the PK for the new member.
+    int memberId = RunSingleQuery<int>(query, m);
+    m.ID = memberId;
 
     return m;
   }
