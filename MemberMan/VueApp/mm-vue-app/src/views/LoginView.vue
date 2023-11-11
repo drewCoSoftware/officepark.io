@@ -62,9 +62,9 @@ async function tryLogin() {
 
           if (data.Code == 0x13) {  // TODO: Define const.
             // Not verified, display the verification message.....
-            //stateClass.value = "not-verified";
-
-            errMsg.value = 'This account has not been verified. You should have received an email, or you may <a href="">request another</a>.'
+            // If we want to reverify at this time, we should maybe use a one-time cookie....?
+            // This will take us to a different page that will fire off the reverification request...?
+            errMsg.value = 'This account has not been verified. You should have received an email, or you may <a href="/reverify">request another</a>.'
 
           }
           // else {

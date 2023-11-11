@@ -30,7 +30,7 @@ const loginState = ref(_Login.GetState());
 
   <main>
     <div class="title">
-      <h1>Member Man Tester</h1>
+      <h1>MemberMan For VUE</h1>
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/register">Register</RouterLink>

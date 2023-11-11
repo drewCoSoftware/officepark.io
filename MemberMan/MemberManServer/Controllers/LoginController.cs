@@ -54,7 +54,7 @@ public class LoginController : ApiController
   /// The response is always 200 as this function is not meant to indicate whether the user actually exists or not.
   /// </summary>
   [HttpPost]
-  [Route("/api/verify")]
+  [Route("/api/reverify")]
   public IAPIResponse RequestVerification([FromBody] VerificationArgs args)
   {
     // TODO: A logged in user should get a 404 or some other error for this...
@@ -82,6 +82,7 @@ public class LoginController : ApiController
   [Route("/api/signup")]
   public SignupResponse Signup(LoginModel login)
   {
+    // TEST:  How can we test attributes / filters in netcore? (we would have to pass cookies around....)
     // TODO: A logged in user should get a 404 or some other error for this... (is there a 200 level code that can articulate this correctly?  are we getting ballz deep into semantics?)
     // The return code should also indicate that the user is already logged in.....
 
