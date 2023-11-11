@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using DataHelpers.Data;
 using DotLiquid;
 using HtmlAgilityPack;
@@ -110,13 +111,13 @@ public class ServiceTesters : TestBase
   /// will send the email again.
   /// </summary>
   [Fact]
-  public void ExpiredVerificationWillResendEmail()
+  public void CanResendVerificationEmail()
   {
     // Create unverified user.
     // Expire the verification (manually, probably)?
     // --> We can just get access to some internal process / service that sets this up, probably in the DAL?
-    const string NAME = nameof(ExpiredVerificationWillResendEmail) + "@test.com";
-    const string EMAIL = NAME;
+    const string EMAIL = nameof(CanResendVerificationEmail) + "@test.com";
+    const string NAME = EMAIL;
     const string PASS = "ABC";
 
     SignupNewUser(NAME, EMAIL, PASS, out var context);
@@ -128,6 +129,17 @@ public class ServiceTesters : TestBase
     // Visit Verification URL.
     BasicResponse response = context.LoginCtl.VerifyUser(oldCode);
     Assert.Equal(LoginController.VERIFICATION_EXPIRED, response.Code);
+
+
+    // We are expired, so let's reverify!
+    var vr = context.LoginCtl.RequestVerification(new VerificationArgs()
+    {
+      Username = NAME,
+    }) as BasicResponse;
+    Assert.NotNull(vr);
+    Assert.Equal(0, vr!.Code);
+
+
 
     // --> Verify that we have another email with a new code.
     var newEmail = context.EmailSvc.LastEmailSent;

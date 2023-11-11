@@ -57,9 +57,12 @@ public class LoginController : ApiController
   [Route("/api/verify")]
   public IAPIResponse RequestVerification([FromBody] VerificationArgs args)
   {
+    // TODO: A logged in user should get a 404 or some other error for this...
+
     var member = _DAL.GetMemberByName(args.Username);
     if (member != null)
     {
+      member = _DAL.RefreshVerification(member.Username, MemberManCfg.VerifyWindow);
       SendVerificationMessage(member);
     }
 
@@ -79,6 +82,8 @@ public class LoginController : ApiController
   [Route("/api/signup")]
   public SignupResponse Signup(LoginModel login)
   {
+    // TODO: A logged in user should get a 404 or some other error for this...
+
     ValidateLoginData(login);
 
     MemberAvailability availability = _DAL.CheckAvailability(login.username, login.email);

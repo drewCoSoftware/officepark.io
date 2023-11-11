@@ -75,9 +75,11 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
       Permissions = "BASIC",
     };
     SetVerificationProps(m, verifyWindow);
-    int id = RunSingleQuery<int>(query, m);
 
-    m.ID = id;
+    // NOTE: This should be 'RunExecute'!
+    int id = RunSingleQuery<int>(query, m);
+    m.ID = id;    // We should not set this!
+
     return m;
   }
 
