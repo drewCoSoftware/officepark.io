@@ -1,62 +1,19 @@
 
 using System.Runtime.CompilerServices;
 using System.Text;
+using DotLiquid;
+using drewCo.Tools;
 using MemberManServer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Mvc.Routing;
 using officepark.io.API;
 using officepark.io.Membership;
 using static MemberManServer.Mailer;
+using IOFile = System.IO.File;
 
 namespace MemberMan;
-
-// ============================================================================================================================
-public class LoginResponse : BasicResponse
-{
-  /// <summary>
-  /// Is the user logged in?
-  /// </summary>
-  public bool IsLoggedIn { get; set; }
-
-  /// <summary>
-  /// Is this a verified user?  Depending on the application, the user may or may not be allowed to 
-  /// access certain features or even the entire system.
-  /// </summary>
-  public bool IsVerified { get; set; }
-
-  /// <summary>
-  /// The name that should be displayed in a UI.  This doesn't have to be the same thing
-  /// as the username used on login.
-  /// </summary>
-  public string DisplayName { get; set; } = default!;
-
-  /// <summary>
-  /// Url to user avatar.  Can be an image, gravatar, whatever....
-  /// </summary>
-  public string? Avatar { get; set; } = null;
-}
-
-// ============================================================================================================================
-public class LoginModel
-{
-  /// <summary>
-  /// All users have an associated email address so that there is at least one way to attempt contact.
-  /// It is perfectly acceptable to use the email address as the user name.  In theses cases, simply
-  /// set username == email.
-  /// </summary>
-  /// <remarks>We may remove email from this model class.... It technically isn't used for logins....</remarks>
-  public string email { get; set; } = string.Empty;
-
-  public string username { get; set; } = string.Empty;
-  public string password { get; set; } = string.Empty;
-}
-
-// ============================================================================================================================
-public class SignupResponse : BasicResponse
-{
-  public bool IsUsernameAvailable { get; set; }
-  public bool IsEmailAvailable { get; set; }
-}
 
 
 // ============================================================================================================================
@@ -69,28 +26,27 @@ public class LoginController : ApiController
   public const int NOT_VERFIED = 0x13;
   public const int LOGIN_FAILED = 0x14;
 
-  // --------------------------------------------------------------------------------------------------------------------------
+
+
   private IMemberAccess _DAL = default!;
   private IEmailService _Email = default!;
-  public LoginController(IMemberAccess dal_, IEmailService email_)
+  private ConfigHelper _Config = null!;
+
+  private MemberManConfig MemberManCfg = null!;
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public LoginController(IMemberAccess dal_, IEmailService email_, ConfigHelper config_)
   {
     if (dal_ == null) { throw new ArgumentNullException("dal_"); }
     if (email_ == null) { throw new ArgumentNullException("email_"); }
 
     _DAL = dal_;
     _Email = email_;
+    _Config = config_;
+
+    MemberManCfg = _Config.Get<MemberManConfig>();
   }
 
-  // --------------------------------------------------------------------------------------------------------------------------
-  /// <summary>
-  /// M$FT hates us and makes model binding as hard as possible.
-  /// We can't just bind single properties from a POST request, we instead have to make a composite type.
-  /// </summary>
-  public class VerificationArgs
-  {
-    public string Username { get; set; } = default!;
-    public string? VerificationCode { get; set; } = default!;
-  }
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
@@ -155,7 +111,7 @@ public class LoginController : ApiController
     if (!HasHeader("X-Test-Api-Call"))
     {
 
-      Member m = _DAL.CreateMember(login.username, login.email, login.password);
+      Member m = _DAL.CreateMember(login.username, login.email, login.password, MemberManCfg.VerifyWindow);
 
       // This is where we will send out the verification, etc. emails.
       SendVerificationMessage(m);
@@ -196,18 +152,32 @@ public class LoginController : ApiController
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private Email CreateVerificationEmail(Member m)
+  protected virtual Email CreateVerificationEmail(Member m)
   {
-    throw new NotImplementedException();
-    //var sb = new StringBuilder();
+    string templateText = IOFile.ReadAllText(Path.Combine(FileTools.GetLocalDir("EmailTemplates"), "Verification.html"));
 
-    //const string DOMAIN = "";
-    //sb.Append($"<p>Your verification code is: <a class=\"verify-link\" href=\"/{DOMAIN}/api/verifyuser?code={m.VerificationCode}\">Click Here to Verify your Account</a></p>");
-    //var res = new Email()
-    //{
-    //  Body = sb.ToString()
-    //};
-    //return res;
+
+    var mmCfg = _Config.Get<MemberManConfig>();
+    string link = mmCfg.VerificationUrl + $"?code={m.VerificationCode}";
+
+    // var date = new DateTimeOffset( m.VerificationExpiration
+    // TODO: Localize to EST and include that in the email.
+    string expires = m.VerificationExpiration.ToString("MM/dd/yyyy at hh:mm:ss");
+
+    var model = new
+    {
+      VerificationLink = link,
+      VerificationCode = m.VerificationCode,
+      ExpirationTime = expires
+    };
+
+    var t = Template.Parse(templateText);
+    string final = t.Render(Hash.FromAnonymousObject(new { model = model }));
+    Console.WriteLine(final);
+
+
+    var res = new Email(MemberManCfg.VerificationSender, m.Email, "Verify your account!", final, true);
+    return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -232,7 +202,7 @@ public class LoginController : ApiController
       DateTimeOffset now = DateTimeOffset.UtcNow;
       if (m.VerificationExpiration == null || now > m.VerificationExpiration)
       {
-        m = _DAL.RefreshVerification(m.Username);
+        m = _DAL.RefreshVerification(m.Username, MemberManConfig.DEFAULT_VERIFY_WINDOW);
 
         res.Code = VERIFICATION_EXPIRED;
         res.Message = "Verification is expired.  A new verification email will be sent.";
@@ -295,43 +265,136 @@ public class LoginController : ApiController
     };
   }
 
+}
 
 
-  // ============================================================================================================================
-  // TODO: Move this functionality to drewCo.Tools.
-  public class StringTools_Local
+// ============================================================================================================================
+/// <summary>
+/// M$FT hates us and makes model binding as hard as possible.
+/// We can't just bind single properties from a POST request, we instead have to make a composite type.
+/// </summary>
+public class VerificationArgs
+{
+  public string Username { get; set; } = default!;
+  public string? VerificationCode { get; set; } = default!;
+}
+
+// ============================================================================================================================
+// TODO: Move this functionality to drewCo.Tools.
+public class StringTools_Local
+{
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// Tells us if the given email address is valid or not.
+  /// </summary>
+  /// <remarks>
+  /// Email addres validation is difficult.  This function may not cover all cases.
+  /// Please report any valid email address that causes this function to return false.
+  /// </remarks>
+  public static bool IsValidEmail(string email)
   {
+    // Thanks Internet!
+    // Original version from:
+    // https://stackoverflow.com/questions/1365407/c-sharp-code-to-validate-email-address
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    /// <summary>
-    /// Tells us if the given email address is valid or not.
-    /// </summary>
-    /// <remarks>
-    /// Email addres validation is difficult.  This function may not cover all cases.
-    /// Please report any valid email address that causes this function to return false.
-    /// </remarks>
-    public static bool IsValidEmail(string email)
+    var trimmedEmail = email.Trim();
+
+    if (trimmedEmail.EndsWith("."))
     {
-      // Thanks Internet!
-      // Original version from:
-      // https://stackoverflow.com/questions/1365407/c-sharp-code-to-validate-email-address
-
-      var trimmedEmail = email.Trim();
-
-      if (trimmedEmail.EndsWith("."))
-      {
-        return false; // suggested by @TK-421
-      }
-      try
-      {
-        var addr = new System.Net.Mail.MailAddress(email);
-        return addr.Address == trimmedEmail;
-      }
-      catch
-      {
-        return false;
-      }
+      return false; // suggested by @TK-421
+    }
+    try
+    {
+      var addr = new System.Net.Mail.MailAddress(email);
+      return addr.Address == trimmedEmail;
+    }
+    catch
+    {
+      return false;
     }
   }
-
 }
+
+
+// ============================================================================================================================
+public class LoginResponse : BasicResponse
+{
+  /// <summary>
+  /// Is the user logged in?
+  /// </summary>
+  public bool IsLoggedIn { get; set; }
+
+  /// <summary>
+  /// Is this a verified user?  Depending on the application, the user may or may not be allowed to 
+  /// access certain features or even the entire system.
+  /// </summary>
+  public bool IsVerified { get; set; }
+
+  /// <summary>
+  /// The name that should be displayed in a UI.  This doesn't have to be the same thing
+  /// as the username used on login.
+  /// </summary>
+  public string DisplayName { get; set; } = default!;
+
+  /// <summary>
+  /// Url to user avatar.  Can be an image, gravatar, whatever....
+  /// </summary>
+  public string? Avatar { get; set; } = null;
+}
+
+// ============================================================================================================================
+public class LoginModel
+{
+  /// <summary>
+  /// All users have an associated email address so that there is at least one way to attempt contact.
+  /// It is perfectly acceptable to use the email address as the user name.  In theses cases, simply
+  /// set username == email.
+  /// </summary>
+  /// <remarks>We may remove email from this model class.... It technically isn't used for logins....</remarks>
+  public string email { get; set; } = string.Empty;
+
+  public string username { get; set; } = string.Empty;
+  public string password { get; set; } = string.Empty;
+}
+
+// ============================================================================================================================
+public class SignupResponse : BasicResponse
+{
+  public bool IsUsernameAvailable { get; set; }
+  public bool IsEmailAvailable { get; set; }
+}
+
+
+// ============================================================================================================================
+/// <summary>
+/// Configuration for member man and its features.
+/// </summary>
+public class MemberManConfig
+{
+  public static readonly TimeSpan DEFAULT_VERIFY_WINDOW = TimeSpan.FromHours(24);
+
+  /// <summary>
+  /// The url that the user should visit to verify their account.
+  /// </summary>
+  public string VerificationUrl { get; set; } = default!;
+
+
+  // public string Domain { get; set; } = default!;
+
+  /// <summary>
+  /// Email account that sends verification emails.
+  /// </summary>
+  public string VerificationSender { get; set; } = default!;
+
+  /// <summary>
+  /// The server address that emails are sent through....
+  /// </summary>
+  public string SmtpServer { get; set; } = default!;
+  public int SmtpPort { get; set; } = 465;
+  public string SmtpPassword { get; set; } = default!;
+
+  public TimeSpan VerifyWindow { get; set; } = DEFAULT_VERIFY_WINDOW;
+}
+
+

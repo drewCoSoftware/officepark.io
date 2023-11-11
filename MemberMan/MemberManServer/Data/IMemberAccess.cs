@@ -1,4 +1,5 @@
 
+using MemberMan;
 using BC = BCrypt.Net.BCrypt;
 
 
@@ -41,13 +42,13 @@ public interface IMemberAccess
   Member? GetMemberByName(string username);
   List<Member> GetMemberList();
 
-  Member CreateMember(string username, string email, string password);
+  Member CreateMember(string username, string email, string password, TimeSpan verifyWindow);
   void RemoveMember(string username, bool mustExist = true);
 
   /// <summary>
   /// Change the verification code and expiration date.
   /// </summary>
-  Member RefreshVerification(string username);
+  Member RefreshVerification(string username, TimeSpan verifyWindow);
 
   /// <summary>
   /// A function to verify that the given password matches the matching password.

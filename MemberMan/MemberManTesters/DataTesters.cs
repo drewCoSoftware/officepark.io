@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using DataHelpers.Data;
 using drewCo.Tools;
+using MemberMan;
 using Microsoft.Data.Sqlite;
 using officepark.io.Membership;
 using Xunit;
@@ -27,7 +28,7 @@ namespace MemberManTesters
       }
 
       // Create a new user with name / email.
-      dal.CreateMember(TEST_USER, TEST_EMAIL, "abc");
+      dal.CreateMember(TEST_USER, TEST_EMAIL, "abc", MemberManConfig.DEFAULT_VERIFY_WINDOW);
       {
         MemberAvailability exists = dal.CheckAvailability(TEST_USER, TEST_EMAIL);
         Assert.False(exists.IsUsernameAvailable);
@@ -68,20 +69,20 @@ namespace MemberManTesters
       CleanupTestUser(USER2);
 
       IMemberAccess dal = GetMemberAccess();
-      dal.CreateMember(USER1, EMAIL1, "abc");
+      dal.CreateMember(USER1, EMAIL1, "abc", MemberManConfig.DEFAULT_VERIFY_WINDOW);
       Assert.Throws<SqliteException>(() =>
       {
-        dal.CreateMember(USER1, EMAIL1, "abc");
+        dal.CreateMember(USER1, EMAIL1, "abc", MemberManConfig.DEFAULT_VERIFY_WINDOW);
       });
 
       // This email address has already been used!
       Assert.Throws<SqliteException>(() =>
       {
-        dal.CreateMember(USER2, EMAIL1, "abc");
+        dal.CreateMember(USER2, EMAIL1, "abc", MemberManConfig.DEFAULT_VERIFY_WINDOW);
       });
 
       // New user + email combination will be OK!
-      Member m = dal.CreateMember(USER2, EMAIL2, "abc");
+      Member m = dal.CreateMember(USER2, EMAIL2, "abc", MemberManConfig.DEFAULT_VERIFY_WINDOW);
       Assert.NotEqual(0, m.ID);
     }
 
@@ -97,7 +98,7 @@ namespace MemberManTesters
       const string TEST_PASS = "123";
       const string TEST_EMAIL = "abc@123.com";
 
-      Member src = dal.CreateMember(TEST_USER, TEST_EMAIL, TEST_PASS);
+      Member src = dal.CreateMember(TEST_USER, TEST_EMAIL, TEST_PASS, MemberManConfig.DEFAULT_VERIFY_WINDOW);
       Assert.NotNull(src);
       Assert.NotNull(src.VerificationCode);
 

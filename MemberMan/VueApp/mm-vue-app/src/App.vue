@@ -49,6 +49,7 @@ const loginState = ref(_Login.GetState());
         <li>Interpret unverified account and post a re-verify link (login page)</li>
         <li>Forgot Password?</li>
         <li>Proper load spinny....</li>
+        <li>Some kind of 404 message for bad urls</li>
       </ul>
     </div>
 

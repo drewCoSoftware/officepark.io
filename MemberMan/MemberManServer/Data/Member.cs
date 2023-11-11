@@ -35,8 +35,7 @@ public class Member : IHasPrimary
   [IsNullable]
   public string? VerificationCode { get; set; } = null;
 
-  [IsNullable]
-  public DateTimeOffset? VerificationExpiration { get; set; } = null;
+  public DateTimeOffset VerificationExpiration { get; set; } = DateTime.MinValue;
 
   [IsNullable]
   public DateTimeOffset? VerifiedOn { get; set; } = null;

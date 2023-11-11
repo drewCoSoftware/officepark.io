@@ -19,7 +19,7 @@ public class FileSystemMemberAccess : IMemberAccess
   private object FSLock = new object();
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public Member CreateMember(string username, string email, string password)
+  public Member CreateMember(string username, string email, string password, TimeSpan verifyWindow)
   {
     // Check for existing user....
     // Explode if one exists...
@@ -170,7 +170,7 @@ public class FileSystemMemberAccess : IMemberAccess
     throw new NotImplementedException();
   }
 
-  public Member RefreshVerification(string username)
+  public Member RefreshVerification(string username, TimeSpan verifyWindow)
   {
     throw new NotImplementedException();
   }

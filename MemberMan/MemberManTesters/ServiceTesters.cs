@@ -62,7 +62,7 @@ public class ServiceTesters : TestBase
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private void SignupNewUser(string username, string email, string password, out SimEmailService emailSvc, out LoginController ctl)
+  private void SignupNewUser(string username, string email, string password, out SimEmailService emailSvc, out LoginController ctl )
   {
     // Remove the test user.
     CleanupTestUser(username);
@@ -70,7 +70,7 @@ public class ServiceTesters : TestBase
     // Create the login controller.
     // Signup the user + validate availability.
     emailSvc = GetEmailService();
-    ctl = new LoginController(GetMemberAccess(), emailSvc);
+    ctl = new LoginController(GetMemberAccess(), emailSvc, null);
     SignupResponse response = ctl.Signup(new LoginModel()
     {
       username = username,

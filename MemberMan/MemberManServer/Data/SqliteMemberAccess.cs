@@ -1,6 +1,7 @@
 using Dapper;
 using DataHelpers.Data;
 using drewCo.Tools;
+using MemberMan;
 using Microsoft.AspNetCore.Razor.Runtime.TagHelpers;
 using Microsoft.Data.Sqlite;
 using static MemberMan.LoginController;
@@ -54,7 +55,7 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public Member CreateMember(string username, string email, string password)
+  public Member CreateMember(string username, string email, string password, TimeSpan verifyWindow)
   {
     if (!StringTools_Local.IsValidEmail(email))
     {
@@ -73,7 +74,7 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
       CreatedOn = DateTimeOffset.UtcNow,
       Permissions = "BASIC",
     };
-    SetVerificationProps(m);
+    SetVerificationProps(m, verifyWindow);
     int id = RunSingleQuery<int>(query, m);
 
     m.ID = id;
@@ -81,10 +82,10 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private void SetVerificationProps(Member m)
+  private void SetVerificationProps(Member m, TimeSpan verifyWindow)
   {
     m.VerificationCode = StringTools.ComputeMD5(RandomTools.GetAlphaNumericString(16));
-    m.VerificationExpiration = DateTimeOffset.Now + TimeSpan.FromHours(24);
+    m.VerificationExpiration = DateTimeOffset.Now + verifyWindow;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -158,14 +159,14 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public Member RefreshVerification(string username)
+  public Member RefreshVerification(string username, TimeSpan verifyWindow)
   {
     Member? m = GetMemberByName(username);
     if (m == null)
     {
       throw new InvalidOperationException($"The user with name: {username} does not exist!");
     }
-    SetVerificationProps(m);
+    SetVerificationProps(m, verifyWindow);
 
     string query = "UPDATE members SET verificationcode = @code, verificationexpiration = @expires WHERE username = @name";
     int updated = RunExecute(query, new

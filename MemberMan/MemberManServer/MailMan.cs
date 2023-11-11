@@ -12,6 +12,7 @@ namespace MemberManServer
   public static class Mailer
   {
     // --------------------------------------------------------------------------------------------------------------------------
+    // NOTE : This functionality can be merged in with our email service classes.
     public static void SendMail(Email mail, string smtpHost, int? port = null, bool highPriority = false, NetworkCredential creds = null)
     {
       // Send with mailkit....
