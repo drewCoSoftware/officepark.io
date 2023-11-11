@@ -1,11 +1,14 @@
 
+using System;
 using System.IO;
 using drewCo.Tools;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
 using officepark.io.Membership;
 
 // ==========================================================================
 public class TestBase
 {
+
   // --------------------------------------------------------------------------------------------------------------------------
   protected void CleanupTestUser(string username)
   {

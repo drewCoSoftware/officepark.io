@@ -1,8 +1,12 @@
 using System;
 using DataHelpers.Data;
+using DotLiquid;
 using HtmlAgilityPack;
 using MemberMan;
 using MemberManServer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.Extensions.Configuration;
 using officepark.io.API;
 
 using officepark.io.Membership;
@@ -22,21 +26,19 @@ public class ServiceTesters : TestBase
     const string EMAIL = NAME;
     const string PASS = "ABC";
 
-    SimEmailService emailSvc;
-    LoginController ctl;
-    SignupNewUser(NAME, EMAIL, PASS, out emailSvc, out ctl);
+    SignupNewUser(NAME, EMAIL, PASS, out var context);
 
     // Confirm that an email was sent + get its content.
-    Assert.NotNull(emailSvc.LastSendResult);
-    Assert.True(emailSvc.LastSendResult!.SendOK);
+    Assert.NotNull(context.EmailSvc.LastSendResult);
+    Assert.True(context.EmailSvc.LastSendResult!.SendOK);
 
-    Email? mail = emailSvc.LastEmailSent;
+    Email? mail = context.EmailSvc.LastEmailSent;
     Assert.NotNull(mail);
 
     // Visit the verification URL (from the email)
     string verifyCode = GetVerificationCodeFromEmail(mail);
 
-    var verifyResult = ctl.VerifyUser(verifyCode);
+    var verifyResult = context.LoginCtl.VerifyUser(verifyCode);
     Assert.Equal(0, verifyResult.Code);
 
     // Confirm that the user is now verified in the DB.
@@ -44,7 +46,7 @@ public class ServiceTesters : TestBase
     Member? check = dal.GetMemberByName(NAME)!;
     Assert.NotNull(check);
     Assert.NotNull(check.VerifiedOn);
-    Assert.Null(check.VerificationExpiration);
+    Assert.Equal(DateTimeOffset.MinValue, check.VerificationExpiration);
     Assert.Null(check.VerificationCode);
 
   }
@@ -61,24 +63,46 @@ public class ServiceTesters : TestBase
     return verifyCode;
   }
 
-  // --------------------------------------------------------------------------------------------------------------------------
-  private void SignupNewUser(string username, string email, string password, out SimEmailService emailSvc, out LoginController ctl )
+  // ============================================================================================================================
+  class TestContext
   {
+    // --------------------------------------------------------------------------------------------------------------------------
+    internal TestContext(ConfigHelper config_, SimEmailService emailSvc_, LoginController loginCtl_)
+    {
+      Config = config_;
+      EmailSvc = emailSvc_;
+      LoginCtl = loginCtl_;
+    }
+    public ConfigHelper Config { get; private set; } = null!;
+    public SimEmailService EmailSvc { get; private set; } = null!;
+    public LoginController LoginCtl { get; private set; } = null!;
+
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private void SignupNewUser(string username, string email, string password, out TestContext context)
+  {
+    var appBuilder = WebApplication.CreateBuilder();
+    var cfgHelper = Program.InitConfig(appBuilder, appBuilder.Environment);
+
     // Remove the test user.
     CleanupTestUser(username);
 
     // Create the login controller.
     // Signup the user + validate availability.
-    emailSvc = GetEmailService();
-    ctl = new LoginController(GetMemberAccess(), emailSvc, null);
-    SignupResponse response = ctl.Signup(new LoginModel()
+    var emailSvc = GetEmailService();
+    var loginCtl = new LoginController(GetMemberAccess(), emailSvc, cfgHelper);
+    SignupResponse response = loginCtl.Signup(new LoginModel()
     {
       username = username,
       email = email,
       password = password
     });
     Assert.Equal(0, response.Code);
+
+    context = new TestContext(cfgHelper, emailSvc, loginCtl);
   }
+
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
@@ -95,20 +119,18 @@ public class ServiceTesters : TestBase
     const string EMAIL = NAME;
     const string PASS = "ABC";
 
-    SimEmailService emailSvc;
-    LoginController ctl;
-    SignupNewUser(NAME, EMAIL, PASS, out emailSvc, out ctl);
+    SignupNewUser(NAME, EMAIL, PASS, out var context);
     SetFakeExpiration(NAME, DateTimeOffset.Now - TimeSpan.FromDays(1));
 
-    var mail = emailSvc.LastEmailSent;
+    var mail = context.EmailSvc.LastEmailSent;
     string oldCode = GetVerificationCodeFromEmail(mail);
 
     // Visit Verification URL.
-    BasicResponse response = ctl.VerifyUser(oldCode);
+    BasicResponse response = context.LoginCtl.VerifyUser(oldCode);
     Assert.Equal(LoginController.VERIFICATION_EXPIRED, response.Code);
 
     // --> Verify that we have another email with a new code.
-    var newEmail = emailSvc.LastEmailSent;
+    var newEmail = context.EmailSvc.LastEmailSent;
     string newCode = GetVerificationCodeFromEmail(newEmail);
     Assert.NotEqual(oldCode, newCode);
 

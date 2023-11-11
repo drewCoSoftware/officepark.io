@@ -200,14 +200,15 @@ public class LoginController : ApiController
     else
     {
       DateTimeOffset now = DateTimeOffset.UtcNow;
-      if (m.VerificationExpiration == null || now > m.VerificationExpiration)
+      if (now > m.VerificationExpiration)
       {
-        m = _DAL.RefreshVerification(m.Username, MemberManConfig.DEFAULT_VERIFY_WINDOW);
 
         res.Code = VERIFICATION_EXPIRED;
-        res.Message = "Verification is expired.  A new verification email will be sent.";
+        res.Message = "Verification code is expired.";
 
-        SendVerificationMessage(m);
+        // OPTION: Auto-reverify?  I don't know seems dangerous and we shouldn't let bots do it....
+        // m = _DAL.RefreshVerification(m.Username, MemberManConfig.DEFAULT_VERIFY_WINDOW);
+        // SendVerificationMessage(m);
 
         return res;
       }

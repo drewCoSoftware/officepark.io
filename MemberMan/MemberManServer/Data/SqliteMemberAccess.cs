@@ -149,8 +149,13 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     // this, or at least indicate to the user in debug mode that something is off.
     // Transaction((conn) =>
     // {
-    var updateVerification = "UPDATE members SET verifiedon = @date, verificationexpiration = null, verificationcode = null WHERE username = @username";
-    int affected = RunExecute(updateVerification, new { date = date, username = m.Username });
+    var updateVerification = "UPDATE members SET verifiedon = @date, verificationexpiration = @verifyExpired, verificationcode = null WHERE username = @username";
+    int affected = RunExecute(updateVerification, new
+    {
+      date,
+      username = m.Username,
+      verifyExpired = DateTimeOffset.MinValue
+    });
     if (affected == 0)
     {
       Console.WriteLine($"Update query for user {m.Username} did not have an effect!");
