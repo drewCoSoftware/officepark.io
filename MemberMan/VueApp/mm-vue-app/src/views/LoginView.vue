@@ -100,14 +100,7 @@ function forgotPassword() {
 }
 
 // -------------------------------------------------------------------------------------------
-function validateForm2() {
-  alert('i am validate 2');
-}
-// -------------------------------------------------------------------------------------------
 function validateForm() {
-//   // Revalidate the form.....
- console.log('email=' + emailAddress);
-
   const isValid = emailAddress != "" && password != "";
   isFormValid.value = isValid;
 }
@@ -120,7 +113,7 @@ function validateForm() {
   <!-- NOTE: Custom events don't bubble in vue3 because the authors are off their meds.
   It seems to me that the easiest way to handle validation is to just catch the input event
   at top level, and then trigger whatever.... -->
-  <EZForm ref="form" css-classes="login" :error-message="errMsg" @validate="validateForm2" @input="validateForm">
+  <EZForm ref="form" css-classes="login" :error-message="errMsg" @input="validateForm">
     <EZInput type="email" name="email" v-model="emailAddress" placeholder="Email"  />
 
     <div class="input">

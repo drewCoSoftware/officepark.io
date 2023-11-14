@@ -31,7 +31,7 @@ export interface FetchyResponse<T extends IApiResponse> {
 }
 
 // ----------------------------------------------------------------------------------------------------------
-export async function fetchyPost<T extends IApiResponse>(url: string, data: any | null, headers: {} | undefined): Promise<FetchyResponse<T>> {
+export async function fetchyPost<T extends IApiResponse>(url: string, data: any | null, headers: {} | undefined = undefined): Promise<FetchyResponse<T>> {
 
   let p = fetchy<T>(url, {
     method: 'POST',

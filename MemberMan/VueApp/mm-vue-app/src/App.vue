@@ -46,6 +46,7 @@ const loginState = ref(_Login.GetState());
       <h3>Back End</h3>
       <h3>Front-end</h3>
       <ul>
+        <li>Verificaiton entry + reverify should be on the same page, named 'verify'.  Just set it up so it can handle all of the states as needed.</li>
         <li>
           <p>Interpret unverified account and post a re-verify link (login page)</p>
           <p>--&gt; Make a 'reverify' component that can kick off and respond to the appropriate request...</p>

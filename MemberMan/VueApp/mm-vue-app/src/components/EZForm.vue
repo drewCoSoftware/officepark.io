@@ -19,7 +19,6 @@ const isWorking = ref(false);
 // We can expose component functions!  Yay!
 function beginWork() {
   if (!isWorking.value) { 
-    alert('being work!');
     isWorking.value = true;
   }
 }
