@@ -48,6 +48,94 @@ public class LoginController : ApiController
   }
 
 
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  [HttpGet]
+  [Route("/api/verify")]
+  public BasicResponse VerifyUser(string code)
+  {
+    var res = new BasicResponse()
+    {
+      Code = 0,
+      Message = "OK"
+    };
+
+    Member? m = _DAL.GetMemberByVerification(code);
+    if (m == null)
+    {
+      res.Code = INVALID_VERIFICATION;
+      res.Message = "Invalid verification code";
+    }
+    else
+    {
+      DateTimeOffset now = DateTimeOffset.UtcNow;
+      if (now > m.VerificationExpiration)
+      {
+
+        res.Code = VERIFICATION_EXPIRED;
+        res.Message = "Verification code is expired.";
+
+        // OPTION: Auto-reverify?  I don't know seems dangerous and we shouldn't let bots do it....
+        // m = _DAL.RefreshVerification(m.Username, MemberManConfig.DEFAULT_VERIFY_WINDOW);
+        // SendVerificationMessage(m);
+
+        return res;
+      }
+
+      _DAL.CompleteVerification(m, now);
+      res.Code = 0;
+      res.Message = "OK";
+    }
+
+    return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  [HttpPost]
+  [Route("/api/login")]
+  public LoginResponse Login(LoginModel login)
+  {
+
+    // Reach into the DAL to look for active user + password.
+    Member? member = _DAL.CheckLogin(login.username, login.password);
+    if (member == null)
+    {
+      // NOTE: This should return a 404!
+      var res = NotFound<LoginResponse>("Invalid username or password!");
+      res.Code = LoginController.LOGIN_FAILED;
+      return res;
+    }
+
+    // Set the auth token cookie too?
+    // NOTE: Here we can interprt options to decide if the user can be logged in, even if they aren't verifed.
+    string msg = "OK";
+    int code = 0;
+    bool isVerified = member.VerifiedOn != null;
+    if (!isVerified)
+    {
+      msg = $"User: {member.Username} is not verified.";
+      code = LoginController.NOT_VERFIED;
+    }
+
+    // TODO: OPTIONS:
+    bool isLoggedIn = true;
+    bool ALLOW_UNVERIFIED_LOGIN = false;
+    if (!isVerified && !ALLOW_UNVERIFIED_LOGIN)
+    {
+      isLoggedIn = false;
+    }
+    return new LoginResponse()
+    {
+      IsLoggedIn = isLoggedIn,
+      IsVerified = isVerified,
+      AuthRequired = true,
+      Message = msg,
+      DisplayName = login.username,
+      Code = code
+    };
+  }
+
+
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
   /// This will request that the system re-send the verification email (or whatever).
@@ -57,13 +145,22 @@ public class LoginController : ApiController
   [Route("/api/reverify")]
   public IAPIResponse RequestVerification([FromBody] VerificationArgs args)
   {
-    // TODO: A logged in user should get a 404 or some other error for this...
+    // TODO: Some kind of cookie check to make sure that the user was actually directed to reverify!
+    // That means a one-time response cookie from the login, and then we should be handing that cookie off to this request...
+    // NOTE: That kind of handshake is kind of advanced, and may not be needed....
 
+
+    // TODO: A logged in user should get a 404 or some other error for this ?
     var member = _DAL.GetMemberByName(args.Username);
     if (member != null)
     {
-      member = _DAL.RefreshVerification(member.Username, MemberManCfg.VerifyWindow);
-      SendVerificationMessage(member);
+      // NOTE: A user that is already verified shouldn't be here anyway, so we aren't
+      // going to indicate that anything is amiss.
+      if (!member.IsVerified)
+      {
+        member = _DAL.RefreshVerification(member.Username, MemberManCfg.VerifyWindow);
+        SendVerificationMessage(member);
+      }
     }
 
     return new BasicResponse()
@@ -187,91 +284,6 @@ public class LoginController : ApiController
     return res;
   }
 
-  // --------------------------------------------------------------------------------------------------------------------------
-  [HttpGet]
-  [Route("/api/verifyuser")]
-  public BasicResponse VerifyUser(string code)
-  {
-    var res = new BasicResponse()
-    {
-      Code = 0,
-      Message = "OK"
-    };
-
-    Member? m = _DAL.GetMemberByVerification(code);
-    if (m == null)
-    {
-      res.Code = INVALID_VERIFICATION;
-      res.Message = "Invalid verification code";
-    }
-    else
-    {
-      DateTimeOffset now = DateTimeOffset.UtcNow;
-      if (now > m.VerificationExpiration)
-      {
-
-        res.Code = VERIFICATION_EXPIRED;
-        res.Message = "Verification code is expired.";
-
-        // OPTION: Auto-reverify?  I don't know seems dangerous and we shouldn't let bots do it....
-        // m = _DAL.RefreshVerification(m.Username, MemberManConfig.DEFAULT_VERIFY_WINDOW);
-        // SendVerificationMessage(m);
-
-        return res;
-      }
-
-      _DAL.CompleteVerification(m, now);
-      res.Code = 0;
-      res.Message = "OK";
-    }
-
-    return res;
-  }
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  [HttpPost]
-  [Route("/api/login")]
-  public LoginResponse Login(LoginModel login)
-  {
-
-    // Reach into the DAL to look for active user + password.
-    Member? member = _DAL.CheckLogin(login.username, login.password);
-    if (member == null)
-    {
-      // NOTE: This should return a 404!
-      var res = NotFound<LoginResponse>("Invalid username or password!");
-      res.Code = LoginController.LOGIN_FAILED;
-      return res;
-    }
-
-    // Set the auth token cookie too?
-    // NOTE: Here we can interprt options to decide if the user can be logged in, even if they aren't verifed.
-    string msg = "OK";
-    int code = 0;
-    bool isVerified = member.VerifiedOn != null;
-    if (!isVerified)
-    {
-      msg = $"User: {member.Username} is not verified.";
-      code = LoginController.NOT_VERFIED;
-    }
-
-    // TODO: OPTIONS:
-    bool isLoggedIn = true;
-    bool ALLOW_UNVERIFIED_LOGIN = false;
-    if (!isVerified && !ALLOW_UNVERIFIED_LOGIN)
-    {
-      isLoggedIn = false;
-    }
-    return new LoginResponse()
-    {
-      IsLoggedIn = isLoggedIn,
-      IsVerified = isVerified,
-      AuthRequired = true,
-      Message = msg,
-      DisplayName = login.username,
-      Code = code
-    };
-  }
 
 }
 
@@ -405,4 +417,11 @@ public class MemberManConfig
   public TimeSpan VerifyWindow { get; set; } = DEFAULT_VERIFY_WINDOW;
 }
 
+
+// ============================================================================================================================
+public static class Cookies
+{
+  public const string REVERIFY = "reverifytoken";
+
+}
 

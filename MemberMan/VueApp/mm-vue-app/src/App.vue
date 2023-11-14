@@ -46,10 +46,13 @@ const loginState = ref(_Login.GetState());
       <h3>Back End</h3>
       <h3>Front-end</h3>
       <ul>
-        <li>Interpret unverified account and post a re-verify link (login page)</li>
+        <li>
+          <p>Interpret unverified account and post a re-verify link (login page)</p>
+          <p>--&gt; Make a 'reverify' component that can kick off and respond to the appropriate request...</p>
+        </li>
+
         <li>Forgot Password?</li>
         <li>Proper load spinny....</li>
-        <li>Some kind of 404 message for bad urls</li>
       </ul>
     </div>
 

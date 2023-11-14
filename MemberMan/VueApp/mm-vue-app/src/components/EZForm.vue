@@ -3,18 +3,44 @@
 // The main point is to have consistent ways to handle common tasks like working state,
 // validation, error messages, etc. 
 import { stringify } from 'querystring';
-import { ref, watch } from 'vue';
+import { popScopeId, ref, watch } from 'vue';
 
 
 const props = defineProps({
-  isWorking: Boolean,
+//  isWorking: Boolean,
   errorMessage: String,
-  cssClasses:String
+  cssClasses:String,
+});
+
+const templateClass = ref("ez-form");
+const isWorking = ref(false);
+
+
+// We can expose component functions!  Yay!
+function beginWork() {
+  if (!isWorking.value) { 
+    alert('being work!');
+    isWorking.value = true;
+  }
+}
+
+function endWork() {
+    isWorking.value = false;
+}
+
+defineExpose({
+  isWorking,
+  beginWork,
+  endWork
+});
+
+watch([props, isWorking], (x) => {
+  updateTemplateClass();
 });
 
 const emit = defineEmits(['validate']);
 
-const templateClass = ref("ez-form");
+
 
 // TOOD: Share this
 function isNullOrEmpty(input:string | undefined) {
@@ -28,7 +54,7 @@ function updateTemplateClass() {
   if (!isNullOrEmpty(props.cssClasses)) {
     useVal += " " + props.cssClasses
   }
-  if (props.isWorking) { 
+  if (isWorking.value) { 
     useVal += " is-working";
   }
   if (props.errorMessage != null && props.errorMessage != ""){
@@ -38,9 +64,6 @@ function updateTemplateClass() {
   templateClass.value = useVal;
 }
 
-watch(props, (x) => {
-  updateTemplateClass();
-});
 
 function onInputEvent() {
   // NOTE: This is kind of hacky since custom events in VUE don't bubble, which is totally stupid.
@@ -63,3 +86,10 @@ function onInputEvent() {
   </div>
 
 </template>
+
+
+<style scoped type="less">
+.ez-form.is-working {
+  background: red;
+}
+</style>

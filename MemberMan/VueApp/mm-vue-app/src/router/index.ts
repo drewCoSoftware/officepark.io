@@ -18,6 +18,17 @@ const router = createRouter({
       component: () => import('../views/RegisterView.vue')
     },
     {
+      path: '/reverify',
+      name: 'reverify',
+      props: route => ({ user: route.query.user }),
+      // route level code-splitting
+      // this generates a separate chunk (About.[hash].js) for this route
+      // which is lazy-loaded when the route is visited.
+      component: () => import('../views/Reverify.vue')
+    },
+
+    // 404
+    {
       path: "/:pathMatch(.*)*",
       name: "not-found",
       component: () => import('../views/NotFound.vue'),    }
