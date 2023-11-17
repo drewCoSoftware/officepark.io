@@ -7,33 +7,43 @@ import { popScopeId, ref, watch } from 'vue';
 
 
 const props = defineProps({
-//  isWorking: Boolean,
-  errorMessage: String,
-  cssClasses:String,
+  //  isWorking: Boolean,
+  //  errorMessage: String,
+  cssClasses: String,
 });
 
-const templateClass = ref("ez-form");
-const isWorking = ref(false);
-
+const TemplateClass = ref("ez-form");
+const IsWorking = ref(false);
+const ErrorMessage = ref<string | null>(null);
 
 // We can expose component functions!  Yay!
 function beginWork() {
-  if (!isWorking.value) { 
-    isWorking.value = true;
+  if (!IsWorking.value) {
+    IsWorking.value = true;
   }
 }
 
 function endWork() {
-    isWorking.value = false;
+  IsWorking.value = false;
+}
+
+function SetErrorMessage(msg: string) {
+  ErrorMessage.value = msg;
+}
+
+function ClearErrors() {
+  ErrorMessage.value = "";
 }
 
 defineExpose({
-  isWorking,
+  IsWorking,
   beginWork,
-  endWork
+  endWork,
+  SetErrorMessage,
+  ClearErrors
 });
 
-watch([props, isWorking], (x) => {
+watch([props, IsWorking, ErrorMessage], (x) => {
   updateTemplateClass();
 });
 
@@ -42,7 +52,7 @@ const emit = defineEmits(['validate']);
 
 
 // TOOD: Share this
-function isNullOrEmpty(input:string | undefined) {
+function isNullOrEmpty(input: string | undefined) {
   const res = input == null || input == undefined || input == "";
   return res;
 }
@@ -53,14 +63,14 @@ function updateTemplateClass() {
   if (!isNullOrEmpty(props.cssClasses)) {
     useVal += " " + props.cssClasses
   }
-  if (isWorking.value) { 
+  if (IsWorking.value) {
     useVal += " is-working";
   }
-  if (props.errorMessage != null && props.errorMessage != ""){
+  if (ErrorMessage.value != null && ErrorMessage.value != "") {
     useVal += " has-error";
   }
 
-  templateClass.value = useVal;
+  TemplateClass.value = useVal;
 }
 
 
@@ -77,13 +87,12 @@ function onInputEvent() {
 
 
 <template>
-  <div :class="templateClass" @input="onInputEvent">
-    <div class="messages" v-html="errorMessage"></div>
+  <div :class="TemplateClass" @input="onInputEvent">
+    <div class="messages" v-html="ErrorMessage"></div>
     <form>
-      <slot ></slot>
+      <slot></slot>
     </form>
   </div>
-
 </template>
 
 

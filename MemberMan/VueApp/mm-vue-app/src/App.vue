@@ -82,7 +82,7 @@ h6 {
 }
 
 .ez-form {
-  .login {}
+//  .login {}
 
   .login.working {
     background: red;
