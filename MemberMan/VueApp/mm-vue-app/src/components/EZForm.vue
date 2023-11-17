@@ -20,6 +20,7 @@ const ErrorMessage = ref<string | null>(null);
 function beginWork() {
   if (!IsWorking.value) {
     IsWorking.value = true;
+    ClearErrors();
   }
 }
 

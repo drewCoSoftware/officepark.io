@@ -48,48 +48,6 @@ public class LoginController : ApiController
   }
 
 
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  [HttpGet]
-  [Route("/api/verify")]
-  public BasicResponse VerifyUser(string code)
-  {
-    var res = new BasicResponse()
-    {
-      Code = 0,
-      Message = "OK"
-    };
-
-    Member? m = _DAL.GetMemberByVerification(code);
-    if (m == null)
-    {
-      res.Code = INVALID_VERIFICATION;
-      res.Message = "Invalid verification code";
-    }
-    else
-    {
-      DateTimeOffset now = DateTimeOffset.UtcNow;
-      if (now > m.VerificationExpiration)
-      {
-
-        res.Code = VERIFICATION_EXPIRED;
-        res.Message = "Verification code is expired.";
-
-        // OPTION: Auto-reverify?  I don't know seems dangerous and we shouldn't let bots do it....
-        // m = _DAL.RefreshVerification(m.Username, MemberManConfig.DEFAULT_VERIFY_WINDOW);
-        // SendVerificationMessage(m);
-
-        return res;
-      }
-
-      _DAL.CompleteVerification(m, now);
-      res.Code = 0;
-      res.Message = "OK";
-    }
-
-    return res;
-  }
-
   // --------------------------------------------------------------------------------------------------------------------------
   [HttpPost]
   [Route("/api/login")]
@@ -169,6 +127,51 @@ public class LoginController : ApiController
     };
   }
 
+
+
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  [HttpPost]
+  [Route("/api/verify")]
+  public BasicResponse VerifyUser([FromBody] VerificationArgs args)
+  {
+    var res = new BasicResponse()
+    {
+      Code = 0,
+      Message = "OK"
+    };
+
+    string code = args.VerificationCode ?? string.Empty;
+    Member? m = _DAL.GetMemberByVerification(code);
+    if (m == null)
+    {
+      res.Code = INVALID_VERIFICATION;
+      res.Message = "Invalid verification code";
+    }
+    else
+    {
+      DateTimeOffset now = DateTimeOffset.UtcNow;
+      if (now > m.VerificationExpiration)
+      {
+
+        res.Code = VERIFICATION_EXPIRED;
+        res.Message = "Verification code is expired.";
+        return res;
+      }
+
+      _DAL.CompleteVerification(m, now);
+
+
+      // Send out the final email...
+      // TEST: Make sure that the email is captured in the test cases.
+      SendVerifyCompleteMessage(m);
+
+      res.Code = 0;
+      res.Message = "OK";
+    }
+
+    return res;
+  }
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
   /// This will create a new, unverifed member in the system.
@@ -231,14 +234,6 @@ public class LoginController : ApiController
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  protected bool HasHeader(string headerName)
-  {
-    if (Request == null) { return false; }
-    bool res = Request.Headers.ContainsKey(headerName);
-    return res;
-  }
-
-  // --------------------------------------------------------------------------------------------------------------------------
   protected void ValidateLoginData(LoginModel login)
   {
     login.username = login.email;
@@ -253,6 +248,41 @@ public class LoginController : ApiController
   {
     Email email = CreateVerificationEmail(member);
     this._Email.SendEmail(email);
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private void SendVerifyCompleteMessage(Member member)
+  {
+    Email email = CreateVerifyCompleteEmail(member);
+    this._Email.SendEmail(email);
+  }
+
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  protected virtual Email CreateVerifyCompleteEmail(Member m)
+  {
+    string templateText = IOFile.ReadAllText(Path.Combine(FileTools.GetLocalDir("EmailTemplates"), "VerifyComplete.html"));
+
+
+    var mmCfg = _Config.Get<MemberManConfig>();
+    string link = mmCfg.VerificationUrl + $"?code={m.VerificationCode}";
+
+    // var date = new DateTimeOffset( m.VerificationExpiration
+    // TODO: Localize to EST and include that in the email.
+    string expires = m.VerificationExpiration.ToString("MM/dd/yyyy at hh:mm:ss");
+
+    var model = new
+    {
+      LoginLink = mmCfg.LoginLink
+    };
+
+    var t = Template.Parse(templateText);
+    string final = t.Render(Hash.FromAnonymousObject(new { model = model }));
+    Console.WriteLine(final);
+
+
+    var res = new Email(MemberManCfg.VerificationSender, m.Email, "Verify your account!", final, true);
+    return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -399,8 +429,10 @@ public class MemberManConfig
   /// </summary>
   public string VerificationUrl { get; set; } = default!;
 
-
-  // public string Domain { get; set; } = default!;
+  /// <summary>
+  /// The url that is used to log into the account.
+  /// </summary>
+  public string LoginLink { get; set; } = default!;
 
   /// <summary>
   /// Email account that sends verification emails.

@@ -103,6 +103,12 @@ h6 {
   }
 }
 
+
+a.as-link {
+  text-decoration: underline;
+  color: @linkColor;
+  cursor: pointer;
+}
 // form .messages {
 //   min-height: 1.5rem;
 //   color: red;

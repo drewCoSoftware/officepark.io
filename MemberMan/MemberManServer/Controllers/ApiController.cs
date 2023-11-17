@@ -6,6 +6,15 @@ namespace MemberMan;
 // ============================================================================================================================
 public class ApiController : Controller
 {
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  protected bool HasHeader(string headerName)
+  {
+    if (Request == null) { return false; }
+    bool res = Request.Headers.ContainsKey(headerName);
+    return res;
+  }
+
   // --------------------------------------------------------------------------------------------------------------------------
   public IAPIResponse NotFound(string message)
   {

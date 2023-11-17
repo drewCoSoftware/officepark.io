@@ -23,8 +23,6 @@ let emailAddress = "";
 let password = "";
 //const isWorking = ref(false);
 const isFormValid = ref(false);
-const hasError = ref(false);
-const errMsg = ref("error message");
 
 const form = ref<typeof EZForm>();
 
@@ -39,10 +37,6 @@ function isWorking() {
 // -------------------------------------------------------------------------------------------
 function beginWork() {
   (form.value as typeof EZForm).beginWork();
-//  isWorking.value = true;
-  hasError.value = false;
-  errMsg.value = "";
-
   // All of the states can be updated here....
 }
 
@@ -59,8 +53,8 @@ async function tryLogin() {
 
     await _Login.Login(emailAddress, password).then((res) => {
       if (res.Error) {
-        hasError.value = true;
-        errMsg.value = "Could not log in at this time.  Please try again later.";
+        form.value?.SetErrorMessage("Could not log in at this time.  Please try again later.");
+        password = "";
       }
       else {
         const data: LoginResponse = res.Data!;
@@ -68,21 +62,16 @@ async function tryLogin() {
           alert('update the current login state!');
         }
         else {
-          hasError.value = true;
-          errMsg.value = data.Message;
-          //stateClass.value = "";
+          form.value?.SetErrorMessage(data.Message);
 
           if (data.Code == 0x13) {  // TODO: Define const.
             // Not verified, display the verification message.....
             // If we want to reverify at this time, we should maybe use a one-time cookie....?
             // This will take us to a different page that will fire off the reverification request...?
-            errMsg.value = 'This account has not been verified. You should have received an email, or you may <a href="/reverify?user=' + emailAddress + '">request another</a>.'
-
+            form.value?.SetErrorMessage('This account has not been verified. You should have received an email, or you may <a href="/verify?user=' + emailAddress + '">request another</a>.');
+            password = "";
           }
-          // else {
-          //   hasError.value = true;
-          //   errMsg.value = data.Message;
-          // }
+
         }
       }
 
@@ -113,7 +102,7 @@ function validateForm() {
   <!-- NOTE: Custom events don't bubble in vue3 because the authors are off their meds.
   It seems to me that the easiest way to handle validation is to just catch the input event
   at top level, and then trigger whatever.... -->
-  <EZForm ref="form" css-classes="login" :error-message="errMsg" @input="validateForm">
+  <EZForm ref="form" css-classes="login">
     <EZInput type="email" name="email" v-model="emailAddress" placeholder="Email"  />
 
     <div class="input">

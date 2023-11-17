@@ -33,14 +33,22 @@ public class ServiceTesters : TestBase
     Assert.NotNull(context.EmailSvc.LastSendResult);
     Assert.True(context.EmailSvc.LastSendResult!.SendOK);
 
-    Email? mail = context.EmailSvc.LastEmailSent;
-    Assert.NotNull(mail);
+    {
+      Email? mail = context.EmailSvc.LastEmailSent;
+      Assert.NotNull(mail);
 
-    // Visit the verification URL (from the email)
-    string verifyCode = GetVerificationCodeFromEmail(mail);
+      // Visit the verification URL (from the email)
+      string verifyCode = GetVerificationCodeFromEmail(mail);
+      var verifyResult = context.LoginCtl.VerifyUser(verifyCode);
+      Assert.Equal(0, verifyResult.Code);
+    }
 
-    var verifyResult = context.LoginCtl.VerifyUser(verifyCode);
-    Assert.Equal(0, verifyResult.Code);
+
+    {
+      Email? mail = context.EmailSvc.LastEmailSent;
+      Assert.NotNull(mail);
+      ConfirmVerifyCompleteMessage(mail);
+    }
 
     // Confirm that the user is now verified in the DB.
     var dal = GetMemberAccess();
@@ -49,6 +57,17 @@ public class ServiceTesters : TestBase
     Assert.NotNull(check.VerifiedOn);
     Assert.Equal(DateTimeOffset.MinValue, check.VerificationExpiration);
     Assert.Null(check.VerificationCode);
+
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private  void ConfirmVerifyCompleteMessage(Email? mail) {
+    var doc = new HtmlDocument();
+    doc.LoadHtml(mail!.Body);
+
+    // Just make sure that the link appears.
+    var verificationLink = doc.DocumentNode.SelectSingleNode("//a[@class='login-link']");
+    Assert.NotNull(verificationLink);
 
   }
 

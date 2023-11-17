@@ -10,6 +10,20 @@ namespace MemberManTesters
   // ==========================================================================
   public class DataTesters : TestBase
   {
+
+    // -------------------------------------------------------------------------------------------------------------------------- 
+    /// <summary>
+    /// This test case was provided to solve a bug where failure to send the verification complete email
+    /// was making it appear as tho the verification process failed.  This could be misleading to the end users.
+    /// </summary>
+    [Fact]
+    public void FailedVerificationCompleteEmailWillSignalSuccessToUI()
+    {
+      // Complete me!
+      Assert.True(false);
+    }
+
+
     // -------------------------------------------------------------------------------------------------------------------------- 
     [Fact]
     public void CanCheckUsernameAvailability()

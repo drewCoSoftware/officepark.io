@@ -6,15 +6,14 @@ import EZInput from '@/components/EZInput.vue';
 import { onMounted, ref } from 'vue';
 import { watch } from 'fs';
 import { fetchy, fetchyPost } from '@/fetchy';
-
+import { useRoute } from 'vue-router';
 
 const IsTestMode = true;
 
 let Username: string = "";
 let VerificationCode: string = "";
 
-let ReverifyOK = ref(false);
-
+const IsManualCodeRequest = ref(false);
 const IsFormValid = ref(false);
 
 
@@ -31,7 +30,7 @@ const CurState = ref(ENTER_USERNAME);
 
 const props = defineProps({
   user: String,
-  code: String
+  xx: String,
 });
 
 // The states are:
@@ -39,27 +38,34 @@ const props = defineProps({
 // 2. Request Verification + auto request.
 // --> We should go back to verification code entry at that point.
 
+const route = useRoute();
 
 onMounted(async () => {
-  Username = props.user ?? "";
-  VerificationCode = props.code ?? "";
+  Username = route.query['user']?.toString() ?? "";
+  VerificationCode = route.query['code']?.toString() ?? ""
 
 
-  SetState(ENTER_USERNAME);
+  // Clear the querystring, but keep the rest of the bits.
+  window.history.pushState(null, "", "/verify");
+
   if (VerificationCode != "") {
-    SetState(ENTER_CODE);
+    SetState(ENTER_CODE, false);
   }
+
   if (CurState.value == ENTER_USERNAME) {
     if (Username != "") {
-      // Send out the verification request here (or miock it)...
+      // Send out the verification request here (or mock it)...
       ValidateForm();
+      await DoVerificationStep();
     }
   }
   else if (CurState.value == ENTER_CODE) {
-
+    if (VerificationCode != "") {
+      ValidateForm();
+      await DoVerificationStep();
+    }
   }
 
-  // await Reverify();
 });
 
 
@@ -106,13 +112,25 @@ async function DoVerificationStep() {
       }
       else {
         // Print the error message to the form....
-        alert('there was an error!');
-        Form.value?.SetErrorMessage(response.Error.Message)
+        // alert('there was an error!');
+        //        console.log(response.Error);
+        Form.value?.SetErrorMessage("Could not request verification at this time.  Please try again later.");
       }
       break;
 
     case ENTER_CODE:
-      await VerifyCode();
+      let codeResponse = await VerifyCode();
+      if (codeResponse.Success) {
+        if (codeResponse.Data?.Code != 0) {
+          Form.value?.SetErrorMessage(codeResponse.Data?.Message);
+        }
+        else {
+          SetState(VERIFY_COMPLETE);
+        }
+      }
+      else {
+        Form.value?.SetErrorMessage("Could not verify your account at this time.  Please try again later.");
+      }
       break;
 
     default:
@@ -126,7 +144,17 @@ async function DoVerificationStep() {
 
 // -------------------------------------------------------------------------------------------
 async function VerifyCode() {
-  return;
+  Form.value?.beginWork();
+
+  let headers: Headers = new Headers();
+  headers.append("Content-Type", "application/json");
+
+  const p = fetchyPost('https://localhost:7138/api/verify', {
+    Username: "verify-me",
+    VerificationCode: VerificationCode
+  }, headers);
+
+  return p;
 }
 
 // -------------------------------------------------------------------------------------------
@@ -147,17 +175,15 @@ async function RequestVerification() {
 }
 
 // -------------------------------------------------------------------------------------------
-async function SetState(newState: string) {
+function SetState(newState: string, clearquerystring:boolean = true) {
   if (CurState.value != newState) {
-    ResetForm();
     CurState.value = newState;
-  }
-}
 
-// -------------------------------------------------------------------------------------------
-function ResetForm() {
-  Username = "";
-  VerificationCode = "";
+    // Remove ANY querystring values.
+    if (clearquerystring) {
+      window.history.pushState(null, "", "/verify");
+    }
+  }
 }
 
 // -------------------------------------------------------------------------------------------
@@ -166,7 +192,8 @@ function userInput() {
 }
 
 // -------------------------------------------------------------------------------------------
-function codeInput() {
+function codeInput(isManual: boolean = false) {
+  IsManualCodeRequest.value = isManual
   SetState(ENTER_CODE);
 }
 
@@ -185,16 +212,22 @@ function verifyFail() {
 
 
 <template>
-
   <div v-if="CurState != VERIFY_COMPLETE" class="input">
     <div v-if="CurState == ENTER_USERNAME">
       <h4>Verify Your Account</h4>
       <p>Enter your email address and click <span>Request Code</span> below.</p>
+      <p><a class="as-link" @click="codeInput(true)">I already have a code</a></p>
     </div>
     <div v-if="CurState == ENTER_CODE">
-      <h4>Request Sent</h4>
-      <p>You will receive a verification email if you have an account registered with us.</p>
-      <p>You may follow the provided link in the email directly, or you may manually enter it here when prompted.</p>
+      <div v-if="IsManualCodeRequest == false">
+        <h4>Request Sent</h4>
+        <p>You will receive a verification email if you have an account registered with us.</p>
+        <p>You may follow the provided link in the email directly, or you may manually enter it here when prompted.</p>
+      </div>
+      <div v-else>
+        <h4>Verify Your Account</h4>
+        <p>Input your verification code below.</p>
+      </div>
     </div>
 
     <EZForm ref="Form" @input="ValidateForm">
@@ -212,22 +245,22 @@ function verifyFail() {
   <div v-else class="complete">
     <h4>Verification Status</h4>
     <div v-if="VerifyOK">
-      <p>Your account has been successfully verified!  You may now <a href="/login">log in!</a></p>
+      <p>Your account has been successfully verified! You may now <a href="/login">log in!</a></p>
     </div>
     <div v-else>
-      <p>The verification code that you entered is incorrect or expired.  You may request a new verification code <a href="/verify">here</a>.</p>
+      <p>The verification code that you entered is incorrect or expired. You may request a new verification code <a
+          href="/verify">here</a>.</p>
     </div>
   </div>
 
   <div class="test-options" v-if="IsTestMode">
-      <h3>TEST OPTIONS</h3>
-      <p>Use the buttons below to manually set a form state.</p>
-      <button @click="userInput">Input User</button>
-      <button @click="codeInput">Input Code</button>
-      <button @click="verifyOK">Verify OK</button>
-      <button @click="verifyFail">Verify Fail</button>
-    </div>
-
+    <h3>TEST OPTIONS</h3>
+    <p>Use the buttons below to manually set a form state.</p>
+    <button @click="userInput">Input User</button>
+    <button @click="codeInput(false)">Input Code</button>
+    <button @click="verifyOK">Verify OK</button>
+    <button @click="verifyFail">Verify Fail</button>
+  </div>
 </template>
 
 
