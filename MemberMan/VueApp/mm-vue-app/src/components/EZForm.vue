@@ -3,12 +3,26 @@
 // The main point is to have consistent ways to handle common tasks like working state,
 // validation, error messages, etc. 
 import { stringify } from 'querystring';
-import { popScopeId, ref, watch } from 'vue';
+import { onMounted, popScopeId, ref, watch } from 'vue';
+import { useSlots } from 'vue';
+
+const slots = useSlots();
+
+// // TEMP:
+// onMounted(() => {
+//   // I understand slots better now, but I still have no idea how I can actually
+//   // utilize them.  VUE does a lot of nice things for us, but completely hiding
+//   // the dom and relationship between parts is really annoying....
+
+//   // const kidSlot = slots.default;
+//   // console.log('kids slot is:');
+//   // console.log(kidSlot);
+
+// });
+
 
 
 const props = defineProps({
-  //  isWorking: Boolean,
-  //  errorMessage: String,
   cssClasses: String,
 });
 
@@ -52,7 +66,7 @@ const emit = defineEmits(['validate']);
 
 
 
-// TOOD: Share this
+// TOOD: Share this function somewhere.....
 function isNullOrEmpty(input: string | undefined) {
   const res = input == null || input == undefined || input == "";
   return res;
@@ -90,14 +104,36 @@ function onInputEvent() {
 <template>
   <div :class="TemplateClass" @input="onInputEvent">
     <div class="messages" v-html="ErrorMessage"></div>
-    <form>
-      <slot></slot>
+    <form v-disable-inputs="IsWorking">
+      <slot />
+      <!-- <slot name="x" /> -->
     </form>
   </div>
 </template>
 
 
 <style scoped type="less">
+.ez-form {
+
+  .login.working {
+    background: red;
+  }
+
+  .messages {
+    min-height: 1.5rem;
+    color: red;
+    opacity: 0;
+    transition: all linear 0.125s;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.ez-form.has-error {
+  .messages {
+    opacity: 1;
+  }
+}
+
 .ez-form.is-working {
   background: red;
 }

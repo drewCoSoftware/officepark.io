@@ -15,7 +15,6 @@ const loginState = ref(_Login.GetState());
 </script>
 
 
-
 <template>
   <header class="login-header">
     <div v-if="loginState?.IsLoggedIn">
@@ -30,15 +29,16 @@ const loginState = ref(_Login.GetState());
 
   <main>
     <div class="title">
-      <h1>MemberMan For VUE</h1>
+      <h1>MemberMan VUE Example</h1>
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/register">Register</RouterLink>
       </nav>
     </div>
 
-    <RouterView />
-
+    <div class="content">
+      <RouterView />
+    </div>
 
     <div class="todo">
       <h2>TODO</h2>
@@ -46,7 +46,8 @@ const loginState = ref(_Login.GetState());
       <h3>Back End</h3>
       <h3>Front-end</h3>
       <ul>
-        <li>Verificaiton entry + reverify should be on the same page, named 'verify'.  Just set it up so it can handle all of the states as needed.</li>
+        <li>Verificaiton entry + reverify should be on the same page, named 'verify'. Just set it up so it can handle all
+          of the states as needed.</li>
         <li>
           <p>Interpret unverified account and post a re-verify link (login page)</p>
           <p>--&gt; Make a 'reverify' component that can kick off and respond to the appropriate request...</p>
@@ -78,50 +79,25 @@ h3,
 h4,
 h5,
 h6 {
-  text-align: center;
+  // text-align: center;
 }
 
-.ez-form {
-//  .login {}
 
-  .login.working {
-    background: red;
-  }
-
-  .messages {
-    min-height: 1.5rem;
-    color: red;
-    opacity: 0;
-    transition: all linear 0.125s;
-    margin-bottom: 0.5rem;
-  }
+.content { 
+  max-width: 1500px;
 }
-
-.ez-form.has-error {
-  .messages {
-    opacity: 1;
-  }
-}
-
 
 a.as-link {
   text-decoration: underline;
   color: @linkColor;
   cursor: pointer;
 }
-// form .messages {
-//   min-height: 1.5rem;
-//   color: red;
-//   opacity: 0;
-//   transition: all linear 0.125s;
-//   margin-bottom: 0.5rem;
-// }
 
-// form.has-error {
-//   .messages {
-//     opacity: 1;
-//   }
-// }
+
+.ez-form {
+text-align: center;
+}
+
 
 button.link-button {
   background: none;

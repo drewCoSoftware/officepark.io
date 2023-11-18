@@ -28,7 +28,7 @@ const form = ref<typeof EZForm>();
 
 // -------------------------------------------------------------------------------------------
 // Hmmm.... this is a bit hacky IMO, but we are just trying stuff out I guess....
-function isWorking() { 
+function isWorking() {
   const f = form.value;
   if (f == null) { return false; }
   return f.isWorking;
@@ -43,7 +43,7 @@ function beginWork() {
 // -------------------------------------------------------------------------------------------
 function endWork() {
   (form.value as typeof EZForm).endWork();
-//  isWorking.value = false;
+  //  isWorking.value = false;
 }
 
 // -------------------------------------------------------------------------------------------
@@ -81,6 +81,8 @@ async function tryLogin() {
   else {
     alert('login not available!');
   }
+
+  validateForm();
 }
 
 // -------------------------------------------------------------------------------------------
@@ -103,7 +105,7 @@ function validateForm() {
   It seems to me that the easiest way to handle validation is to just catch the input event
   at top level, and then trigger whatever.... -->
   <EZForm ref="form" css-classes="login">
-    <EZInput type="email" name="email" v-model="emailAddress" placeholder="Email"  />
+    <EZInput type="email" name="email" v-model="emailAddress" placeholder="Email" />
 
     <div class="input">
       <input type="password" name="password" v-model="password" placeholder="Password" :disabled="isWorking()"
