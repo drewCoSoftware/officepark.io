@@ -34,6 +34,11 @@ app.directive("disable-inputs", {
   }
 });
 
+// gobals?
+// NOTE: Use environment variable here?
+app.provide('isTestMode', true);
+//app.config.globalProperties.$isTestMode = true;
+
 app.use(createPinia())
 app.use(router)
 

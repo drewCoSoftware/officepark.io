@@ -46,15 +46,9 @@ const loginState = ref(_Login.GetState());
       <h3>Back End</h3>
       <h3>Front-end</h3>
       <ul>
-        <li>Verificaiton entry + reverify should be on the same page, named 'verify'. Just set it up so it can handle all
-          of the states as needed.</li>
-        <li>
-          <p>Interpret unverified account and post a re-verify link (login page)</p>
-          <p>--&gt; Make a 'reverify' component that can kick off and respond to the appropriate request...</p>
-        </li>
-
+        <li>Proper load spinny.... This should be part of the basic styling update...</li>
         <li>Forgot Password?</li>
-        <li>Proper load spinny....</li>
+        <li>The register page needs to be updated to use EZForm</li>
       </ul>
     </div>
 
@@ -79,12 +73,18 @@ h3,
 h4,
 h5,
 h6 {
-  // text-align: center;
+  text-align: center;
 }
 
-
-.content { 
+@siteWidth: 1500px;
+.content {
   max-width: 1500px;
+
+  > * { 
+    display:block;
+    margin: 0 auto;
+    max-width: 1500px;
+  }
 }
 
 a.as-link {
@@ -95,7 +95,7 @@ a.as-link {
 
 
 .ez-form {
-text-align: center;
+  text-align: center;
 }
 
 

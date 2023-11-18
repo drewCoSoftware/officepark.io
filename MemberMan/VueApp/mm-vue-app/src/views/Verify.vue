@@ -7,8 +7,9 @@ import { onMounted, ref } from 'vue';
 import { watch } from 'fs';
 import { fetchy, fetchyPost } from '@/fetchy';
 import { useRoute } from 'vue-router';
+import { inject } from 'vue';
 
-const IsTestMode = true;
+const IsTestMode = inject('isTestMode');
 
 let Username: string = "";
 let VerificationCode: string = "";
