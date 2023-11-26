@@ -23,7 +23,8 @@ const slots = useSlots();
 
 
 const props = defineProps({
-  cssClasses: String,
+  cssClasses: { type: String, default:''},
+  enableSubmit: {type: Boolean, default: true }
 });
 
 const TemplateClass = ref("ez-form");
@@ -103,21 +104,32 @@ function onInputEvent() {
 
 <template>
   <div :class="TemplateClass" @input="onInputEvent">
+    <div class="shade">
+      <img src="/src/assets/refresh.svg" />
+    </div>
     <div class="messages" v-html="ErrorMessage"></div>
-    <form v-disable-inputs="IsWorking">
+    <form v-disable-inputs="IsWorking" v-enable-submit="props.enableSubmit">
       <slot />
-      <!-- <slot name="x" /> -->
     </form>
   </div>
 </template>
 
 
 <style scoped type="less">
-.ez-form {
-
-  .login.working {
-    background: red;
+@keyframes loadSpin {
+  from {
+    transform: rotate(0deg);
   }
+
+  to {
+    transform: rotate(180deg);
+  }
+}
+
+
+.ez-form {
+  padding: 1rem;
+  position: relative;
 
   .messages {
     min-height: 1.5rem;
@@ -125,6 +137,27 @@ function onInputEvent() {
     opacity: 0;
     transition: all linear 0.125s;
     margin-bottom: 0.5rem;
+  }
+
+
+  .shade {
+    display:none;
+    position: absolute;
+    background: #FFFFFF5A;
+    z-index: 999;
+    width: 100%;
+    height: 100%;
+    line-height: 1;
+
+    justify-content: center;
+    align-items: center;
+    img {
+      height: 50px;
+      animation-name: loadSpin;
+      animation-duration: 0.75s;
+      animation-iteration-count: infinite;
+      animation-timing-function: cubic-bezier();
+    }
   }
 }
 
@@ -135,6 +168,8 @@ function onInputEvent() {
 }
 
 .ez-form.is-working {
-  background: red;
+  .shade {
+    display: flex;
+  }
 }
 </style>

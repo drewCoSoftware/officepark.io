@@ -19,18 +19,32 @@ app.directive("disable-inputs", {
   updated: function (el, binding) {
 
     // NOTE: This seems to fire a lot....
-    // alert('custom directive!');
     const flag = binding.value;
 
-    // NOTE:  If this is EZFrom specific
+    // NOTE:  If this is EZForm specific
     const tags = ["input", "button", "textarea", "select"];
     tags.forEach(tagName => {
       const nodes = el.getElementsByTagName(tagName);
       for (let i = 0; i < nodes.length; i++) {
         nodes[i].disabled = flag;
-        nodes[i].tabIndex = -1;
       }
     });
+  }
+});
+
+app.directive("enable-submit", {
+  updated: function (el, binding) {
+    const flag = binding.value;
+
+    console.log('flag is: ' + flag);
+
+    const selector = 'button[data-is-submit="true"],button[type="submit"]';
+    const nodes = (el.querySelectorAll(selector));
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      node.disabled = !flag;
+    }
+
   }
 });
 

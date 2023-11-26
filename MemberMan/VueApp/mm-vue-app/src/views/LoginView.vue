@@ -8,7 +8,7 @@ import EZInput from '../components/EZInput.vue'
 
 import { useLoginStore } from '../stores/login';
 import type { ILoginState, LoginResponse } from "../stores/login";
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 
 const _Login = useLoginStore();
@@ -21,10 +21,26 @@ const loginState = ref(_Login.GetState());
 // Form properties.
 let emailAddress = "";
 let password = "";
-//const isWorking = ref(false);
 const isFormValid = ref(false);
 
 const form = ref<typeof EZForm>();
+
+// const x = defineProps({
+//   theThing: String
+// });
+
+onMounted(() => {
+  validateForm();
+});
+
+const myObject = {
+  disableFunc: alwaysTrue
+};
+
+
+function alwaysTrue() { 
+  return true;
+}
 
 // -------------------------------------------------------------------------------------------
 // Hmmm.... this is a bit hacky IMO, but we are just trying stuff out I guess....
@@ -55,6 +71,7 @@ async function tryLogin() {
       if (res.Error) {
         form.value?.SetErrorMessage("Could not log in at this time.  Please try again later.");
         password = "";
+       // validateForm();
       }
       else {
         const data: LoginResponse = res.Data!;
@@ -104,14 +121,15 @@ function validateForm() {
   <!-- NOTE: Custom events don't bubble in vue3 because the authors are off their meds.
   It seems to me that the easiest way to handle validation is to just catch the input event
   at top level, and then trigger whatever.... -->
-  <EZForm ref="form" css-classes="login">
+  <!-- NOTE: It would also be cool to be able to set the validation function at the top level... -->
+  <EZForm ref="form" css-classes="login" :enable-submit="isFormValid">
     <EZInput type="email" name="email" v-model="emailAddress" placeholder="Email" />
 
     <div class="input">
-      <input type="password" name="password" v-model="password" placeholder="Password" :disabled="isWorking()"
+      <input type="password" name="password" v-model="password" placeholder="Password"
         @input="validateForm" />
     </div>
-    <button type="button" @click="tryLogin" :disabled="!isFormValid || isWorking()">Login</button>
+    <button data-is-submit="true" type="button" @click="tryLogin">Login</button>
   </EZForm>
 
   <div class="actions">
