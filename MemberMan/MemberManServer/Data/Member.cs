@@ -1,13 +1,16 @@
 using DataHelpers.Data;
 using drewCo.Tools;
+using MemberMan;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Hosting.Internal;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -82,17 +85,28 @@ public class CheckMembership : ActionFilterAttribute
   /// </summary>
   public bool Show404OnLoggedOut { get; set; } = false;
 
+  // OPTION: How do we give it settings when it is an attribute?
   public string LoginUrl { get; set; } = "/Login";
 
   // --------------------------------------------------------------------------------------------------------------------------
   public override void OnActionExecuting(ActionExecutingContext fc)
   {
 
+
+
     // This is where we will check our membership tokens and stuff.  If we don't have the right data, we will redirect.
     HttpRequest request = fc.HttpContext.Request;
     HttpResponse response = fc.HttpContext.Response;
 
-    if (!MembershipHelper.IsLoggedIn(request))
+    bool isLoggedIn = false;
+    IMemberManFeatures? ctl = fc.Controller as IMemberManFeatures;
+    if (ctl != null)
+    {
+      isLoggedIn = MembershipHelper.IsLoggedIn(request);
+    }
+
+
+    if (!isLoggedIn)
     {
       if (Show404OnLoggedOut)
       {
@@ -110,8 +124,10 @@ public class CheckMembership : ActionFilterAttribute
     {
       // The cookie is good, so we will make sure that we have a valid login handle.  If we do, then we can
       // update the window time of the login cookie.
-      Member m = MembershipHelper.GetMember(request);
+      Member? m = MembershipHelper.GetMember(request);
       MembershipHelper.UpdateLoginCookie(request, response);
+
+      // TODO: The 'last visited / active data' in the db should be updated here...?
     }
 
   }
@@ -124,16 +140,53 @@ public class CheckMembership : ActionFilterAttribute
 /// </summary>
 public class MembershipHelper
 {
+  // OPTIONS:  This should come from member man config....
+  // That also means that this helper class should also use instance methods....
+  // We can worry about all that later....
   public const int LOGIN_COOKIE_TIME = 30;
   public const string MEMBERSHIP_COOKIE = "fsmid";
 
   private static Dictionary<string, Member> LoggedInMembers = new Dictionary<string, Member>();
 
+  private static object DataLock = new object();
+
   // --------------------------------------------------------------------------------------------------------------------------
   public static bool IsLoginActive(string cookieVal, string ip)
   {
     string token = GetLoginToken(cookieVal, ip);
-    return LoggedInMembers.TryGetValue(token, out Member? m);
+
+    // TODO: This should be concurrent....
+    lock (DataLock)
+    {
+      ExpireMembers();
+      bool res = LoggedInMembers.TryGetValue(token, out Member? m);
+      return res;
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// This will flush any members in the cache from the system.
+  /// </summary>
+  private static void ExpireMembers()
+  {
+    lock (DataLock)
+    {
+      var now = DateTimeOffset.Now;
+      var toRemove = new List<string>();
+      foreach (var item in LoggedInMembers)
+      {
+        if (item.Value.LastActive + TimeSpan.FromMinutes(LOGIN_COOKIE_TIME) < now)
+        {
+          toRemove.Add(item.Key); 
+        }
+      }
+
+      foreach (var item in toRemove)
+      {
+        LoggedInMembers.Remove(item);
+      }
+    }
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -142,8 +195,8 @@ public class MembershipHelper
     string val = CreateLoginCookieVal();
     response.Cookies.Append(MEMBERSHIP_COOKIE, val, new CookieOptions()
     {
-      Expires = DateTime.UtcNow + TimeSpan.FromMinutes(LOGIN_COOKIE_TIME),
-      HttpOnly = true,
+      Expires = DateTime.Now + TimeSpan.FromMinutes(LOGIN_COOKIE_TIME),
+      HttpOnly = false,
     });
     //);
 
@@ -176,11 +229,11 @@ public class MembershipHelper
   // --------------------------------------------------------------------------------------------------------------------------
   internal static void Logout(HttpRequest request, HttpResponse response)
   {
-    string token = GetLoginToken(request);
-    bool isLoggedIn = token != null && LoggedInMembers.TryGetValue(token, out Member m);
+    string? token = GetLoginToken(request);
+    bool isLoggedIn = token != null && LoggedInMembers.TryGetValue(token, out Member? m);
     if (isLoggedIn)
     {
-      LoggedInMembers.Remove(token);
+      LoggedInMembers.Remove(token!);
     }
     response.Cookies.Delete(MEMBERSHIP_COOKIE);
   }
@@ -193,17 +246,19 @@ public class MembershipHelper
   /// </summary>
   public static string CreateLoginCookieVal()
   {
-    string res = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString());
+    // NOTE: We are just throwing out some string.  This isn't particularly secure....
+    string res = StringTools.ComputeMD5(Guid.NewGuid().ToString());
     return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public static string GetLoginToken(HttpRequest request)
+  public static string? GetLoginToken(HttpRequest request)
   {
-    string cookie = request.Cookies[MEMBERSHIP_COOKIE];
-    if (cookie == null) { return ""; }
+    string? cookie = request.Cookies[MEMBERSHIP_COOKIE];
+    if (cookie == null) { return null; }
 
-    string res = GetLoginToken(cookie, IPHelper.GetIP(request));
+    string ipAddress = IPHelper.GetIP(request);
+    string res = GetLoginToken(cookie, ipAddress);
     return res;
   }
 
@@ -216,26 +271,32 @@ public class MembershipHelper
     int ipLen = ip.Length;
     int ipIndex = 0;
 
+    // We encode the cookie value by x-oring it with the IP address.
     int len = cookie.Length;
-    char[] res = new char[len];
+    char[] encoded = new char[len];
     for (int i = 0; i < len; i++)
     {
       uint cVal = (uint)cookie[i] ^ (uint)ip[ipIndex];
-      res[i] = (char)cVal;
+      encoded[i] = (char)cVal;
       ipIndex = (ipIndex + 1) % ipLen;
     }
 
-    string s = StringTools.ToHexString(new string(res));
-    return s;
+    string res = StringTools.ToHexString(new string(encoded));
+    return res;
 
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
   internal static void CompleteLoginInternal(Member m, HttpRequest request, HttpResponse response)
   {
+    // TODO: Check to make sure that the user isn't already registered / logged in
+    // They should not be....
+    string ipAddress = IPHelper.GetIP(request);
+
     m.LoggedInSince = DateTime.UtcNow;
     m.LastActive = m.LoggedInSince;
     m.IsLoggedIn = true;
+    m.IP = ipAddress;
 
     // Now we create our entry for membership.
     string val = CreateLoginCookie(response);
@@ -247,43 +308,64 @@ public class MembershipHelper
   // --------------------------------------------------------------------------------------------------------------------------
   internal static bool IsLoggedIn(HttpRequest request)
   {
-    string cookie = request.Cookies[MEMBERSHIP_COOKIE];
+    string? cookie = request.Cookies[MEMBERSHIP_COOKIE];
+    if (string.IsNullOrEmpty(cookie)) { return false; }
 
-    bool res = cookie != null && IsLoginActive(cookie, IPHelper.GetIP(request));
+    string ipAddress = IPHelper.GetIP(request);
+    bool res = cookie != null && IsLoginActive(cookie, ipAddress);
     return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public static bool TryGetLoggedInMember(HttpRequest request, out Member member)
+  public static bool TryGetLoggedInMember(HttpRequest request, out Member? member)
   {
-    member = new Member()
-    {
-      IsLoggedIn = false
-    };
 
     // NOTE: We are only returning a subset of the data on purpose.
-    Member check = GetMember(request);
-    bool res = check != null;
-    if (res)
+    Member? check = GetMember(request);
+    if (check != null)
     {
-      member.IsLoggedIn = true;
       member = check;
+      member.IsLoggedIn = true;
+      return true;
     }
 
-    return res;
+    member = null;
+    return false;
   }
 
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal static Member GetMember(HttpRequest request)
+  internal static Member? GetMember(HttpRequest request)
   {
-    string token = GetLoginToken(request);
-    Member res = null;
-    if (LoggedInMembers.TryGetValue(token, out res))
+    string? token = GetLoginToken(request);
+    if (token == null) { return null; }
+
+    if (LoggedInMembers.TryGetValue(token, out Member? res))
     {
       res.LastActive = DateTime.UtcNow;
     }
     return res;
+
+  }
+
+  // ============================================================================================================================
+  // TODO: We will use this later when we have better cookie poisoning protection...
+  /// <summary>
+  /// All of the data that we want to track for our login tokens....
+  /// </summary>
+  class LoginToken
+  {
+    //    public LoginToken(
+
+    public string Token { get; set; } = default!;
+    public DateTimeOffset ExpiresOn { get; set; }
+    public string IP { get; set; } = default!;
+
+    //public string GetCookieValue()
+    //{
+
+    //}
+
 
   }
 }

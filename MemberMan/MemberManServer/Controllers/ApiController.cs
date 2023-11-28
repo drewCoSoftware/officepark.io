@@ -16,6 +16,21 @@ public class ApiController : Controller
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
+  public T OK<T>(string? message = null)
+    where T:IAPIResponse, new()
+  {
+    T res = new T();
+    res.Message = message;
+    return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public IAPIResponse OK(string? message)
+  {
+    return OK<BasicResponse>(message);
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
   public IAPIResponse NotFound(string message)
   {
     if (Response != null)

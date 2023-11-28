@@ -97,7 +97,7 @@ export const useLoginStore = defineStore('login', () => {
         username: username,
         password: password
       }),
-      headers: { "Content-Type": 'application/json' }
+      headers: { "Content-Type": 'application/json' },
     });
 
     return p;

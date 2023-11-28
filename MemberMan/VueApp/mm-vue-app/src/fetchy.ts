@@ -60,7 +60,8 @@ export async function fetchy<T extends IApiResponse>(url: string, ops: FetchyOpt
   let p = fetch(url, {
     method: ops.method,
     body: ops.body,
-    headers: ops.headers
+    headers: ops.headers,
+    credentials: "include"    // TODO: FETCHY needs to be some kind of configurable functor.
   })
 
   let success = true;

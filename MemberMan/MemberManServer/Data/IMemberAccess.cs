@@ -19,7 +19,7 @@ public interface IMemberAccess
   /// <summary>
   /// Check a user's login credentials.
   /// </summary>
-  Member? CheckLogin(string username, string password);
+  Member? GetMember(string username, string password);
 
   // --------------------------------------------------------------------------------------------------------------------------
   // Cool.  With default implementations, we complete the loop and have ABCs! Lol, j/k.

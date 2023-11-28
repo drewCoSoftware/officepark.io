@@ -17,9 +17,19 @@ namespace MemberMan;
 
 
 // ============================================================================================================================
+/// <summary>
+/// Indicates that a controller has certain member man features.
+/// </summary>
+internal interface IMemberManFeatures
+{
+  IMemberAccess DAL { get; }
+  MemberManConfig MemberManConfig { get; }
+}
+
+// ============================================================================================================================
 [ApiController]
 [Route("[controller]")]
-public class LoginController : ApiController
+public class LoginController : ApiController, IMemberManFeatures
 {
   public const int INVALID_VERIFICATION = 0x11;
   public const int VERIFICATION_EXPIRED = 0x12;
@@ -28,11 +38,12 @@ public class LoginController : ApiController
 
 
 
-  private IMemberAccess _DAL = default!;
-  private IEmailService _Email = default!;
-  private ConfigHelper _Config = null!;
+  public IMemberAccess DAL { get; private set; } = default!;
+  public MemberManConfig MemberManConfig { get; private set; } = null!;
 
-  private MemberManConfig MemberManCfg = null!;
+  private IEmailService _Email = default!;
+  private ConfigHelper _ConfigHelper = null!;
+
 
   // --------------------------------------------------------------------------------------------------------------------------
   public LoginController(IMemberAccess dal_, IEmailService email_, ConfigHelper config_)
@@ -40,12 +51,20 @@ public class LoginController : ApiController
     if (dal_ == null) { throw new ArgumentNullException("dal_"); }
     if (email_ == null) { throw new ArgumentNullException("email_"); }
 
-    _DAL = dal_;
+    DAL = dal_;
     _Email = email_;
-    _Config = config_;
+    _ConfigHelper = config_;
 
-    MemberManCfg = _Config.Get<MemberManConfig>();
+    MemberManConfig = _ConfigHelper.Get<MemberManConfig>();
   }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public IMemberAccess GetDAL()
+  {
+    return DAL;
+  }
+
+  public MemberManConfig GetConfig () { return MemberManConfig; }
 
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -53,9 +72,14 @@ public class LoginController : ApiController
   [Route("/api/login")]
   public LoginResponse Login(LoginModel login)
   {
+    // If the user is currently logged in, then we can just return OK or something....
+    if (MembershipHelper.IsLoggedIn(Request))
+    {
+      return OK<LoginResponse>();
+    }
 
     // Reach into the DAL to look for active user + password.
-    Member? member = _DAL.CheckLogin(login.username, login.password);
+    Member? member = DAL.GetMember(login.username, login.password);
     if (member == null)
     {
       // NOTE: This should return a 404!
@@ -82,6 +106,10 @@ public class LoginController : ApiController
     {
       isLoggedIn = false;
     }
+
+    // Now we will register the logged in user....
+    MembershipHelper.CompleteLoginInternal(member, Request, Response);
+
     return new LoginResponse()
     {
       IsLoggedIn = isLoggedIn,
@@ -109,14 +137,14 @@ public class LoginController : ApiController
 
 
     // TODO: A logged in user should get a 404 or some other error for this ?
-    var member = _DAL.GetMemberByName(args.Username);
+    var member = DAL.GetMemberByName(args.Username);
     if (member != null)
     {
       // NOTE: A user that is already verified shouldn't be here anyway, so we aren't
       // going to indicate that anything is amiss.
       if (!member.IsVerified)
       {
-        member = _DAL.RefreshVerification(member.Username, MemberManCfg.VerifyWindow);
+        member = DAL.RefreshVerification(member.Username, MemberManConfig.VerifyWindow);
         SendVerificationMessage(member);
       }
     }
@@ -142,7 +170,7 @@ public class LoginController : ApiController
     };
 
     string code = args.VerificationCode ?? string.Empty;
-    Member? m = _DAL.GetMemberByVerification(code);
+    Member? m = DAL.GetMemberByVerification(code);
     if (m == null)
     {
       res.Code = INVALID_VERIFICATION;
@@ -159,7 +187,7 @@ public class LoginController : ApiController
         return res;
       }
 
-      _DAL.CompleteVerification(m, now);
+      DAL.CompleteVerification(m, now);
 
 
       // Send out the final email...
@@ -188,7 +216,7 @@ public class LoginController : ApiController
 
     ValidateLoginData(login);
 
-    MemberAvailability availability = _DAL.CheckAvailability(login.username, login.email);
+    MemberAvailability availability = DAL.CheckAvailability(login.username, login.email);
     bool isAvailable = availability.IsUsernameAvailable && availability.IsEmailAvailable;
 
     if (!isAvailable)
@@ -218,7 +246,7 @@ public class LoginController : ApiController
     if (!HasHeader("X-Test-Api-Call"))
     {
 
-      Member m = _DAL.CreateMember(login.username, login.email, login.password, MemberManCfg.VerifyWindow);
+      Member m = DAL.CreateMember(login.username, login.email, login.password, MemberManConfig.VerifyWindow);
 
       // This is where we will send out the verification, etc. emails.
       SendVerificationMessage(m);
@@ -264,7 +292,7 @@ public class LoginController : ApiController
     string templateText = IOFile.ReadAllText(Path.Combine(FileTools.GetLocalDir("EmailTemplates"), "VerifyComplete.html"));
 
 
-    var mmCfg = _Config.Get<MemberManConfig>();
+    var mmCfg = _ConfigHelper.Get<MemberManConfig>();
     string link = mmCfg.VerificationUrl + $"?code={m.VerificationCode}";
 
     // var date = new DateTimeOffset( m.VerificationExpiration
@@ -281,7 +309,7 @@ public class LoginController : ApiController
     Console.WriteLine(final);
 
 
-    var res = new Email(MemberManCfg.VerificationSender, m.Email, "Verify your account!", final, true);
+    var res = new Email(MemberManConfig.VerificationSender, m.Email, "Verify your account!", final, true);
     return res;
   }
 
@@ -291,7 +319,7 @@ public class LoginController : ApiController
     string templateText = IOFile.ReadAllText(Path.Combine(FileTools.GetLocalDir("EmailTemplates"), "Verification.html"));
 
 
-    var mmCfg = _Config.Get<MemberManConfig>();
+    var mmCfg = _ConfigHelper.Get<MemberManConfig>();
     string link = mmCfg.VerificationUrl + $"?code={m.VerificationCode}";
 
     // var date = new DateTimeOffset( m.VerificationExpiration
@@ -310,7 +338,7 @@ public class LoginController : ApiController
     Console.WriteLine(final);
 
 
-    var res = new Email(MemberManCfg.VerificationSender, m.Email, "Verify your account!", final, true);
+    var res = new Email(MemberManConfig.VerificationSender, m.Email, "Verify your account!", final, true);
     return res;
   }
 

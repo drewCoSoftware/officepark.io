@@ -13,7 +13,8 @@ namespace officepark.io
       var xff = request.Headers["X-Forwarded-For"];
       if (xff.Count > 0) { return xff[0]; }
 
-      return request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "-1";
+      string res = request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "-1";
+      return res;
     }
 
     // --------------------------------------------------------------------------------------------------------------------------

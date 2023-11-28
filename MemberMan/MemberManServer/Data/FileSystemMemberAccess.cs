@@ -77,7 +77,7 @@ public class FileSystemMemberAccess : IMemberAccess
   /// <summary>
   /// Given the username and password, returns a member, or null if the username or password is incorrect.
   /// /// </summary>
-  public Member? CheckLogin(string username, string plaintextPassword)
+  public Member? GetMember(string username, string plaintextPassword)
   {
     Member? m = GetMemberByName(username);
     if (m == null)

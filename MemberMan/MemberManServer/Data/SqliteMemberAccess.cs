@@ -18,7 +18,7 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   { }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public Member? CheckLogin(string username, string password)
+  public Member? GetMember(string username, string password)
   {
     // string hash = (this as IMemberAccess).GetPasswordHash(password);
 
