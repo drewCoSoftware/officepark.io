@@ -36,6 +36,10 @@ public class LoginController : ApiController, IMemberManFeatures
   public const int NOT_VERFIED = 0x13;
   public const int LOGIN_FAILED = 0x14;
 
+  /// <summary>
+  /// The user is already logged in.
+  /// </summary>
+  public const int LOGGED_IN = 0x15;
 
 
   public IMemberAccess DAL { get; private set; } = default!;
@@ -64,8 +68,45 @@ public class LoginController : ApiController, IMemberManFeatures
     return DAL;
   }
 
-  public MemberManConfig GetConfig () { return MemberManConfig; }
+  public MemberManConfig GetConfig() { return MemberManConfig; }
 
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  // NOTE: This call will always work, we don't need to know if someone is logged in or not....
+  [HttpPost]
+  [Route("/api/logout")]
+  public IAPIResponse Logout()
+  {
+    MembershipHelper.Logout(Request, Response);
+    var res = OK<BasicResponse>();
+    return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// This is a simple way to validate that the user is currently logged in.
+  /// It will return 200 and minimal information if they are, or 404 if they are not.
+  /// </summary>
+  [HttpGet]
+  [Route("/api/login/validate")]
+  public LoginResponse ValidateLogin()
+  {
+    if (MembershipHelper.TryGetLoggedInMember(Request, out Member m))
+    {
+      var res = OK<LoginResponse>();
+
+
+      res.DisplayName = m!.Email;
+      res.IsLoggedIn = true;
+      res.Avatar = null;
+
+      return res;
+    }
+    else
+    {
+      return NotFound<LoginResponse>("You are not logged in!");
+    }
+  }
 
   // --------------------------------------------------------------------------------------------------------------------------
   [HttpPost]
@@ -73,9 +114,12 @@ public class LoginController : ApiController, IMemberManFeatures
   public LoginResponse Login(LoginModel login)
   {
     // If the user is currently logged in, then we can just return OK or something....
+    // TODO: Can we make this block of code part of the 'CheckMembership' attribute?
     if (MembershipHelper.IsLoggedIn(Request))
     {
-      return OK<LoginResponse>();
+      var res = OK<LoginResponse>();
+      res.IsLoggedIn = true;
+      return res;
     }
 
     // Reach into the DAL to look for active user + password.
@@ -131,6 +175,15 @@ public class LoginController : ApiController, IMemberManFeatures
   [Route("/api/reverify")]
   public IAPIResponse RequestVerification([FromBody] VerificationArgs args)
   {
+    if (MembershipHelper.IsLoggedIn(Request))
+    {
+      return new BasicResponse()
+      {
+        Code = LoginController.LOGGED_IN,
+        Message = "You are already logged in"
+      };
+    }
+
     // TODO: Some kind of cookie check to make sure that the user was actually directed to reverify!
     // That means a one-time response cookie from the login, and then we should be handing that cookie off to this request...
     // NOTE: That kind of handshake is kind of advanced, and may not be needed....
@@ -156,13 +209,20 @@ public class LoginController : ApiController, IMemberManFeatures
   }
 
 
-
-
   // --------------------------------------------------------------------------------------------------------------------------
   [HttpPost]
   [Route("/api/verify")]
   public BasicResponse VerifyUser([FromBody] VerificationArgs args)
   {
+    if (MembershipHelper.IsLoggedIn(Request))
+    {
+      return new BasicResponse()
+      {
+        Code = LoginController.LOGGED_IN,
+        Message = "You are already logged in"
+      };
+    }
+
     var res = new BasicResponse()
     {
       Code = 0,
@@ -210,6 +270,15 @@ public class LoginController : ApiController, IMemberManFeatures
   [Route("/api/signup")]
   public SignupResponse Signup(LoginModel login)
   {
+    if (MembershipHelper.IsLoggedIn(Request))
+    {
+      return new SignupResponse()
+      {
+        Code = LoginController.LOGGED_IN,
+        Message = "You are already logged in"
+      };
+    }
+
     // TEST:  How can we test attributes / filters in netcore? (we would have to pass cookies around....)
     // TODO: A logged in user should get a 404 or some other error for this... (is there a 200 level code that can articulate this correctly?  are we getting ballz deep into semantics?)
     // The return code should also indicate that the user is already logged in.....

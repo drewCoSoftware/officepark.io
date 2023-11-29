@@ -19,6 +19,28 @@ namespace MemberManTesters;
 // ==========================================================================
 public class ServiceTesters : TestBase
 {
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// This test case shows that if a user is currently logged in, we can't log them in again.
+  /// </summary>
+  [Fact]
+  public void CantLogInLoggedInUser()
+  {
+    Assert.True(false);
+  }
+
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// This shows that we can't log out a user that isn't currently logged in.
+  /// </summary>
+  [Fact]
+  public void CantLogOutUnlessLoggedIn() 
+  {
+    Assert.True(false);
+  }
+
   // --------------------------------------------------------------------------------------------------------------------------
   [Fact]
   public void CanSignupAndVerifyNewUser()
@@ -39,7 +61,12 @@ public class ServiceTesters : TestBase
 
       // Visit the verification URL (from the email)
       string verifyCode = GetVerificationCodeFromEmail(mail);
-      var verifyResult = context.LoginCtl.VerifyUser(verifyCode);
+      var args = new VerificationArgs()
+      {
+        Username = NAME,
+        VerificationCode = verifyCode,
+      };
+      var verifyResult = context.LoginCtl.VerifyUser(args);
       Assert.Equal(0, verifyResult.Code);
     }
 
@@ -61,7 +88,8 @@ public class ServiceTesters : TestBase
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private  void ConfirmVerifyCompleteMessage(Email? mail) {
+  private void ConfirmVerifyCompleteMessage(Email? mail)
+  {
     var doc = new HtmlDocument();
     doc.LoadHtml(mail!.Body);
 
@@ -146,7 +174,13 @@ public class ServiceTesters : TestBase
     string oldCode = GetVerificationCodeFromEmail(mail);
 
     // Visit Verification URL.
-    BasicResponse response = context.LoginCtl.VerifyUser(oldCode);
+    var args = new VerificationArgs()
+    {
+      Username = NAME,
+      VerificationCode = oldCode,
+    };
+
+    BasicResponse response = context.LoginCtl.VerifyUser(args);
     Assert.Equal(LoginController.VERIFICATION_EXPIRED, response.Code);
 
 

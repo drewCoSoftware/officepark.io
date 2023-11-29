@@ -25,13 +25,13 @@ public class ApiController : Controller
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public IAPIResponse OK(string? message)
+  public BasicResponse OK(string? message = null)
   {
     return OK<BasicResponse>(message);
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public IAPIResponse NotFound(string message)
+  public IAPIResponse NotFound(string? message = null)
   {
     if (Response != null)
     {
@@ -47,7 +47,7 @@ public class ApiController : Controller
 
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public T NotFound<T>(string message)
+  public T NotFound<T>(string? message = null)
     where T : IAPIResponse, new()
   {
     if (Response != null)

@@ -4,22 +4,27 @@ import HelloWorld from './components/HelloWorld.vue'
 import type { IStatusData } from "./fetchy.js";
 import { useLoginStore } from './stores/login';
 import type { ILoginState } from "./stores/login";
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
 // For each page, or every so often we want to update the login status...
 // NOTE: The back-end of the application is responsible for evauluating the
 // permissions of the current user.
 const _Login = useLoginStore();
-const loginState = ref(_Login.GetState());
+//const loginState = ref(_Login.GetState());
+
+
+onMounted(() => {
+  _Login.CheckLogin();
+});
 
 </script>
 
 
 <template>
   <header class="login-header">
-    <div v-if="loginState?.IsLoggedIn">
-      <img :src="loginState.Avatar" alt="avatar image" />
-      <p>{{ loginState.DisplayName }}</p>
+    <div v-if="_Login.IsLoggedIn">
+      <img :src="_Login.Avatar" alt="avatar image" />
+      <p>{{ _Login.DisplayName }}</p>
       <button class="link" @click="_Login.Logout">Log Out</button>
     </div>
     <div v-else>
@@ -46,9 +51,10 @@ const loginState = ref(_Login.GetState());
       <h3>Back End</h3>
       <h3>Front-end</h3>
       <ul>
-        <li>Proper load spinny.... This should be part of the basic styling update...</li>
+        <li>Complete UI for a logged in user.</li>
         <li>Forgot Password?</li>
-        <li>The register page needs to be updated to use EZForm</li>
+        <li>Logout</li>
+        <li>The register page needs to be updated to use EZForm?</li>
       </ul>
     </div>
 

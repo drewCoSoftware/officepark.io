@@ -64,32 +64,32 @@ async function tryRegister() {
     isWorking.value = true;
     refreshState();
 
-    await _Login.SignUp(emailAddr, emailAddr, password).then((res) => {
-      if (res.Error) {
-        // NOTE: We should only get to this code block in cases of network errors....
-        console.log(res.Error);
-        hasError.value = true;
-        errMsg.value = "Could not register at this time.  Please try again later.";
-      } else {
-        const data: SignupResponse = res.Data!;
+    // await _Login.SignUp(emailAddr, emailAddr, password).then((res) => {
+    //   if (res.Error) {
+    //     // NOTE: We should only get to this code block in cases of network errors....
+    //     console.log(res.Error);
+    //     hasError.value = true;
+    //     errMsg.value = "Could not register at this time.  Please try again later.";
+    //   } else {
+    //     const data: SignupResponse = res.Data!;
 
-        if (res.Success && data?.IsUsernameAvailable) {
-          hasError.value = false;
-          errMsg.value = "";
+    //     if (res.Success && data?.IsUsernameAvailable) {
+    //       hasError.value = false;
+    //       errMsg.value = "";
 
-          // We want to display some kind of 'Thank you' or other type message....
+    //       // We want to display some kind of 'Thank you' or other type message....
 
-          // alert('Indicate that the signup is OK!');
-          onSignupComplete();
-        }
-        else {
-          hasError.value = true;
-          errMsg.value = data?.Message;
-        }
+    //       // alert('Indicate that the signup is OK!');
+    //       onSignupComplete();
+    //     }
+    //     else {
+    //       hasError.value = true;
+    //       errMsg.value = data?.Message;
+    //     }
 
 
-      }
-    });
+    //   }
+    // });
 
     isWorking.value = false;
     refreshState();

@@ -26,6 +26,7 @@ export interface FetchyResponse<T extends IApiResponse> {
   Data: T | null;
   Success: boolean;
   Error: any | null;
+  StatusCode: number;
 
   // TODO: We can care about headers, etc. later??
 }
@@ -54,7 +55,8 @@ export async function fetchy<T extends IApiResponse>(url: string, ops: FetchyOpt
   let res: FetchyResponse<T> = {
     Success: false,
     Data: null,
-    Error: null
+    Error: null,
+    StatusCode: 0
   }
 
   let p = fetch(url, {
@@ -65,8 +67,10 @@ export async function fetchy<T extends IApiResponse>(url: string, ops: FetchyOpt
   })
 
   let success = true;
+  let statusCode = 0;
   await p.then(response => {
-    success = response.status == 200;   // OPTIONS: We could configure to pass/not other status codes.
+    statusCode = response.status;
+    success = statusCode == 200;   // OPTIONS: We could configure to pass/not other status codes.
     const res = response.json();
     return res;
   }).then(data => {
@@ -78,6 +82,7 @@ export async function fetchy<T extends IApiResponse>(url: string, ops: FetchyOpt
     // we want to mess with at this time.
     res.Data = <T>data;
     res.Success = success;
+    res.StatusCode = statusCode;
 
   }).catch((error) => {
 

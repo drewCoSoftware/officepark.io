@@ -306,8 +306,10 @@ public class MembershipHelper
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal static bool IsLoggedIn(HttpRequest request)
+  internal static bool IsLoggedIn(HttpRequest? request)
   {
+    if (request == null) { return false; }
+
     string? cookie = request.Cookies[MEMBERSHIP_COOKIE];
     if (string.IsNullOrEmpty(cookie)) { return false; }
 
@@ -317,7 +319,7 @@ public class MembershipHelper
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public static bool TryGetLoggedInMember(HttpRequest request, out Member? member)
+  public static bool TryGetLoggedInMember(HttpRequest request, out Member member)
   {
 
     // NOTE: We are only returning a subset of the data on purpose.
@@ -329,7 +331,7 @@ public class MembershipHelper
       return true;
     }
 
-    member = null;
+    member = new Member();
     return false;
   }
 

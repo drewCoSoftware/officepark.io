@@ -16,7 +16,7 @@ const _Login = useLoginStore();
 // For each page, or every so often we want to update the login status...
 // NOTE: The back-end of the application is responsible for evauluating the
 // permissions of the current user.
-const loginState = ref(_Login.GetState());
+//const loginState = ref(_Login.GetState());
 
 // Form properties.
 let emailAddress = "";
@@ -70,13 +70,12 @@ async function tryLogin() {
     await _Login.Login(emailAddress, password).then((res) => {
       if (res.Error) {
         form.value?.SetErrorMessage("Could not log in at this time.  Please try again later.");
-        password = "";
-       // validateForm();
       }
       else {
         const data: LoginResponse = res.Data!;
         if (res.Success && data.IsLoggedIn) {
-          alert('update the current login state!');
+          // alert('update the current login state!');
+          form.value?.SetErrorMessage("redirect the user to account or other landing page....");
         }
         else {
           form.value?.SetErrorMessage(data.Message);
@@ -92,6 +91,7 @@ async function tryLogin() {
         }
       }
 
+      password = "";
       endWork();
     });
   }
