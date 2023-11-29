@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRouter } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
 import type { IStatusData } from "./fetchy.js";
 import { useLoginStore } from './stores/login';
@@ -10,12 +10,18 @@ import { onMounted, ref } from 'vue';
 // NOTE: The back-end of the application is responsible for evauluating the
 // permissions of the current user.
 const _Login = useLoginStore();
-//const loginState = ref(_Login.GetState());
-
+const _Router = useRouter();
 
 onMounted(() => {
   _Login.CheckLogin();
 });
+
+async function logout() {
+  await _Login.Logout();
+
+  // OPTIONS: HOME PAGE.
+  _Router.push("/");
+}
 
 </script>
 
@@ -25,7 +31,7 @@ onMounted(() => {
     <div v-if="_Login.IsLoggedIn">
       <img :src="_Login.Avatar" alt="avatar image" />
       <p>{{ _Login.DisplayName }}</p>
-      <button class="link" @click="_Login.Logout">Log Out</button>
+      <button class="link" @click="logout">Log Out</button>
     </div>
     <div v-else>
       <p>Not Logged In</p>
@@ -37,7 +43,8 @@ onMounted(() => {
       <h1>MemberMan VUE Example</h1>
       <nav>
         <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/register">Register</RouterLink>
+        <RouterLink v-if="!_Login.IsLoggedIn" to="/register">Register</RouterLink>
+        <RouterLink v-if="_Login.IsLoggedIn" to="/account">Account</RouterLink>
       </nav>
     </div>
 
@@ -51,7 +58,7 @@ onMounted(() => {
       <h3>Back End</h3>
       <h3>Front-end</h3>
       <ul>
-        <li>Complete UI for a logged in user.</li>
+        <li>Make a distinction between the home page, and the login page!</li>
         <li>Forgot Password?</li>
         <li>Logout</li>
         <li>The register page needs to be updated to use EZForm?</li>

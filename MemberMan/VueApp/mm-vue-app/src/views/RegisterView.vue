@@ -1,10 +1,12 @@
 <script setup lang="ts">
 
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useLoginStore } from '../stores/login';
 import type { SignupResponse } from '../stores/login';
+import { useRouter } from 'vue-router';
 
 const _Login = useLoginStore();
+const _Router = useRouter();
 
 // Form properties.
 let emailAddr = "";
@@ -18,6 +20,12 @@ const verificationSent = ref(false);
 
 const loginSectionClass = ref("login");
 const stateClass = ref("signup-page");
+
+onMounted(() => {
+  if (_Login.IsLoggedIn) {
+    _Router.push("/account");
+  }
+});
 
 // -------------------------------------------------------------------------------------------
 function validateForm() {

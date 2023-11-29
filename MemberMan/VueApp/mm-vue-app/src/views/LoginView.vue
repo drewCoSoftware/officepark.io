@@ -3,6 +3,7 @@
 
 // This looks useful...
 // https://stackoverflow.com/questions/73257534/vue-multiple-components-in-a-single-file
+import { useRouter } from 'vue-router';
 import EZForm from '../components/EZForm.vue'
 import EZInput from '../components/EZInput.vue'
 
@@ -12,6 +13,7 @@ import { onMounted, ref, watch } from 'vue';
 
 
 const _Login = useLoginStore();
+const _Router = useRouter();
 
 // For each page, or every so often we want to update the login status...
 // NOTE: The back-end of the application is responsible for evauluating the
@@ -30,6 +32,10 @@ const form = ref<typeof EZForm>();
 // });
 
 onMounted(() => {
+  if (_Login.IsLoggedIn) {
+    _Router.push("/account");
+    return;
+  }
   validateForm();
 });
 
@@ -76,6 +82,9 @@ async function tryLogin() {
         if (res.Success && data.IsLoggedIn) {
           // alert('update the current login state!');
           form.value?.SetErrorMessage("redirect the user to account or other landing page....");
+          // NOTE: We could look for a redirect URL here....
+          // we will assume one is not set (for now) and use a default instead.
+          _Router.push("/account");
         }
         else {
           form.value?.SetErrorMessage(data.Message);
