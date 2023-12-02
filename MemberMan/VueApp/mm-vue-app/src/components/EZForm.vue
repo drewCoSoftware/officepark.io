@@ -2,34 +2,22 @@
 // EZForm lets us define a standard form wrapper that we can put any old content into.
 // The main point is to have consistent ways to handle common tasks like working state,
 // validation, error messages, etc. 
+import { isNullOrEmpty } from '@/shared';
 import { stringify } from 'querystring';
 import { onMounted, popScopeId, ref, watch } from 'vue';
 import { useSlots } from 'vue';
 
 const slots = useSlots();
 
-// // TEMP:
-// onMounted(() => {
-//   // I understand slots better now, but I still have no idea how I can actually
-//   // utilize them.  VUE does a lot of nice things for us, but completely hiding
-//   // the dom and relationship between parts is really annoying....
-
-//   // const kidSlot = slots.default;
-//   // console.log('kids slot is:');
-//   // console.log(kidSlot);
-
-// });
-
-
-
 const props = defineProps({
   cssClasses: { type: String, default:''},
-  enableSubmit: {type: Boolean, default: true }
+  validate: { type: Function, default: null },
 });
 
 const TemplateClass = ref("ez-form");
 const IsWorking = ref(false);
 const ErrorMessage = ref<string | null>(null);
+const IsFormValid = ref(true);
 
 // We can expose component functions!  Yay!
 function beginWork() {
@@ -59,20 +47,15 @@ defineExpose({
   ClearErrors
 });
 
-watch([props, IsWorking, ErrorMessage], (x) => {
+watch([props, IsWorking, ErrorMessage, IsFormValid], (x) => {
   updateTemplateClass();
 });
 
-const emit = defineEmits(['validate']);
+onMounted(() => {
+    onInputEvent();
+});
 
-
-
-// TOOD: Share this function somewhere.....
-function isNullOrEmpty(input: string | undefined) {
-  const res = input == null || input == undefined || input == "";
-  return res;
-}
-
+// ------------------------------------------------------------------------------------
 function updateTemplateClass() {
 
   let useVal = "ez-form";
@@ -90,14 +73,19 @@ function updateTemplateClass() {
 }
 
 
+// ------------------------------------------------------------------------------------
 function onInputEvent() {
-  // NOTE: This is kind of hacky since custom events in VUE don't bubble, which is totally stupid.
-  // Either way, we need to determine what thing got an input, and how we might determine
-  // if all of the inputs are valid.
-  // That is total overkill at this time, and we can instead just write per-form
-  // validation code and keep this project moving....
-  // emit('validate');
+  if (props.validate != null) {
+    const isValid = props.validate();
+    IsFormValid.value = isValid;
+  }
+  else {
+    IsFormValid.value = true;
+  }
 }
+
+
+
 
 </script>
 
@@ -108,7 +96,7 @@ function onInputEvent() {
       <img src="/src/assets/refresh.svg" />
     </div>
     <div class="messages" v-html="ErrorMessage"></div>
-    <form v-disable-inputs="IsWorking" v-enable-submit="props.enableSubmit">
+    <form v-disable-inputs="IsWorking" v-enable-submit="IsFormValid">
       <slot />
     </form>
   </div>

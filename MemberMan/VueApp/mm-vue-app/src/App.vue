@@ -28,25 +28,30 @@ async function logout() {
 
 <template>
   <header class="login-header">
-    <div v-if="_Login.IsLoggedIn">
-      <img :src="_Login.Avatar" alt="avatar image" />
-      <p>{{ _Login.DisplayName }}</p>
-      <button class="link" @click="logout">Log Out</button>
+    <div class="title">
+      <h1>MemberMan VUE Example</h1>
     </div>
-    <div v-else>
-      <p>Not Logged In</p>
+
+    <div class="login-status">
+      <div v-if="_Login.IsLoggedIn">
+        <img :src="_Login.Avatar" alt="avatar image" />
+        <p>{{ _Login.DisplayName }}</p>
+        <button class="link" @click="logout">Log Out</button>
+      </div>
+      <div v-else>
+        <p>Not Logged In</p>
+      </div>
     </div>
   </header>
 
   <main>
-    <div class="title">
-      <h1>MemberMan VUE Example</h1>
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink v-if="!_Login.IsLoggedIn" to="/register">Register</RouterLink>
-        <RouterLink v-if="_Login.IsLoggedIn" to="/account">Account</RouterLink>
-      </nav>
-    </div>
+    <nav>
+      <RouterLink to="/">Home</RouterLink>
+      <RouterLink v-if="!_Login.IsLoggedIn" to="/login">Login</RouterLink>
+      <RouterLink v-if="!_Login.IsLoggedIn" to="/signup">Sign Up</RouterLink>
+      <RouterLink v-if="_Login.IsLoggedIn" to="/account">Account</RouterLink>
+    </nav>
+
 
     <div class="content">
       <RouterView />
@@ -58,9 +63,9 @@ async function logout() {
       <h3>Back End</h3>
       <h3>Front-end</h3>
       <ul>
-        <li>Make a distinction between the home page, and the login page!</li>
         <li>Forgot Password?</li>
-        <li>Logout</li>
+        <li>Review all forms + get them up to date with the new :validated function.</li>
+        <li>Move the form based custom directives to EZFORM</li>
         <li>The register page needs to be updated to use EZForm?</li>
       </ul>
     </div>
@@ -90,17 +95,40 @@ h6 {
 }
 
 @siteWidth: 1500px;
+
 .content {
   max-width: 1500px;
 
-  > * { 
-    display:block;
+  >* {
+    display: block;
     margin: 0 auto;
     max-width: 1500px;
   }
 }
 
-a.as-link {
+nav {
+  margin: 0 0 1.0rem 0;
+
+  a {
+    margin: 0 0.25rem;
+    text-decoration: none;
+    border: solid 1px black;
+    padding: 0.5rem;
+
+  }
+
+  a.router-link-active {
+    background: #CCC;
+  }
+
+  a:hover {
+    background: black;
+    color: white;
+  }
+
+}
+
+a {
   text-decoration: underline;
   color: @linkColor;
   cursor: pointer;

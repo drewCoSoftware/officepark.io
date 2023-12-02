@@ -217,7 +217,7 @@ function verifyFail() {
     <div v-if="CurState == ENTER_USERNAME">
       <h4>Verify Your Account</h4>
       <p>Enter your email address and click <span>Request Code</span> below.</p>
-      <p><a class="as-link" @click="codeInput(true)">I already have a code</a></p>
+      <p><a @click="codeInput(true)">I already have a code</a></p>
     </div>
     <div v-if="CurState == ENTER_CODE">
       <div v-if="IsManualCodeRequest == false">

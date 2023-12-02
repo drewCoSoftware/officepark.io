@@ -142,8 +142,8 @@ function validateForm() {
   </EZForm>
 
   <div class="actions">
-    <p>New User? <a href="/register">Register Here!</a></p>
-    <p>Forgot your <a href="/reset">password</a>?</p>
+    <p>New User? <RouterLink to="/signup">Sign Up</RouterLink></p>
+    <p><RouterLink to="/forgot-password">Forgot your Password</RouterLink>?</p>
   </div>
 </template>
 

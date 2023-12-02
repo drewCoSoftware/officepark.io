@@ -8,15 +8,9 @@ const _Login = useLoginStore();
 const _Router = useRouter();
 
 onMounted(() => {
-//  alert('account page is mounted!');
-
-
   if (!_Login.IsLoggedIn) {
-    // OPTIONS: Configure the login page....
-//    alert('we are not logged in!');
-//    _Router.push("/?goto=/account");
+    _Router.push("/login?goto=/account");
   }
-
 });
 
 

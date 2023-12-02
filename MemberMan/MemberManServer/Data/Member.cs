@@ -357,18 +357,9 @@ public class MembershipHelper
   /// </summary>
   class LoginToken
   {
-    //    public LoginToken(
-
     public string Token { get; set; } = default!;
     public DateTimeOffset ExpiresOn { get; set; }
     public string IP { get; set; } = default!;
-
-    //public string GetCookieValue()
-    //{
-
-    //}
-
-
   }
 }
 
