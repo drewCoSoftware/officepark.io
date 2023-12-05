@@ -22,6 +22,38 @@ public class ServiceTesters : TestBase
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
+  /// This test case was provided to show that we can send a password reset email to a user.
+  /// </summary>
+  [Fact]
+  public void CanSendResetPasswordEmail()
+  {
+    const string NAME = nameof(CanSignupAndVerifyNewUser) + "@test.com";
+    const string EMAIL = NAME;
+    const string OLD_PASSWORD = "ABC";
+    const string NEW_PASSWORD = "DEF";
+
+    SignupNewUser(NAME, EMAIL, OLD_PASSWORD, out var context);
+
+    // Create a user w/ a test password.
+    // Log in the user.
+    // Use the reset feature + parse the email for the reset URL / code.
+    // Confirm user is logged in still.  (we don't want the reset form feature to auto logout users)
+
+    // Use the code to set the new password.
+    // Confirm that the user is now logged out!
+
+    // Log the user in with the new password and show that it worked!
+    // Show that the DB entries for reset code + times have been cleared from the system.
+
+
+    // EXTRA: Create a new test case that shows that the timeout on the password reset feature works.
+    Assert.True(false);
+    //Assert.Fail("Finish this test please...");
+  }
+
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
   /// This test case shows that if a user is currently logged in, we can't log them in again.
   /// </summary>
   [Fact]
@@ -30,16 +62,6 @@ public class ServiceTesters : TestBase
     Assert.True(false);
   }
 
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  /// <summary>
-  /// This shows that we can't log out a user that isn't currently logged in.
-  /// </summary>
-  [Fact]
-  public void CantLogOutUnlessLoggedIn() 
-  {
-    Assert.True(false);
-  }
 
   // --------------------------------------------------------------------------------------------------------------------------
   [Fact]
@@ -124,6 +146,12 @@ public class ServiceTesters : TestBase
     public ConfigHelper Config { get; private set; } = null!;
     public SimEmailService EmailSvc { get; private set; } = null!;
     public LoginController LoginCtl { get; private set; } = null!;
+
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private void SignupAndValidateNewUser(string username, string email, string password, out TestContext context)
+  {
 
   }
 
