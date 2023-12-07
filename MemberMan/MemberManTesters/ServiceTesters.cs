@@ -22,24 +22,47 @@ public class ServiceTesters : TestBase
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
-  /// This test case was provided to show that we can send a password reset email to a user.
+  /// This test case was provided to show that we can send a password reset email to a user, and that
+  /// they can use it to complete the reset process.
   /// </summary>
   [Fact]
-  public void CanSendResetPasswordEmail()
+  public void CanResetPassword()
   {
-    const string NAME = nameof(CanSignupAndVerifyNewUser) + "@test.com";
-    const string EMAIL = NAME;
+    const string USERNAME = nameof(CanResetPassword) + "@test.com";
+    const string EMAIL = USERNAME;
     const string OLD_PASSWORD = "ABC";
     const string NEW_PASSWORD = "DEF";
 
-    SignupNewUser(NAME, EMAIL, OLD_PASSWORD, out var context);
+    SignupAndVerifyNewUser(USERNAME, EMAIL, OLD_PASSWORD, out var context);
 
     // Create a user w/ a test password.
-    // Log in the user.
-    // Use the reset feature + parse the email for the reset URL / code.
-    // Confirm user is logged in still.  (we don't want the reset form feature to auto logout users)
+    var dal = GetMemberAccess();
+    var member = dal.GetMemberByName(USERNAME)!;
+    Assert.NotNull(member);
+    Assert.True(member.IsVerified);
+    Assert.False(member.IsLoggedIn);
 
-    // Use the code to set the new password.
+    // Log in the user.
+    var loginResult = context.LoginCtl.Login(new LoginModel()
+    {
+      username = USERNAME,
+      password = OLD_PASSWORD
+    });
+    
+    Assert.True(loginResult.IsLoggedIn);
+
+    // Use the reset feature + parse the email for the reset URL / code.
+    context.LoginCtl.ForgotPassword(USERNAME);
+    Email? lastMail = context.EmailSvc.LastEmailSent!;
+    Assert.NotNull(lastMail);
+    string resetCode = lastMail.Body!;
+    Assert.NotNull(resetCode);
+
+    // Confirm user is logged in still.  (we don't want the reset form feature to auto logout users)
+    var check = context.LoginCtl.ValidateLogin(); 
+    Assert.True(check.IsLoggedIn);
+
+    // Use the reset code + the new password.
     // Confirm that the user is now logged out!
 
     // Log the user in with the new password and show that it worked!
@@ -51,6 +74,12 @@ public class ServiceTesters : TestBase
     //Assert.Fail("Finish this test please...");
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  [Fact]
+  public void LogginInAfterPasswordResetOperationResetsIt()
+  {
+    Assert.True(false);
+  }
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
@@ -67,30 +96,17 @@ public class ServiceTesters : TestBase
   [Fact]
   public void CanSignupAndVerifyNewUser()
   {
-    const string NAME = nameof(CanSignupAndVerifyNewUser) + "@test.com";
-    const string EMAIL = NAME;
+    const string USER_NAME = nameof(CanSignupAndVerifyNewUser) + "@test.com";
+    const string EMAIL = USER_NAME;
     const string PASS = "ABC";
 
-    SignupNewUser(NAME, EMAIL, PASS, out var context);
+    SignupNewUser(USER_NAME, EMAIL, PASS, out var context);
 
     // Confirm that an email was sent + get its content.
     Assert.NotNull(context.EmailSvc.LastSendResult);
     Assert.True(context.EmailSvc.LastSendResult!.SendOK);
 
-    {
-      Email? mail = context.EmailSvc.LastEmailSent;
-      Assert.NotNull(mail);
-
-      // Visit the verification URL (from the email)
-      string verifyCode = GetVerificationCodeFromEmail(mail);
-      var args = new VerificationArgs()
-      {
-        Username = NAME,
-        VerificationCode = verifyCode,
-      };
-      var verifyResult = context.LoginCtl.VerifyUser(args);
-      Assert.Equal(0, verifyResult.Code);
-    }
+    VerifyUser(context, USER_NAME);
 
 
     {
@@ -101,7 +117,7 @@ public class ServiceTesters : TestBase
 
     // Confirm that the user is now verified in the DB.
     var dal = GetMemberAccess();
-    Member? check = dal.GetMemberByName(NAME)!;
+    Member? check = dal.GetMemberByName(USER_NAME)!;
     Assert.NotNull(check);
     Assert.NotNull(check.VerifiedOn);
     Assert.Equal(DateTimeOffset.MinValue, check.VerificationExpiration);
@@ -109,6 +125,25 @@ public class ServiceTesters : TestBase
 
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  private void VerifyUser(TestContext context, string username)
+  {
+    {
+      Email? mail = context.EmailSvc.LastEmailSent;
+      Assert.NotNull(mail);
+
+      // Visit the verification URL (from the email)
+      string verifyCode = GetVerificationCodeFromEmail(mail);
+      var args = new VerificationArgs()
+      {
+        Username = username,
+        VerificationCode = verifyCode,
+      };
+      var verifyResult = context.LoginCtl.VerifyUser(args);
+      Assert.Equal(0, verifyResult.Code);
+    }
+
+  }
   // --------------------------------------------------------------------------------------------------------------------------
   private void ConfirmVerifyCompleteMessage(Email? mail)
   {
@@ -150,9 +185,10 @@ public class ServiceTesters : TestBase
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private void SignupAndValidateNewUser(string username, string email, string password, out TestContext context)
+  private void SignupAndVerifyNewUser(string username, string email, string password, out TestContext context)
   {
-
+    SignupNewUser(username, email, password, out context);
+    VerifyUser(context, username);
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -167,7 +203,7 @@ public class ServiceTesters : TestBase
     // Create the login controller.
     // Signup the user + validate availability.
     var emailSvc = GetEmailService();
-    var loginCtl = new LoginController(GetMemberAccess(), emailSvc, cfgHelper);
+    var loginCtl = new SimLoginController(GetMemberAccess(), emailSvc, cfgHelper);
     SignupResponse response = loginCtl.Signup(new LoginModel()
     {
       username = username,

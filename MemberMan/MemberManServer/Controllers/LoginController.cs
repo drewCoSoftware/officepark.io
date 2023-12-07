@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.Net.Http.Headers;
+using officepark.io;
 using officepark.io.API;
 using officepark.io.Membership;
 using static MemberManServer.Mailer;
@@ -78,9 +80,73 @@ public class LoginController : ApiController, IMemberManFeatures
   public IAPIResponse Logout()
   {
     MembershipHelper.Logout(Request, Response);
+    _LoginToken = null;
+
     var res = OK<BasicResponse>();
     return res;
   }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// This will initiate the password reset process for a user.
+  /// Note that a user may still log into their account if they remember the password
+  /// before going through the whole process, which should invalidate any data that was
+  /// initiated during this step.
+  /// </summary>
+  /// <returns></returns>
+  [HttpPost]
+  [Route("/api/forgot-password")]
+  public IAPIResponse ForgotPassword([FromBody] string username)
+  {
+    // TODO: Check for and reject if the user is currently logged in.
+
+    // Find the user.
+    // If they exist, then we will generate a reset token/code.
+    // The DB must be updated at this point.
+    // With that token, we will generate and send out an email with the reset instructions.
+    // Then the email is sent!
+
+    // NOTE: We always return OK for this function.
+    return OK();
+  }
+
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  [HttpPost]
+  [Route("/api/reset-password")]
+  public IAPIResponse ResetPassword([FromBody] ResetPasswordArgs args)
+  {
+    // TODO: Disallow logged in users.
+
+    // Get the member with the given token.
+    // Check that the token matches and that the expiration is OK.
+    // If so, remove the token + set the new password.
+
+    throw new NotImplementedException();
+  }
+
+  #region Properties 
+  protected string _IPAddress = default!;
+  public virtual string IPAddress
+  {
+    get
+    {
+      return _IPAddress ?? (_IPAddress = IPHelper.GetIP(Request));
+    }
+    internal set { _IPAddress = value; }
+  }
+
+  protected string? _LoginToken = default!;
+  public virtual string? LoginToken
+  {
+    get
+    {
+      return _LoginToken ?? (_LoginToken = MembershipHelper.GetLoginToken(Request));
+    }
+    internal set { _LoginToken = value; }
+  }
+
+  #endregion
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
@@ -91,10 +157,9 @@ public class LoginController : ApiController, IMemberManFeatures
   [Route("/api/login/validate")]
   public LoginResponse ValidateLogin()
   {
-    if (MembershipHelper.TryGetLoggedInMember(Request, out Member m))
+    if (MembershipHelper.TryGetLoggedInMember(LoginToken, out Member m))
     {
       var res = OK<LoginResponse>();
-
 
       res.DisplayName = m!.Email;
       res.IsLoggedIn = true;
@@ -115,6 +180,7 @@ public class LoginController : ApiController, IMemberManFeatures
   {
     // If the user is currently logged in, then we can just return OK or something....
     // TODO: Can we make this block of code part of the 'CheckMembership' attribute?
+    // TODO: This is also something that should use the properties for LoginToken, IPAddress, etc.
     if (MembershipHelper.IsLoggedIn(Request))
     {
       var res = OK<LoginResponse>();
@@ -123,8 +189,8 @@ public class LoginController : ApiController, IMemberManFeatures
     }
 
     // Reach into the DAL to look for active user + password.
-    Member? member = DAL.GetMember(login.username, login.password);
-    if (member == null)
+    Member? m = DAL.GetMember(login.username, login.password);
+    if (m == null)
     {
       // NOTE: This should return a 404!
       var res = NotFound<LoginResponse>("Invalid username or password!");
@@ -136,10 +202,10 @@ public class LoginController : ApiController, IMemberManFeatures
     // NOTE: Here we can interprt options to decide if the user can be logged in, even if they aren't verifed.
     string msg = "OK";
     int code = 0;
-    bool isVerified = member.VerifiedOn != null;
+    bool isVerified = m.VerifiedOn != null;
     if (!isVerified)
     {
-      msg = $"User: {member.Username} is not verified.";
+      msg = $"User: {m.Username} is not verified.";
       code = LoginController.NOT_VERFIED;
     }
 
@@ -152,7 +218,35 @@ public class LoginController : ApiController, IMemberManFeatures
     }
 
     // Now we will register the logged in user....
-    MembershipHelper.CompleteLoginInternal(member, Request, Response);
+    //    MembershipHelper.CompleteLoginInternal(member, Request, Response);
+
+    // internal static string CompleteLoginInternal(Member m, HttpRequest request, HttpResponse response)
+    // {
+    // TODO: Check to make sure that the user isn't already registered / logged in
+    // They should not be....
+    //    string ipAddress = IPHelper.GetIP(request);
+
+    m.LoggedInSince = DateTime.UtcNow;
+    m.LastActive = m.LoggedInSince;
+    m.IsLoggedIn = true;
+    m.IP = IPAddress;
+
+    // Now we create our entry for membership.
+    string cookieVal = MembershipHelper.CreateLoginCookie();
+
+    // TODO: Invent a proper 'Set/GetCookie' functions on the base class...
+    if (Response != null)
+    {
+      Response.Cookies.Append(MembershipHelper.MEMBERSHIP_COOKIE, cookieVal, new CookieOptions()
+      {
+        Expires = DateTime.Now + TimeSpan.FromMinutes(MembershipHelper.LOGIN_COOKIE_TIME),
+        HttpOnly = false,
+      });
+    }
+
+    _LoginToken = MembershipHelper.GetLoginToken(cookieVal, m.IP);
+    MembershipHelper.SetLoggedInUser(m, _LoginToken);
+
 
     return new LoginResponse()
     {
@@ -338,6 +432,20 @@ public class LoginController : ApiController, IMemberManFeatures
     {
       throw new InvalidOperationException("Invalid email address!");
     }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private void SendForgotPasswordMessage(Member member, string resetCode)
+  {
+    Email email = CreateForgotPasswordEmail(member, resetCode);
+    this._Email.SendEmail(email);
+  }
+
+  // -------------------------------------------------------------------------------------------------------------------------- 
+  private Email CreateForgotPasswordEmail(Member member, string resetCode)
+  {
+    string body = ""; ////  This can just come from a configured template it the test project?
+    throw new NotImplementedException();
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -554,3 +662,4 @@ public static class Cookies
 
 }
 
+public record class ResetPasswordArgs(string ResetToken, string NewPassword);

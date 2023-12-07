@@ -25,7 +25,7 @@ public class ApiController : Controller
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public BasicResponse OK(string? message = null)
+  public BasicResponse OK(string? message = "OK")
   {
     return OK<BasicResponse>(message);
   }

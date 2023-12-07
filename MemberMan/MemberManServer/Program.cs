@@ -109,7 +109,7 @@ internal class Program
     cfg.SetBasePath(Directory.GetCurrentDirectory())
        .AddJsonFile("appsettings.json", false, true)
        .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true)
-       .AddJsonFile("appsettings.local.json", true, true);
+       .AddJsonFile("appsettings.local.json", true, false);
 
     var helper = new ConfigHelper(cfg);
 

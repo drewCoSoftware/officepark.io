@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting.Internal;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -178,7 +179,7 @@ public class MembershipHelper
       {
         if (item.Value.LastActive + TimeSpan.FromMinutes(LOGIN_COOKIE_TIME) < now)
         {
-          toRemove.Add(item.Key); 
+          toRemove.Add(item.Key);
         }
       }
 
@@ -189,24 +190,24 @@ public class MembershipHelper
     }
   }
 
-  // --------------------------------------------------------------------------------------------------------------------------
-  public static string CreateLoginCookie(HttpResponse response)
-  {
-    string val = CreateLoginCookieVal();
-    response.Cookies.Append(MEMBERSHIP_COOKIE, val, new CookieOptions()
-    {
-      Expires = DateTime.Now + TimeSpan.FromMinutes(LOGIN_COOKIE_TIME),
-      HttpOnly = false,
-    });
-    //);
+  // // --------------------------------------------------------------------------------------------------------------------------
+  // public static string CreateLoginCookie(HttpResponse response)
+  // {
+  //   string val = CreateLoginCookieVal();
+  //   response.Cookies.Append(MEMBERSHIP_COOKIE, val, new CookieOptions()
+  //   {
+  //     Expires = DateTime.Now + TimeSpan.FromMinutes(LOGIN_COOKIE_TIME),
+  //     HttpOnly = false,
+  //   });
+  //   //);
 
-    return val;
-    //HttpCookie c = new HttpCookie(MEMBERSHIP_COOKIE, );
-    //c.Expires = DateTime.UtcNow + TimeSpan.FromMinutes(LOGIN_COOKIE_TIME);
-    //c.HttpOnly = true;
+  //   return val;
+  //   //HttpCookie c = new HttpCookie(MEMBERSHIP_COOKIE, );
+  //   //c.Expires = DateTime.UtcNow + TimeSpan.FromMinutes(LOGIN_COOKIE_TIME);
+  //   //c.HttpOnly = true;
 
-    //return c;
-  }
+  //   //return c;
+  // }
 
   // --------------------------------------------------------------------------------------------------------------------------
   internal static void UpdateLoginCookie(HttpRequest request, HttpResponse response)
@@ -244,7 +245,7 @@ public class MembershipHelper
   /// Generate the login token for the current member.
   /// We check this against current requests to detect cases where users are trying to hijack accounts with cookies.
   /// </summary>
-  public static string CreateLoginCookieVal()
+  public static string CreateLoginCookie()
   {
     // NOTE: We are just throwing out some string.  This isn't particularly secure....
     string res = StringTools.ComputeMD5(Guid.NewGuid().ToString());
@@ -254,6 +255,9 @@ public class MembershipHelper
   // --------------------------------------------------------------------------------------------------------------------------
   public static string? GetLoginToken(HttpRequest request)
   {
+    // We need the cookie, and the ip address....
+    // How can we detach this from the request.....
+
     string? cookie = request.Cookies[MEMBERSHIP_COOKIE];
     if (cookie == null) { return null; }
 
@@ -287,22 +291,9 @@ public class MembershipHelper
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal static void CompleteLoginInternal(Member m, HttpRequest request, HttpResponse response)
+  internal static void SetLoggedInUser(Member m, string loginToken)
   {
-    // TODO: Check to make sure that the user isn't already registered / logged in
-    // They should not be....
-    string ipAddress = IPHelper.GetIP(request);
-
-    m.LoggedInSince = DateTime.UtcNow;
-    m.LastActive = m.LoggedInSince;
-    m.IsLoggedIn = true;
-    m.IP = ipAddress;
-
-    // Now we create our entry for membership.
-    string val = CreateLoginCookie(response);
-
-    string token = GetLoginToken(val, m.IP);
-    LoggedInMembers[token] = m;
+    LoggedInMembers[loginToken] = m;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -318,36 +309,44 @@ public class MembershipHelper
     return res;
   }
 
-  // --------------------------------------------------------------------------------------------------------------------------
-  public static bool TryGetLoggedInMember(HttpRequest request, out Member member)
-  {
 
-    // NOTE: We are only returning a subset of the data on purpose.
-    Member? check = GetMember(request);
-    if (check != null)
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public static bool TryGetLoggedInMember(string? loginToken, out Member member)
+  {
+    if (loginToken != null)
     {
-      member = check;
-      member.IsLoggedIn = true;
-      return true;
+      // NOTE: We are only returning a subset of the data on purpose.
+      Member? check = GetMember(loginToken);
+      //Member? check = GetMember(
+      if (check != null)
+      {
+        member = check;
+        member.IsLoggedIn = true;
+        return true;
+      }
     }
 
     member = new Member();
     return false;
   }
 
-
   // --------------------------------------------------------------------------------------------------------------------------
   internal static Member? GetMember(HttpRequest request)
   {
     string? token = GetLoginToken(request);
-    if (token == null) { return null; }
+    return GetMember(token);
+  }
 
-    if (LoggedInMembers.TryGetValue(token, out Member? res))
+  // --------------------------------------------------------------------------------------------------------------------------
+  internal static Member? GetMember(string? loginToken)
+  {
+    if (loginToken == null) { return null; }
+    if (LoggedInMembers.TryGetValue(loginToken, out Member? res))
     {
       res.LastActive = DateTime.UtcNow;
     }
     return res;
-
   }
 
   // ============================================================================================================================
