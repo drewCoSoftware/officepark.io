@@ -46,14 +46,20 @@ public class Member : IHasPrimary
 
   public bool IsVerified { get { return VerifiedOn != null && VerifiedOn > CreatedOn; } }
 
-  // TODO:
-  // Indicates that the user should be prompted to change their password on the next login.
-  // public bool ResetPassword { get; set; } = true;
+  [IsNullable]
+  public string? ResetToken { get; set; } = null;
 
-  /// <summary>
-  /// Comma delimited list of permissions, to be interpreted by the application.
-  /// </summary>
-  public string? Permissions { get; set; } = null;
+  [IsNullable]
+  public DateTimeOffset? TokenExpires { get; set; } = null;
+
+    // TODO:
+    // Indicates that the user should be prompted to change their password on the next login.
+    // public bool ResetPassword { get; set; } = true;
+
+    /// <summary>
+    /// Comma delimited list of permissions, to be interpreted by the application.
+    /// </summary>
+    public string? Permissions { get; set; } = null;
 
   /// <summary>
   /// The hashed password.
@@ -270,8 +276,10 @@ public class MembershipHelper
   /// <summary>
   /// Given the current cookie value and IP address, this will create the membership token that is used to check login status.
   /// </summary>
-  public static string GetLoginToken(string cookie, string ip)
+  public static string? GetLoginToken(string? cookie, string ip)
   {
+    if (cookie == null) { return null; }  
+
     int ipLen = ip.Length;
     int ipIndex = 0;
 
@@ -294,6 +302,14 @@ public class MembershipHelper
   internal static void SetLoggedInUser(Member m, string loginToken)
   {
     LoggedInMembers[loginToken] = m;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  internal static bool IsLoggedIn(string? cookie, string ipAddress)
+  {
+    if (cookie == null) { return false; }
+    bool res = IsLoginActive(cookie, ipAddress);
+    return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 
 using MemberMan;
+using Org.BouncyCastle.Asn1;
 using BC = BCrypt.Net.BCrypt;
 
 
@@ -16,6 +17,7 @@ public interface IMemberAccess
 
   MemberAvailability CheckAvailability(string username, string email);
 
+  // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
   /// Check a user's login credentials.
   /// </summary>
@@ -33,13 +35,14 @@ public interface IMemberAccess
   /// <summary>
   /// Compares the given password to the hash.  This will tell us if the password is actually correct or not.
   /// </summary>
+  /// TODO: We should allow plugins for different pasword checking schemes...
   bool CheckPassword(string password, string hash)
   {
     bool res = BC.Verify(password, hash);
     return res;
   }
 
-  Member? GetMemberByName(string username);
+  Member? GetMember(string username);
   List<Member> GetMemberList();
 
   Member CreateMember(string username, string email, string password, TimeSpan verifyWindow);
@@ -63,5 +66,8 @@ public interface IMemberAccess
 
   Member? GetMemberByVerification(string verificationCode);
   void CompleteVerification(Member member, DateTimeOffset date);
+  void SetPasswordResetData(string username, string resetToken, DateTimeOffset? tokenExpires);
+  public void RemovePasswordResetData(string username);
+
 }
 

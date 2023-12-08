@@ -4,6 +4,7 @@ using drewCo.Tools;
 using MemberMan;
 using Microsoft.AspNetCore.Razor.Runtime.TagHelpers;
 using Microsoft.Data.Sqlite;
+using Npgsql;
 using static MemberMan.LoginController;
 
 namespace officepark.io.Membership;
@@ -45,6 +46,18 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
 
     return res;
   }
+
+  //// --------------------------------------------------------------------------------------------------------------------------
+  //public Member? GetMember(string username)
+  //{
+  //  string query = "SELECT * FROM Members WHERE username = @username";
+  //  var res = RunSingleQuery<Member>(query, new
+  //  {
+  //    username = username,
+  //  });
+  //  return res;
+
+  //}
 
   // --------------------------------------------------------------------------------------------------------------------------
   private string? GetStoredHash(string username)
@@ -107,7 +120,7 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public Member? GetMemberByName(string username)
+  public Member? GetMember(string username)
   {
     Member? res = RunSingleQuery<Member>("SELECT * FROM members WHERE username = @username", new { username = username });
     return res;
@@ -166,9 +179,33 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
+  public void SetPasswordResetData(string username, string? resetToken, DateTimeOffset? tokenExpires)
+  {
+    string query = "UPDATE members SET resettoken = @resetToken, tokenexpires = @tokenExpires WHERE username = @username";
+    var args = new
+    {
+      resetToken = resetToken,
+      tokenExpires = tokenExpires,
+      username = username,
+    };
+
+    int updated = RunExecute(query, args);
+    if (updated != 1)
+    {
+      Console.WriteLine($"Setting password reset data for user {username} did not have an effect!");
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public void RemovePasswordResetData(string username)
+  {
+    SetPasswordResetData(username, null, null);
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
   public Member RefreshVerification(string username, TimeSpan verifyWindow)
   {
-    Member? m = GetMemberByName(username);
+    Member? m = GetMember(username);
     if (m == null)
     {
       throw new InvalidOperationException($"The user with name: {username} does not exist!");

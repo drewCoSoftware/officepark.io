@@ -34,29 +34,34 @@ public class ServiceTesters : TestBase
     const string NEW_PASSWORD = "DEF";
 
     SignupAndVerifyNewUser(USERNAME, EMAIL, OLD_PASSWORD, out var context);
+    context.NextRequest();
 
     // Create a user w/ a test password.
     var dal = GetMemberAccess();
-    var member = dal.GetMemberByName(USERNAME)!;
+    var member = dal.GetMember(USERNAME)!;
     Assert.NotNull(member);
     Assert.True(member.IsVerified);
     Assert.False(member.IsLoggedIn);
 
-    // Log in the user.
-    var loginResult = context.LoginCtl.Login(new LoginModel()
-    {
-      username = USERNAME,
-      password = OLD_PASSWORD
-    });
-    
-    Assert.True(loginResult.IsLoggedIn);
+    // NOTE: This is part of another test.  We shouldn't be able to ask to reset the password
+    // if we are currently logged in!
+    //// Log in the user.
+    //var loginResult = context.LoginCtl.Login(new LoginModel()
+    //{
+    //  username = USERNAME,
+    //  password = OLD_PASSWORD
+    //});
+    //Assert.True(loginResult.IsLoggedIn);
 
     // Use the reset feature + parse the email for the reset URL / code.
-    context.LoginCtl.ForgotPassword(USERNAME);
+    var response = context.LoginCtl.ForgotPassword(USERNAME);
+    Assert.True(response.Code == 0, "Invalid response code!");
+
     Email? lastMail = context.EmailSvc.LastEmailSent!;
     Assert.NotNull(lastMail);
     string resetCode = lastMail.Body!;
     Assert.NotNull(resetCode);
+    Assert.NotEqual(string.Empty, resetCode);
 
     // Confirm user is logged in still.  (we don't want the reset form feature to auto logout users)
     var check = context.LoginCtl.ValidateLogin(); 
@@ -117,7 +122,7 @@ public class ServiceTesters : TestBase
 
     // Confirm that the user is now verified in the DB.
     var dal = GetMemberAccess();
-    Member? check = dal.GetMemberByName(USER_NAME)!;
+    Member? check = dal.GetMember(USER_NAME)!;
     Assert.NotNull(check);
     Assert.NotNull(check.VerifiedOn);
     Assert.Equal(DateTimeOffset.MinValue, check.VerificationExpiration);
@@ -182,6 +187,15 @@ public class ServiceTesters : TestBase
     public SimEmailService EmailSvc { get; private set; } = null!;
     public LoginController LoginCtl { get; private set; } = null!;
 
+    // --------------------------------------------------------------------------------------------------------------------------
+    /// <summary>
+    /// Resets the state of the context, last emails sent and whatnot....
+    /// </summary>
+    /// NOTE: Not really sure what to name this thing.....
+    internal void NextRequest()
+    {
+      EmailSvc.ClearLastEmail();
+    }
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -265,7 +279,7 @@ public class ServiceTesters : TestBase
 
     // --> Show that the user is still unverified.
     var dal = GetMemberAccess();
-    Member check = dal.GetMemberByName(NAME)!;
+    Member check = dal.GetMember(NAME)!;
     Assert.False(check.IsVerified);
   }
 

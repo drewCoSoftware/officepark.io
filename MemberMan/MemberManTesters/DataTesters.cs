@@ -113,7 +113,7 @@ namespace MemberManTesters
       Assert.NotNull(src);
       Assert.NotNull(src.VerificationCode);
 
-      Member comp = dal.GetMemberByName(TEST_USER)!;
+      Member comp = dal.GetMember(TEST_USER)!;
       Assert.NotNull(comp);
 
       Assert.Equal(src.CreatedOn, comp.CreatedOn);

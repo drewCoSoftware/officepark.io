@@ -1,11 +1,37 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using officepark.io.API;
+using officepark.io.Membership;
 
 namespace MemberMan;
 
 // ============================================================================================================================
 public class ApiController : Controller
 {
+
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  protected void RemoveCookie(string name)
+  {
+    Response.Cookies.Delete(name);
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  protected void SetCookie(string name, string value, DateTime expires)
+  {
+    Response.Cookies.Append(name, value, new CookieOptions()
+    {
+      Expires = DateTime.Now + TimeSpan.FromMinutes(MembershipHelper.LOGIN_COOKIE_TIME),
+      HttpOnly = false,
+    });
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  // TODO: Put this on a base class....
+  protected string? GetCookie(string cookieName)
+  {
+    string? res = Request.Cookies[cookieName];
+    return res;
+  }
 
   // --------------------------------------------------------------------------------------------------------------------------
   protected bool HasHeader(string headerName)

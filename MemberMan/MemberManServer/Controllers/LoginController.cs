@@ -4,6 +4,7 @@ using System.Text;
 using DotLiquid;
 using drewCo.Tools;
 using MemberManServer;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
@@ -64,6 +65,56 @@ public class LoginController : ApiController, IMemberManFeatures
     MemberManConfig = _ConfigHelper.Get<MemberManConfig>();
   }
 
+
+  #region Properties 
+
+  protected string _IPAddress = default!;
+  public virtual string IPAddress
+  {
+    get
+    {
+      return _IPAddress ?? (_IPAddress = IPHelper.GetIP(Request));
+    }
+    internal set { _IPAddress = value; }
+  }
+
+  protected string? _LoginToken = default!;
+  public virtual string? LoginToken
+  {
+    get
+    {
+      return _LoginToken ?? (_LoginToken = MembershipHelper.GetLoginToken(Request));
+    }
+    internal set { _LoginToken = value; }
+  }
+
+  //  protected string? _MembershipCookie = default!;
+  public virtual string? MembershipCookie
+  {
+    get
+    {
+      return GetCookie(MembershipHelper.MEMBERSHIP_COOKIE);
+    }
+
+    internal set
+    {
+      if (value != null)
+      {
+        SetCookie(MembershipHelper.MEMBERSHIP_COOKIE, value, DateTime.Now + TimeSpan.FromMinutes(MembershipHelper.LOGIN_COOKIE_TIME));
+      }
+      else
+      {
+        RemoveCookie(MembershipHelper.MEMBERSHIP_COOKIE);
+      }
+
+    }
+  }
+
+  #endregion
+
+
+
+
   // --------------------------------------------------------------------------------------------------------------------------
   public IMemberAccess GetDAL()
   {
@@ -99,15 +150,61 @@ public class LoginController : ApiController, IMemberManFeatures
   public IAPIResponse ForgotPassword([FromBody] string username)
   {
     // TODO: Check for and reject if the user is currently logged in.
+    if (IsLoggedIn())
+    {
+      // TODO: Research a better error code to return....
+      return NotFound();
+    }
 
     // Find the user.
+    var member = DAL.GetMember(username);
+    if (member == null)
+    {
+      return NotFound();
+    }
+
     // If they exist, then we will generate a reset token/code.
     // The DB must be updated at this point.
+    string resetToken = GeneratePasswordResetToken();
+    DateTimeOffset tokenExpires = DateTimeOffset.UtcNow + MemberManConfig.PasswordResetWindow;
+    DAL.SetPasswordResetData(username, resetToken, tokenExpires);
+
     // With that token, we will generate and send out an email with the reset instructions.
     // Then the email is sent!
+    SendForgotPasswordMessage(member, resetToken);
 
     // NOTE: We always return OK for this function.
     return OK();
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private string GeneratePasswordResetToken()
+  {
+    // TODO: Some kind of crypto / random hash or something?
+    return "reset-token";
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private Member? GetLoggedInMember()
+  {
+    string? token = MembershipHelper.GetLoginToken(MembershipCookie, IPAddress);
+    var res = MembershipHelper.GetMember(token);
+    return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  // TODO: This could also go with some kind of base class?
+  private bool IsLoggedIn()
+  {
+    bool res = MembershipHelper.IsLoggedIn(MembershipCookie, IPAddress);
+    return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private bool IsLoggedIn(out Member? m)
+  {
+    m = GetLoggedInMember();
+    return m != null;
   }
 
 
@@ -125,28 +222,7 @@ public class LoginController : ApiController, IMemberManFeatures
     throw new NotImplementedException();
   }
 
-  #region Properties 
-  protected string _IPAddress = default!;
-  public virtual string IPAddress
-  {
-    get
-    {
-      return _IPAddress ?? (_IPAddress = IPHelper.GetIP(Request));
-    }
-    internal set { _IPAddress = value; }
-  }
 
-  protected string? _LoginToken = default!;
-  public virtual string? LoginToken
-  {
-    get
-    {
-      return _LoginToken ?? (_LoginToken = MembershipHelper.GetLoginToken(Request));
-    }
-    internal set { _LoginToken = value; }
-  }
-
-  #endregion
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
@@ -157,7 +233,7 @@ public class LoginController : ApiController, IMemberManFeatures
   [Route("/api/login/validate")]
   public LoginResponse ValidateLogin()
   {
-    if (MembershipHelper.TryGetLoggedInMember(LoginToken, out Member m))
+    if (IsLoggedIn(out Member? m))
     {
       var res = OK<LoginResponse>();
 
@@ -235,14 +311,7 @@ public class LoginController : ApiController, IMemberManFeatures
     string cookieVal = MembershipHelper.CreateLoginCookie();
 
     // TODO: Invent a proper 'Set/GetCookie' functions on the base class...
-    if (Response != null)
-    {
-      Response.Cookies.Append(MembershipHelper.MEMBERSHIP_COOKIE, cookieVal, new CookieOptions()
-      {
-        Expires = DateTime.Now + TimeSpan.FromMinutes(MembershipHelper.LOGIN_COOKIE_TIME),
-        HttpOnly = false,
-      });
-    }
+    MembershipCookie = cookieVal;
 
     _LoginToken = MembershipHelper.GetLoginToken(cookieVal, m.IP);
     MembershipHelper.SetLoggedInUser(m, _LoginToken);
@@ -284,7 +353,7 @@ public class LoginController : ApiController, IMemberManFeatures
 
 
     // TODO: A logged in user should get a 404 or some other error for this ?
-    var member = DAL.GetMemberByName(args.Username);
+    var member = DAL.GetMember(args.Username);
     if (member != null)
     {
       // NOTE: A user that is already verified shouldn't be here anyway, so we aren't
@@ -628,6 +697,7 @@ public class SignupResponse : BasicResponse
 public class MemberManConfig
 {
   public static readonly TimeSpan DEFAULT_VERIFY_WINDOW = TimeSpan.FromHours(24);
+  public static readonly TimeSpan DEFAULT_RESET_PASSWORD_WINDOW = TimeSpan.FromHours(24);
 
   /// <summary>
   /// The url that the user should visit to verify their account.
@@ -652,6 +722,8 @@ public class MemberManConfig
   public string SmtpPassword { get; set; } = default!;
 
   public TimeSpan VerifyWindow { get; set; } = DEFAULT_VERIFY_WINDOW;
+
+  public TimeSpan PasswordResetWindow { get; set; } = DEFAULT_RESET_PASSWORD_WINDOW;
 }
 
 

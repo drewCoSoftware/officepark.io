@@ -1,6 +1,7 @@
 
 // ==========================================================================
 using MemberManServer;
+using System;
 
 public class SimEmailService : IEmailService
 {
@@ -21,5 +22,12 @@ public class SimEmailService : IEmailService
     LastEmailSent = mail;
     LastSendResult = res;
     return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  internal void ClearLastEmail()
+  {
+    LastEmailSent = null; 
+    LastSendResult = null;  
   }
 }
