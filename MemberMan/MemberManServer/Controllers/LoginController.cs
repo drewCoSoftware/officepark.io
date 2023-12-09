@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using DotLiquid;
 using drewCo.Tools;
+using Humanizer;
+using Humanizer.Localisation;
 using MemberManServer;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Mvc;
@@ -27,6 +29,13 @@ internal interface IMemberManFeatures
 {
   IMemberAccess DAL { get; }
   MemberManConfig MemberManConfig { get; }
+}
+
+// ============================================================================================================================
+public static class EmailTemplateNames
+{
+  public const string VERIFICATION_TEMPLATE = "Verification";
+  public const string FORGOT_PASSWORD_TEMPLATE = "ForgotPassword";
 }
 
 // ============================================================================================================================
@@ -513,8 +522,20 @@ public class LoginController : ApiController, IMemberManFeatures
   // -------------------------------------------------------------------------------------------------------------------------- 
   private Email CreateForgotPasswordEmail(Member member, string resetCode)
   {
-    string body = ""; ////  This can just come from a configured template it the test project?
-    throw new NotImplementedException();
+    string resetTime = MemberManConfig.PasswordResetWindow.Humanize(maxUnit:TimeUnit.Hour);
+
+    var model = new
+    {
+      ResetLink = MemberManConfig.PasswordResetUrl + "?code=" + resetCode,
+      ResetTime = resetTime,
+    };
+
+    string templateText = GetTemplateText(EmailTemplateNames.FORGOT_PASSWORD_TEMPLATE);
+    var t = Template.Parse(templateText);
+    string final = t.Render(Hash.FromAnonymousObject(new { model = model }));
+
+    var res = new Email(MemberManConfig.VerificationSender, member.Email, "Verify your account!", final, true);
+    return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -539,7 +560,7 @@ public class LoginController : ApiController, IMemberManFeatures
 
 
     var mmCfg = _ConfigHelper.Get<MemberManConfig>();
-    string link = mmCfg.VerificationUrl + $"?code={m.VerificationCode}";
+    string link = mmCfg.VerifyAccountUrl + $"?code={m.VerificationCode}";
 
     // var date = new DateTimeOffset( m.VerificationExpiration
     // TODO: Localize to EST and include that in the email.
@@ -547,26 +568,25 @@ public class LoginController : ApiController, IMemberManFeatures
 
     var model = new
     {
-      LoginLink = mmCfg.LoginLink
+      LoginUrl = mmCfg.LoginUrl
     };
 
     var t = Template.Parse(templateText);
     string final = t.Render(Hash.FromAnonymousObject(new { model = model }));
-    Console.WriteLine(final);
-
 
     var res = new Email(MemberManConfig.VerificationSender, m.Email, "Verify your account!", final, true);
     return res;
   }
 
+
   // --------------------------------------------------------------------------------------------------------------------------
   protected virtual Email CreateVerificationEmail(Member m)
   {
-    string templateText = IOFile.ReadAllText(Path.Combine(FileTools.GetLocalDir("EmailTemplates"), "Verification.html"));
-
+    // TODO: This should be overridable....
+    string templateText = GetTemplateText(EmailTemplateNames.VERIFICATION_TEMPLATE);
 
     var mmCfg = _ConfigHelper.Get<MemberManConfig>();
-    string link = mmCfg.VerificationUrl + $"?code={m.VerificationCode}";
+    string link = mmCfg.VerifyAccountUrl + $"?code={m.VerificationCode}";
 
     // var date = new DateTimeOffset( m.VerificationExpiration
     // TODO: Localize to EST and include that in the email.
@@ -588,7 +608,17 @@ public class LoginController : ApiController, IMemberManFeatures
     return res;
   }
 
-
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// Given the template name, this function will return the template text.
+  /// Override the function to use custom templates....
+  /// </summary>
+  protected virtual string GetTemplateText(string templateName)
+  {
+    string templateFilePath = Path.Combine(FileTools.GetLocalDir("EmailTemplates"), $"{templateName}.html");
+    string res = IOFile.ReadAllText(templateFilePath);
+    return res;
+  }
 }
 
 
@@ -687,43 +717,6 @@ public class SignupResponse : BasicResponse
 {
   public bool IsUsernameAvailable { get; set; }
   public bool IsEmailAvailable { get; set; }
-}
-
-
-// ============================================================================================================================
-/// <summary>
-/// Configuration for member man and its features.
-/// </summary>
-public class MemberManConfig
-{
-  public static readonly TimeSpan DEFAULT_VERIFY_WINDOW = TimeSpan.FromHours(24);
-  public static readonly TimeSpan DEFAULT_RESET_PASSWORD_WINDOW = TimeSpan.FromHours(24);
-
-  /// <summary>
-  /// The url that the user should visit to verify their account.
-  /// </summary>
-  public string VerificationUrl { get; set; } = default!;
-
-  /// <summary>
-  /// The url that is used to log into the account.
-  /// </summary>
-  public string LoginLink { get; set; } = default!;
-
-  /// <summary>
-  /// Email account that sends verification emails.
-  /// </summary>
-  public string VerificationSender { get; set; } = default!;
-
-  /// <summary>
-  /// The server address that emails are sent through....
-  /// </summary>
-  public string SmtpServer { get; set; } = default!;
-  public int SmtpPort { get; set; } = 465;
-  public string SmtpPassword { get; set; } = default!;
-
-  public TimeSpan VerifyWindow { get; set; } = DEFAULT_VERIFY_WINDOW;
-
-  public TimeSpan PasswordResetWindow { get; set; } = DEFAULT_RESET_PASSWORD_WINDOW;
 }
 
 

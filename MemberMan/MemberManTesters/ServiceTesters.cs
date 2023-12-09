@@ -43,7 +43,7 @@ public class ServiceTesters : TestBase
     Assert.True(member.IsVerified);
     Assert.False(member.IsLoggedIn);
 
-    // NOTE: This is part of another test.  We shouldn't be able to ask to reset the password
+    // NOTE: This is part of another test that we should write.  We shouldn't be able to ask to reset the password
     // if we are currently logged in!
     //// Log in the user.
     //var loginResult = context.LoginCtl.Login(new LoginModel()
@@ -62,10 +62,6 @@ public class ServiceTesters : TestBase
     string resetCode = lastMail.Body!;
     Assert.NotNull(resetCode);
     Assert.NotEqual(string.Empty, resetCode);
-
-    // Confirm user is logged in still.  (we don't want the reset form feature to auto logout users)
-    var check = context.LoginCtl.ValidateLogin(); 
-    Assert.True(check.IsLoggedIn);
 
     // Use the reset code + the new password.
     // Confirm that the user is now logged out!

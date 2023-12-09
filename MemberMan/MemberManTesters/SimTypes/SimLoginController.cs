@@ -19,6 +19,19 @@ public class SimLoginController : LoginController
 
   public override string? MembershipCookie { get; internal set; } = null;
 
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  protected override string GetTemplateText(string templateName)
+  {
+    if (templateName == EmailTemplateNames.FORGOT_PASSWORD_TEMPLATE)
+    {
+      return "{{model.ResetLink}}";
+    }
+    else
+    {
+      return base.GetTemplateText(templateName);
+    }
+  }
   // public override string IPAddress { get; protected set; } = "127.0.0.1";
 
   #endregion
