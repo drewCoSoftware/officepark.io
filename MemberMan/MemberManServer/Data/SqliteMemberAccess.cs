@@ -5,6 +5,7 @@ using MemberMan;
 using Microsoft.AspNetCore.Razor.Runtime.TagHelpers;
 using Microsoft.Data.Sqlite;
 using Npgsql;
+using Org.BouncyCastle.Crypto;
 using static MemberMan.LoginController;
 
 namespace officepark.io.Membership;
@@ -147,6 +148,14 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
+  public Member? GetMemberByResetToken(string resetToken)
+  {
+    var byTokenQuery = "SELECT username,resettoken,tokenexpires FROM members WHERE resettoken = @resetToken";
+    var byToken = RunSingleQuery<Member>(byTokenQuery, new { @resetToken = resetToken });
+    return byToken;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMemberByVerification(string code)
   {
     var byVerification = "SELECT username, verificationexpiration FROM members WHERE verificationcode = @verificationcode";
@@ -194,6 +203,24 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     {
       Console.WriteLine($"Setting password reset data for user {username} did not have an effect!");
     }
+  }
+
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public void SetPassword(string username, string password)
+  {
+    string pwQuery = "UPDATE members SET password = @password WHERE username = @username";
+
+    IMemberAccess t = this;
+    password = t.GetPasswordHash(password);
+
+    int updated = RunExecute(pwQuery, new { password, username });
+
+    if (updated != 1)
+    {
+      throw new InvalidOperationException($"Unable to set password for user: {username}!");
+    }
+
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

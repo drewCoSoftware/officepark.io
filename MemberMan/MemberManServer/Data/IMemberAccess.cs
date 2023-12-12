@@ -67,7 +67,8 @@ public interface IMemberAccess
   Member? GetMemberByVerification(string verificationCode);
   void CompleteVerification(Member member, DateTimeOffset date);
   void SetPasswordResetData(string username, string resetToken, DateTimeOffset? tokenExpires);
-  public void RemovePasswordResetData(string username);
-
+  void RemovePasswordResetData(string username);
+  Member GetMemberByResetToken(string resetToken);
+  void SetPassword(string username, string newPassword);
 }
 

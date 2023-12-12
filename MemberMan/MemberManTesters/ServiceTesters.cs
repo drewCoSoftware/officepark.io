@@ -94,11 +94,11 @@ public class ServiceTesters : TestBase
 
 
     // Show that the DB entries for reset code + times have been cleared from the system.
+    Member? check = dal.GetMember(USERNAME);
+    Assert.NotNull(check);
+    Assert.Null(check?.ResetToken);
+    Assert.Null(check?.TokenExpires);
 
-
-    // EXTRA: Create a new test case that shows that the timeout on the password reset feature works.
-    Assert.True(false);
-    //Assert.Fail("Finish this test please...");
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

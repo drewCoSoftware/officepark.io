@@ -226,44 +226,50 @@ public class LoginController : ApiController, IMemberManFeatures
   public IAPIResponse ResetPassword([FromBody] ResetPasswordArgs args)
   {
     // TODO: Disallow logged in users.
-    if (IsLoggedIn(out Member? m))
+    if (IsLoggedIn())
     {
       return NotFound();
     }
 
     // Get the member with the given token.
-    if (m == null) {
+    var member = DAL.GetMemberByResetToken(args.ResetToken);
+    if (member == null)
+    {
       return NotFound();
     }
 
-    if (m.TokenExpires == null || m.ResetToken == null)
+    if (member.TokenExpires == null || member.ResetToken == null)
     {
       return NotFound();
     }
 
     var timestamp = DateTimeOffset.Now;
     int code = 0;
-    if (m.ResetToken != args.ResetToken)
+    string msg = string.Empty;
+    if (member.ResetToken != args.ResetToken)
     {
       code = INVALID_RESET_TOKEN;
+      msg = "Invalid reset token!";
     }
 
-    if (timestamp > m.TokenExpires)
+    if (timestamp > member.TokenExpires)
     {
       code = RESET_TOKEN_EXPIRED;
+      msg = "Reset token expired!";
     }
 
     if (code != 0)
     {
+      // We were not able to reset the password.....
+      return Error(code, msg);
     }
     else
     {
+      // Reset OK!
+      DAL.RemovePasswordResetData(member.Username);
+      DAL.SetPassword(member.Username, args.NewPassword);
+      return OK();
     }
-
-    // Check that the token matches and that the expiration is OK.
-    // If so, remove the token + set the new password.
-
-    throw new NotImplementedException();
   }
 
 
@@ -557,7 +563,7 @@ public class LoginController : ApiController, IMemberManFeatures
   // -------------------------------------------------------------------------------------------------------------------------- 
   private Email CreateForgotPasswordEmail(Member member, string resetCode)
   {
-    string resetTime = MemberManConfig.PasswordResetWindow.Humanize(maxUnit:TimeUnit.Hour);
+    string resetTime = MemberManConfig.PasswordResetWindow.Humanize(maxUnit: TimeUnit.Hour);
 
     var model = new
     {

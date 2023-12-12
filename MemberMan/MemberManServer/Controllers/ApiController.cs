@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DotLiquid.Util;
+using Microsoft.AspNetCore.Mvc;
 using officepark.io.API;
 using officepark.io.Membership;
 
@@ -55,6 +56,25 @@ public class ApiController : Controller
   {
     return OK<BasicResponse>(message);
   }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public BasicResponse Error(int code ,string? message = "Error")
+  {
+    return Error<BasicResponse>(code, message);
+  }
+  // --------------------------------------------------------------------------------------------------------------------------
+  public T Error<T>(int code, string? message = "Error")
+    where T : IAPIResponse, new()
+  {
+    if (Response != null) {
+      Response.StatusCode = 500;
+    }
+    return new T() {
+      Code = code,
+      Message = message
+    };
+  }
+
 
   // --------------------------------------------------------------------------------------------------------------------------
   public IAPIResponse NotFound(string? message = null)
