@@ -5,21 +5,23 @@ import { useLoginStore } from '../stores/login';
 import type { SignupResponse } from '../stores/login';
 import { useRouter } from 'vue-router';
 
+import EZForm from '../components/EZForm.vue'
+import EZInput from '../components/EZInput.vue'
+
 const _Login = useLoginStore();
 const _Router = useRouter();
 
 // Form properties.
 let emailAddr = "";
 let password = "";
-const isWorking = ref(false);
-const isFormValid = ref(false);
-const hasError = ref(false);
-const errMsg = ref("error message");
+
 const isSignupOK = ref(false);
 const verificationSent = ref(false);
 
 const loginSectionClass = ref("login");
 const stateClass = ref("signup-page");
+
+const form = ref<typeof EZForm>();
 
 onMounted(() => {
   if (_Login.IsLoggedIn) {
@@ -28,10 +30,17 @@ onMounted(() => {
 });
 
 // -------------------------------------------------------------------------------------------
-function validateForm() {
-  // Revalidate the form.....
+function validateForm(): boolean {
   const isValid = emailAddr != "" && password != "";
-  isFormValid.value = isValid;
+  return isValid;
+}
+
+// -------------------------------------------------------------------------------------------
+// Hmmm.... this is a bit hacky IMO, but we are just trying stuff out I guess....
+function isWorking() {
+  const f = form.value;
+  if (f == null) { return false; }
+  return f.isWorking;
 }
 
 // -------------------------------------------------------------------------------------------
@@ -41,7 +50,7 @@ function refreshState() {
   stateVal += verificationSent.value ? " verification-sent" : "";
 
   // Update state variables based on what is happening on this page....
-  let loginVal = "login" + (isWorking.value ? " working" : "");
+  let loginVal = "login" + (isWorking() ? " working" : "");
 
 
   loginSectionClass.value = loginVal;
@@ -63,43 +72,41 @@ async function requestVerification() {
   refreshState();
 }
 
-
 // -------------------------------------------------------------------------------------------
 async function trySignup() {
 
   const isValid = emailAddr != "" && password != "";
-  if (isValid && !isWorking.value) {
-    isWorking.value = true;
-    refreshState();
+  if (isValid && !isWorking()) {
 
-    // await _Login.SignUp(emailAddr, emailAddr, password).then((res) => {
-    //   if (res.Error) {
-    //     // NOTE: We should only get to this code block in cases of network errors....
-    //     console.log(res.Error);
-    //     hasError.value = true;
-    //     errMsg.value = "Could not sign up at this time.  Please try again later.";
-    //   } else {
-    //     const data: SignupResponse = res.Data!;
+    (form.value)?.beginWork();
 
-    //     if (res.Success && data?.IsUsernameAvailable) {
-    //       hasError.value = false;
-    //       errMsg.value = "";
+    await _Login.SignUp(emailAddr, emailAddr, password).then((res) => {
+      if (res.Error) {
+        // NOTE: We should only get to this code block in cases of network errors....
+        console.log(res.Error);
+        (form.value)?.SetErrorMessage(res.Error.message);
+        // hasError.value = true;
+        // errMsg.value = "Could not sign up at this time.  Please try again later.";
+      } else {
+        const data: SignupResponse = res.Data!;
 
-    //       // We want to display some kind of 'Thank you' or other type message....
+        if (res.Success && data?.IsUsernameAvailable) {
+          (form.value)?.ClearErrors();
 
-    //       // alert('Indicate that the signup is OK!');
-    //       onSignupComplete();
-    //     }
-    //     else {
-    //       hasError.value = true;
-    //       errMsg.value = data?.Message;
-    //     }
+          // We want to display some kind of 'Thank you' or other type message....
+
+          onSignupComplete();
+        }
+        else {
+          (form.value)?.SetErrorMessage(data?.Message);
+        }
 
 
-    //   }
-    // });
+      }
+    });
 
-    isWorking.value = false;
+    (form.value)?.endWork();
+
     refreshState();
 
   }
@@ -111,7 +118,14 @@ async function trySignup() {
 
     <h2>Sign Up for Account</h2>
     <div :class="loginSectionClass">
-      <form :class="hasError ? 'has-error' : ''">
+      <EZForm ref="form" :validate="validateForm">
+        <EZInput type="email" v-model="emailAddr" placeholder="Email" />
+        <EZInput type="password" v-model="password" placeholder="Password" />
+        <button data-is-submit="true" type="button" @click="trySignup">Sign Up</button>
+      </EZForm>
+
+
+      <!-- <form :class="hasError ? 'has-error' : ''">
         <div class="messages">
           <p>{{ errMsg }}</p>
         </div>
@@ -123,7 +137,7 @@ async function trySignup() {
             @input="validateForm" />
         </div>
         <button type="button" @click="trySignup" :disabled="!isFormValid || isWorking">Sign Up</button>
-      </form>
+      </form> -->
     </div>
 
     <div class="thank-you">
@@ -139,12 +153,11 @@ async function trySignup() {
       <p><a href="/">Return to Login</a></p>
     </div>
   </div>
-
 </template>
 
 <style lang="less">
 .signup-page {
-  > div {
+  >div {
     text-align: center;
   }
 
@@ -153,7 +166,7 @@ async function trySignup() {
   }
 
   .verification-msg {
-    display:none;
+    display: none;
   }
 }
 
@@ -169,11 +182,11 @@ async function trySignup() {
 
 .signup-page.verification-sent {
   .thank-you {
-    display:none;
+    display: none;
   }
+
   .verification-msg {
-    display:block;
+    display: block;
   }
 }
-
 </style>

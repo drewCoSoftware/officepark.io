@@ -37,6 +37,10 @@ public class EmailService : IEmailService
     SmtpHost = smtpHost_;
     Port = port_;
     User = user;
+
+    if (string.IsNullOrEmpty(password)) {
+      throw new ArgumentNullException("Password may not be null or empty!");
+    }
     Password = password;
   }
 

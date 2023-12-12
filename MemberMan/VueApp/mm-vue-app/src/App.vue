@@ -61,12 +61,13 @@ async function logout() {
       <h2>TODO</h2>
 
       <h3>Back End</h3>
+        <li>Fetchy should be a functor type deal....</li>
       <h3>Front-end</h3>
       <ul>
         <li>Forgot Password?</li>
+        <li>Configurable domain for login service urls.</li>
         <li>Review all forms + get them up to date with the new :validated function.</li>
         <li>Move the form based custom directives to EZFORM</li>
-        <li>The register page needs to be updated to use EZForm?</li>
       </ul>
     </div>
 

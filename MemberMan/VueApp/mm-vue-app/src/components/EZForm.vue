@@ -75,6 +75,9 @@ function updateTemplateClass() {
 
 // ------------------------------------------------------------------------------------
 function onInputEvent() {
+
+  // console.log('input event!');
+
   if (props.validate != null) {
     const isValid = props.validate();
     IsFormValid.value = isValid;

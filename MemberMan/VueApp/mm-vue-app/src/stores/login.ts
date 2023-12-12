@@ -61,20 +61,23 @@ export const useLoginStore = defineStore('login', {
   },
 
   actions: {
+
+    // ---------------------------------------------------
     async CheckLogin() {
       const url = "https://localhost:7138/api/login/validate";
       let p = await fetchy<LoginResponse>(url);
       if (p.Success && p.StatusCode == 200) {
         this.IsLoggedIn = true;
         this.DisplayName = p.Data?.DisplayName,
-        this.Avatar = p.Data?.Avatar
+          this.Avatar = p.Data?.Avatar
       }
       else {
         this.Logout();
       }
-      
+
     },
 
+    // ---------------------------------------------------
     async Login(username: string, password: string): Promise<FetchyResponse<LoginResponse>> {
 
       const url = "https://localhost:7138/api/login";
@@ -104,23 +107,64 @@ export const useLoginStore = defineStore('login', {
       return p;
     },
 
-    async Logout() 
-    {
-        const url = "https://localhost:7138/api/logout";
-        let p = await fetchyPost(url, null);
+    // ---------------------------------------------------
+    async Logout() {
+      const url = "https://localhost:7138/api/logout";
+      let p = await fetchyPost(url, null);
 
-        // NOTE: We just assume that the call to logout is correct.
-        // Server side it will always work.
-        // Destroy cookies?
-        // https://stackoverflow.com/questions/2144386/how-to-delete-a-cookie
+      // NOTE: We just assume that the call to logout is correct.
+      // Server side it will always work.
+      // Destroy cookies?
+      // https://stackoverflow.com/questions/2144386/how-to-delete-a-cookie
 
-        this.IsLoggedIn = false;
-        this.DisplayName = "";
-        this.Avatar = "";
-     },
+      this.IsLoggedIn = false;
+      this.DisplayName = "";
+      this.Avatar = "";
+    },
 
+    // ---------------------------------------------------
     async RequestVerification(email: string) {
+      throw Error("Not implemented!");
+    },
+
+    // ---------------------------------------------------
+    async ForgotPassword(username:string) : Promise<FetchyResponse<IApiResponse>> {
+        const url = "https://localhost:7138/api/forgot-password";
+        let headers: Headers = new Headers();
+        headers.append("Content-Type", "application/json");
+
+        let p = await fetchy<IApiResponse>(url, {
+            method: 'POST',
+            body: JSON.stringify({ Username: username }),
+            headers: headers
+        });
+
+        return p;
+    },
+
+    // ---------------------------------------------------
+    async SignUp(username: string, emailAddr: string, password: string): Promise<FetchyResponse<SignupResponse>> {
+      const url = "https://localhost:7138/api/signup";
+
+      let headers: Headers = new Headers();
+      headers.append("Content-Type", "application/json");
+
+      // TODO: Use Environment var:
+      // headers.append("X-Test-Api-Call", "true");
+
+      let p = await fetchy<SignupResponse>(url, {
+        method: 'POST',
+        body: JSON.stringify({
+          username: username,
+          email: emailAddr,
+          password: password
+        }),
+        headers: headers
+      });
+
+      return p;
     }
+
   }
 
 

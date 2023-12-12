@@ -6,6 +6,7 @@ import EZInput from '../components/EZInput.vue'
 import { isNullOrEmpty } from '@/shared';
 import { useLoginStore } from '@/stores/login';
 import { useRouter } from 'vue-router';
+import type { IApiResponse } from '@/fetchy';
 
 const form = ref<typeof EZForm>();
 
@@ -30,14 +31,40 @@ onMounted(() => {
 });
 
 
+// ---------------------------------------------------------------------------------
 function validateForm() {
   let isValid = !isNullOrEmpty(emailAddress);
   return isValid;
 }
 
+// ---------------------------------------------------------------------------------
 async function trySubmit() {
-//  _CurState.value = SUBMITED_STATE;
-  alert('i will try to retrieve the password!');
+  const url = "/api/forgot-password";
+
+  (form.value)?.beginWork();
+
+  const response = await _Login.ForgotPassword(emailAddress);
+  if (response.Error) {
+    form.value?.SetErrorMessage("Could not begin the forgot password process at this time.  Please try again later...");
+  }
+  else {
+    const data: IApiResponse = response.Data!;
+    if (data.Code != 0 || response.StatusCode != 200) {
+      form.value?.SetErrorMessage(data.Message);
+    }
+    else {
+      form.value?.ClearErrors();
+      SetState(SUBMITED_STATE);
+    }
+  }
+
+  (form.value)?.endWork();
+
+  // --------------------------------------------------
+  function SetState(state:string) {
+    _CurState.value = SUBMITED_STATE;
+  }
+
 }
 
 </script>

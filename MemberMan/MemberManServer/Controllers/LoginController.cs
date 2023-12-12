@@ -149,6 +149,11 @@ public class LoginController : ApiController, IMemberManFeatures
     return res;
   }
 
+  // ==========================================================================
+  public class ForgotPasswordArgs {
+    public string Username { get; set; } = default!;
+  }
+
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
   /// This will initiate the password reset process for a user.
@@ -159,7 +164,7 @@ public class LoginController : ApiController, IMemberManFeatures
   /// <returns></returns>
   [HttpPost]
   [Route("/api/forgot-password")]
-  public IAPIResponse ForgotPassword([FromBody] string username)
+  public IAPIResponse ForgotPassword([FromBody] ForgotPasswordArgs args)
   {
     // TODO: Check for and reject if the user is currently logged in.
     if (IsLoggedIn())
@@ -169,7 +174,7 @@ public class LoginController : ApiController, IMemberManFeatures
     }
 
     // Find the user.
-    var member = DAL.GetMember(username);
+    var member = DAL.GetMember(args.Username);
     if (member == null)
     {
       return NotFound();
@@ -179,7 +184,7 @@ public class LoginController : ApiController, IMemberManFeatures
     // The DB must be updated at this point.
     string resetToken = GeneratePasswordResetToken();
     DateTimeOffset tokenExpires = DateTimeOffset.UtcNow + MemberManConfig.PasswordResetWindow;
-    DAL.SetPasswordResetData(username, resetToken, tokenExpires);
+    DAL.SetPasswordResetData(args.Username, resetToken, tokenExpires);
 
     // With that token, we will generate and send out an email with the reset instructions.
     // Then the email is sent!
@@ -343,28 +348,28 @@ public class LoginController : ApiController, IMemberManFeatures
       isLoggedIn = false;
     }
 
-    // Now we will register the logged in user....
-    //    MembershipHelper.CompleteLoginInternal(member, Request, Response);
-
-    // internal static string CompleteLoginInternal(Member m, HttpRequest request, HttpResponse response)
-    // {
-    // TODO: Check to make sure that the user isn't already registered / logged in
-    // They should not be....
-    //    string ipAddress = IPHelper.GetIP(request);
-
-    m.LoggedInSince = DateTime.UtcNow;
-    m.LastActive = m.LoggedInSince;
-    m.IsLoggedIn = true;
+    m.IsLoggedIn = isLoggedIn;
     m.IP = IPAddress;
 
+
     // Now we create our entry for membership.
-    string cookieVal = MembershipHelper.CreateLoginCookie();
+    if (isLoggedIn)
+    {
+      m.LoggedInSince = DateTime.UtcNow;
+      m.LastActive = m.LoggedInSince;
 
-    // TODO: Invent a proper 'Set/GetCookie' functions on the base class...
-    MembershipCookie = cookieVal;
+      string cookieVal = MembershipHelper.CreateLoginCookie();
 
-    _LoginToken = MembershipHelper.GetLoginToken(cookieVal, m.IP);
-    MembershipHelper.SetLoggedInUser(m, _LoginToken);
+      // TODO: Invent a proper 'Set/GetCookie' functions on the base class...
+      MembershipCookie = cookieVal;
+
+      _LoginToken = MembershipHelper.GetLoginToken(cookieVal, m.IP);
+      if (_LoginToken == null)
+      {
+        throw new InvalidOperationException("Could not generate a login token!");
+      }
+      MembershipHelper.SetLoggedInUser(m, _LoginToken);
+    }
 
 
     return new LoginResponse()
@@ -575,7 +580,7 @@ public class LoginController : ApiController, IMemberManFeatures
     var t = Template.Parse(templateText);
     string final = t.Render(Hash.FromAnonymousObject(new { model = model }));
 
-    var res = new Email(MemberManConfig.VerificationSender, member.Email, "Verify your account!", final, true);
+    var res = new Email(MemberManConfig.VerificationSender, member.Email, "Reset your Password!", final, true);
     return res;
   }
 
