@@ -43,10 +43,13 @@ public static class EmailTemplateNames
 [Route("[controller]")]
 public class LoginController : ApiController, IMemberManFeatures
 {
+  // TODO: Wrap these into their own static class.
   public const int INVALID_VERIFICATION = 0x11;
   public const int VERIFICATION_EXPIRED = 0x12;
   public const int NOT_VERFIED = 0x13;
   public const int LOGIN_FAILED = 0x14;
+  public const int INVALID_RESET_TOKEN = 0x15;
+  public const int RESET_TOKEN_EXPIRED = 0x16;
 
   /// <summary>
   /// The user is already logged in.
@@ -223,8 +226,40 @@ public class LoginController : ApiController, IMemberManFeatures
   public IAPIResponse ResetPassword([FromBody] ResetPasswordArgs args)
   {
     // TODO: Disallow logged in users.
+    if (IsLoggedIn(out Member? m))
+    {
+      return NotFound();
+    }
 
     // Get the member with the given token.
+    if (m == null) {
+      return NotFound();
+    }
+
+    if (m.TokenExpires == null || m.ResetToken == null)
+    {
+      return NotFound();
+    }
+
+    var timestamp = DateTimeOffset.Now;
+    int code = 0;
+    if (m.ResetToken != args.ResetToken)
+    {
+      code = INVALID_RESET_TOKEN;
+    }
+
+    if (timestamp > m.TokenExpires)
+    {
+      code = RESET_TOKEN_EXPIRED;
+    }
+
+    if (code != 0)
+    {
+    }
+    else
+    {
+    }
+
     // Check that the token matches and that the expiration is OK.
     // If so, remove the token + set the new password.
 

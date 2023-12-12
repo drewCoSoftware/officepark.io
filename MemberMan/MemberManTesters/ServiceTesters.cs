@@ -59,14 +59,40 @@ public class ServiceTesters : TestBase
 
     Email? lastMail = context.EmailSvc.LastEmailSent!;
     Assert.NotNull(lastMail);
-    string resetCode = lastMail.Body!;
+    string resetCode = lastMail.Body?.Split("?code=")[1]!;
     Assert.NotNull(resetCode);
     Assert.NotEqual(string.Empty, resetCode);
 
     // Use the reset code + the new password.
     // Confirm that the user is now logged out!
+    context.NextRequest();
+    var res = context.LoginCtl.ResetPassword(new ResetPasswordArgs(resetCode, NEW_PASSWORD));
+    Assert.Equal(0, res.Code);
 
     // Log the user in with the new password and show that it worked!
+
+    {
+      var vr = context.LoginCtl.ValidateLogin();
+      Assert.False(vr.IsLoggedIn, "The user should not be logged in!");
+    }
+    {
+      var vr = context.LoginCtl.Login(new LoginModel()
+      {
+      username = USERNAME,
+      password = OLD_PASSWORD
+      });
+      Assert.False(vr.IsLoggedIn, "The user should not be logged in after using the old password");
+    }
+    {
+      var vr = context.LoginCtl.Login(new LoginModel()
+      {
+        username = USERNAME,
+        password = NEW_PASSWORD
+      });
+      Assert.True(vr.IsLoggedIn, "The user should be logged in after using the new password");
+    }
+
+
     // Show that the DB entries for reset code + times have been cleared from the system.
 
 
