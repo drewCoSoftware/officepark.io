@@ -47,6 +47,7 @@ public class Member : IHasPrimary
   public bool IsVerified { get { return VerifiedOn != null && VerifiedOn > CreatedOn; } }
 
   [IsNullable]
+  [Unique]
   public string? ResetToken { get; set; } = null;
 
   [IsNullable]

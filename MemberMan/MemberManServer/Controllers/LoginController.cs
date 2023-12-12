@@ -149,10 +149,6 @@ public class LoginController : ApiController, IMemberManFeatures
     return res;
   }
 
-  // ==========================================================================
-  public class ForgotPasswordArgs {
-    public string Username { get; set; } = default!;
-  }
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
@@ -236,16 +232,22 @@ public class LoginController : ApiController, IMemberManFeatures
       return NotFound();
     }
 
-    // Get the member with the given token.
-    var member = DAL.GetMemberByResetToken(args.ResetToken);
-    if (member == null)
+    // Make sure that the passwords match....
+    // This can be part of some better defined validation type code.....
+    if (args.NewPassword != args.ConfirmPassword)
     {
-      return NotFound();
+      return Error(-1, "Passwords do not match!");
     }
 
-    if (member.TokenExpires == null || member.ResetToken == null)
+    // Get the member with the given token.
+    var member = DAL.GetMemberByResetToken(args.ResetToken);
+    if (member == null || member.TokenExpires == null || member.ResetToken == null)
     {
-      return NotFound();
+      return new BasicResponse()
+      {
+        Code = INVALID_RESET_TOKEN,
+        Message = "Invalid reset token!"
+      };
     }
 
     var timestamp = DateTimeOffset.Now;
@@ -254,7 +256,7 @@ public class LoginController : ApiController, IMemberManFeatures
     if (member.ResetToken != args.ResetToken)
     {
       code = INVALID_RESET_TOKEN;
-      msg = "Invalid reset token!";
+      msg = "Reset token mismatch!";
     }
 
     if (timestamp > member.TokenExpires)
@@ -262,6 +264,7 @@ public class LoginController : ApiController, IMemberManFeatures
       code = RESET_TOKEN_EXPIRED;
       msg = "Reset token expired!";
     }
+
 
     if (code != 0)
     {
@@ -572,7 +575,7 @@ public class LoginController : ApiController, IMemberManFeatures
 
     var model = new
     {
-      ResetLink = MemberManConfig.PasswordResetUrl + "?code=" + resetCode,
+      ResetLink = MemberManConfig.PasswordResetUrl + "?resetToken=" + resetCode,
       ResetTime = resetTime,
     };
 
@@ -606,7 +609,7 @@ public class LoginController : ApiController, IMemberManFeatures
 
 
     var mmCfg = _ConfigHelper.Get<MemberManConfig>();
-    string link = mmCfg.VerifyAccountUrl + $"?code={m.VerificationCode}";
+    string link = mmCfg.VerifyAccountUrl + $"?resetToken={m.VerificationCode}";
 
     // var date = new DateTimeOffset( m.VerificationExpiration
     // TODO: Localize to EST and include that in the email.
@@ -632,7 +635,7 @@ public class LoginController : ApiController, IMemberManFeatures
     string templateText = GetTemplateText(EmailTemplateNames.VERIFICATION_TEMPLATE);
 
     var mmCfg = _ConfigHelper.Get<MemberManConfig>();
-    string link = mmCfg.VerifyAccountUrl + $"?code={m.VerificationCode}";
+    string link = mmCfg.VerifyAccountUrl + $"?resetToken={m.VerificationCode}";
 
     // var date = new DateTimeOffset( m.VerificationExpiration
     // TODO: Localize to EST and include that in the email.
@@ -773,4 +776,12 @@ public static class Cookies
 
 }
 
-public record class ResetPasswordArgs(string ResetToken, string NewPassword);
+// ===========================================================================================
+public record class ResetPasswordArgs(string ResetToken, string NewPassword, string ConfirmPassword);
+
+
+// ===========================================================================================
+public class ForgotPasswordArgs
+{
+  public string Username { get; set; } = default!;
+}

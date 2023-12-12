@@ -128,18 +128,37 @@ export const useLoginStore = defineStore('login', {
     },
 
     // ---------------------------------------------------
-    async ForgotPassword(username:string) : Promise<FetchyResponse<IApiResponse>> {
-        const url = "https://localhost:7138/api/forgot-password";
-        let headers: Headers = new Headers();
-        headers.append("Content-Type", "application/json");
+    async ForgotPassword(username: string): Promise<FetchyResponse<IApiResponse>> {
+      const url = "https://localhost:7138/api/forgot-password";
+      let headers: Headers = new Headers();
+      headers.append("Content-Type", "application/json");
 
-        let p = await fetchy<IApiResponse>(url, {
-            method: 'POST',
-            body: JSON.stringify({ Username: username }),
-            headers: headers
-        });
+      let p = await fetchy<IApiResponse>(url, {
+        method: 'POST',
+        body: JSON.stringify({ Username: username }),
+        headers: headers
+      });
 
-        return p;
+      return p;
+    },
+
+    // ---------------------------------------------------
+    async ResetPassword(resetToken: string, newPassword: string, confirmPassword:string): Promise<FetchyResponse<IApiResponse>> {
+      const url = "https://localhost:7138/api/reset-password";
+      let headers: Headers = new Headers();
+      headers.append("Content-Type", "application/json");
+
+      let p = await fetchy<IApiResponse>(url, {
+        method: 'POST',
+        body: JSON.stringify({
+          ResetToken: resetToken,
+          NewPassword: newPassword,
+          ConfirmPassword: confirmPassword,
+        }),
+        headers: headers
+      });
+
+      return p;
     },
 
     // ---------------------------------------------------

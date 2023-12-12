@@ -266,7 +266,4 @@ function verifyFail() {
 
 
 <style lang="less">
-.test-options {
-  margin-top: 2rem;
-}
 </style>

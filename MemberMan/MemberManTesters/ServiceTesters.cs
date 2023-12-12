@@ -54,19 +54,22 @@ public class ServiceTesters : TestBase
     //Assert.True(loginResult.IsLoggedIn);
 
     // Use the reset feature + parse the email for the reset URL / code.
-    var response = context.LoginCtl.ForgotPassword(USERNAME);
+    var response = context.LoginCtl.ForgotPassword(new ForgotPasswordArgs()
+    {
+      Username = USERNAME
+    });
     Assert.True(response.Code == 0, "Invalid response code!");
 
     Email? lastMail = context.EmailSvc.LastEmailSent!;
     Assert.NotNull(lastMail);
-    string resetCode = lastMail.Body?.Split("?code=")[1]!;
+    string resetCode = lastMail.Body?.Split("?resetToken=")[1]!;
     Assert.NotNull(resetCode);
     Assert.NotEqual(string.Empty, resetCode);
 
     // Use the reset code + the new password.
     // Confirm that the user is now logged out!
     context.NextRequest();
-    var res = context.LoginCtl.ResetPassword(new ResetPasswordArgs(resetCode, NEW_PASSWORD));
+    var res = context.LoginCtl.ResetPassword(new ResetPasswordArgs(resetCode, NEW_PASSWORD, NEW_PASSWORD));
     Assert.Equal(0, res.Code);
 
     // Log the user in with the new password and show that it worked!
@@ -78,8 +81,8 @@ public class ServiceTesters : TestBase
     {
       var vr = context.LoginCtl.Login(new LoginModel()
       {
-      username = USERNAME,
-      password = OLD_PASSWORD
+        username = USERNAME,
+        password = OLD_PASSWORD
       });
       Assert.False(vr.IsLoggedIn, "The user should not be logged in after using the old password");
     }
@@ -191,7 +194,7 @@ public class ServiceTesters : TestBase
     var verificationLink = doc.DocumentNode.SelectSingleNode("//a[@class='verify-link']");
     Assert.NotNull(verificationLink);
     string href = verificationLink.GetAttributeValue("href", null);
-    string verifyCode = href.Split("?code=")[1];    // <-- We should probably parse the url + extract querystring properly.
+    string verifyCode = href.Split("?resetToken=")[1];    // <-- We should probably parse the url + extract querystring properly.
     return verifyCode;
   }
 

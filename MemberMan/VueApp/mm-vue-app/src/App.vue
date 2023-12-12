@@ -171,4 +171,13 @@ button.link-button:hover {
   }
 
 }
+
+.test-options {
+  margin-top: 2rem;
+  border: solid 1px black;
+  padding: 1.5rem;
+
+  button { margin: 0 0.25rem; }
+}
+
 </style>

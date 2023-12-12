@@ -32,11 +32,10 @@ app.directive("disable-inputs", {
   }
 });
 
+// OBSOLETE: We can remove this!
 app.directive("enable-submit", {
   updated: function (el, binding) {
     const flag = binding.value;
-
-    console.log('flag is: ' + flag);
 
     const selector = 'button[data-is-submit="true"],button[type="submit"]';
     const nodes = (el.querySelectorAll(selector));
@@ -50,7 +49,7 @@ app.directive("enable-submit", {
 
 // gobals?
 // NOTE: Use environment variable here?
-app.provide('isTestMode', true);
+app.provide('isTestMode', import.meta.env.VITE_IS_TEST_MODE == 'true');
 //app.config.globalProperties.$isTestMode = true;
 
 app.use(createPinia())
