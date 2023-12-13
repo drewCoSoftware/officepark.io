@@ -23,13 +23,8 @@ const _Router = useRouter();
 // Form properties.
 let emailAddress = "";
 let password = "";
-const isFormValid = ref(false);
 
 const form = ref<typeof EZForm>();
-
-// const x = defineProps({
-//   theThing: String
-// });
 
 onMounted(() => {
   if (_Login.IsLoggedIn) {
@@ -44,7 +39,7 @@ const myObject = {
 };
 
 
-function alwaysTrue() { 
+function alwaysTrue() {
   return true;
 }
 
@@ -112,14 +107,9 @@ async function tryLogin() {
 }
 
 // -------------------------------------------------------------------------------------------
-function forgotPassword() {
-  alert('not implemented!');
-}
-
-// -------------------------------------------------------------------------------------------
-function validateForm() {
+function validateForm(): boolean {
   const isValid = emailAddress != "" && password != "";
-  isFormValid.value = isValid;
+  return isValid;
 }
 
 </script>
@@ -131,19 +121,21 @@ function validateForm() {
   It seems to me that the easiest way to handle validation is to just catch the input event
   at top level, and then trigger whatever.... -->
   <!-- NOTE: It would also be cool to be able to set the validation function at the top level... -->
-  <EZForm ref="form" css-classes="login" :enable-submit="isFormValid">
+  <EZForm ref="form" css-classes="login" :validate="validateForm">
     <EZInput type="email" name="email" v-model="emailAddress" placeholder="Email" />
 
     <div class="input">
-      <input type="password" name="password" v-model="password" placeholder="Password"
-        @input="validateForm" />
+      <input type="password" name="password" v-model="password" placeholder="Password" @input="validateForm" />
     </div>
     <button data-is-submit="true" type="button" @click="tryLogin">Login</button>
   </EZForm>
 
   <div class="actions">
-    <p>New User? <RouterLink to="/signup">Sign Up</RouterLink></p>
-    <p><RouterLink to="/forgot-password">Forgot your Password</RouterLink>?</p>
+    <p>New User? <RouterLink to="/signup">Sign Up</RouterLink>
+    </p>
+    <p>
+      <RouterLink to="/forgot-password">Forgot your Password</RouterLink>?
+    </p>
   </div>
 </template>
 

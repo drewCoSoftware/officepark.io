@@ -7,6 +7,46 @@ import { stringify } from 'querystring';
 import { onMounted, popScopeId, ref, watch } from 'vue';
 import { useSlots } from 'vue';
 
+
+// Thanks Internet!
+// https://stackoverflow.com/questions/55905055/vue-need-to-disable-all-inputs-on-page
+// This is how we are disabling all of the inputs on a form when it is working.
+// It may make more sense to just shove all of this into the EZFORM component....
+// TODO: Put this into some kind of reusable file/package....
+const vDisableInputs = {
+  // When all the children of the parent component have been updated
+  updated: function (el:any, binding:any) {
+
+    // NOTE: This seems to fire a lot....
+    const flag = binding.value;
+
+    // NOTE:  If this is EZForm specific
+    const tags = ["input", "button", "textarea", "select"];
+    tags.forEach(tagName => {
+      const nodes = el.getElementsByTagName(tagName);
+      for (let i = 0; i < nodes.length; i++) {
+        nodes[i].disabled = flag;
+      }
+    });
+  }
+};
+
+const vEnableSubmit = {
+  updated: function (el:any, binding:any) {
+    const flag = binding.value;
+
+    const selector = 'button[data-is-submit="true"],button[type="submit"]';
+    const nodes = (el.querySelectorAll(selector));
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      node.disabled = !flag;
+    }
+
+  }
+};
+
+
+
 const slots = useSlots();
 
 const props = defineProps({
@@ -75,8 +115,6 @@ function updateTemplateClass() {
 
 // ------------------------------------------------------------------------------------
 function onInputEvent() {
-
-  // console.log('input event!');
 
   if (props.validate != null) {
     const isValid = props.validate();

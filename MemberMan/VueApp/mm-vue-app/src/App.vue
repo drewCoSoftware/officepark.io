@@ -62,12 +62,16 @@ async function logout() {
 
       <h3>Back End</h3>
         <li>Fetchy should be a functor type deal....</li>
+        <li>Look into getting the 'login store' + other functions moved off to some kind of local NPM (or repository style) package....
+<br />
+<a href="https://stackoverflow.com/questions/7575627/can-you-host-a-private-repository-for-your-organization-to-use-with-npm">https://stackoverflow.com/questions/7575627/can-you-host-a-private-repository-for-your-organization-to-use-with-npm</a>
+
+        </li>
       <h3>Front-end</h3>
       <ul>
-        <li>Forgot Password?</li>
-        <li>Configurable domain for login service urls.</li>
         <li>Review all forms + get them up to date with the new :validated function.</li>
         <li>Move the form based custom directives to EZFORM</li>
+        <li>Configurable domain for login service urls.</li>
       </ul>
     </div>
 
