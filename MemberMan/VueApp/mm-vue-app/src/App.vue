@@ -65,7 +65,9 @@ async function logout() {
         <li>Look into getting the 'login store' + other functions moved off to some kind of local NPM (or repository style) package....
 <br />
 <a href="https://stackoverflow.com/questions/7575627/can-you-host-a-private-repository-for-your-organization-to-use-with-npm">https://stackoverflow.com/questions/7575627/can-you-host-a-private-repository-for-your-organization-to-use-with-npm</a>
-
+<p>NOTE: Local modules in VITE and possibly NPM probably aren't possible.  Of course there is a littany of excuses as to why this is OK, but it just isn't.  All we can
+  really do is create some other kind of NPM package to get this to actually work :(
+</p>
         </li>
       <h3>Front-end</h3>
       <ul>
