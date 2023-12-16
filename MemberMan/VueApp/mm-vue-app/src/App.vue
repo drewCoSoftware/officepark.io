@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
-import type { IStatusData } from "./fetchy.js";
-import { useLoginStore } from './stores/login';
+import { useLoginStore, InitLoginStore as initLoginStore } from './stores/login';
 import type { ILoginState } from "./stores/login";
 import { onMounted, ref } from 'vue';
 
@@ -11,6 +10,8 @@ import { onMounted, ref } from 'vue';
 // permissions of the current user.
 const _Login = useLoginStore();
 const _Router = useRouter();
+
+initLoginStore("https://localhost:7138/api");
 
 onMounted(() => {
   _Login.CheckLogin();
@@ -72,8 +73,6 @@ async function logout() {
       <h3>Front-end</h3>
       <ul>
         <li>Review all forms + get them up to date with the new :validated function.</li>
-        <li>Move the form based custom directives to EZFORM</li>
-        <li>Configurable domain for login service urls.</li>
       </ul>
     </div>
 

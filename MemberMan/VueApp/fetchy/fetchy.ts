@@ -1,5 +1,14 @@
 // NOTE: This was copied from the RelatedSearch project.  We should find a way
 // to generalize / share it between apps (NPM?)
+let _ApiRoot: string = null;
+let _IsInitialized:boolean = false;
+
+// ----------------------------------------------------------------------
+export function Init(apiRoot_:string) {
+  _ApiRoot = apiRoot_;
+  _IsInitialized = true;
+}
+
 
 // NOTE: This thingy could be used for any of our loading components....
 export interface IStatusData {

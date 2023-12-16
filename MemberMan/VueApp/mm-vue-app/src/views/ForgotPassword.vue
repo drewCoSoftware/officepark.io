@@ -6,7 +6,7 @@ import EZInput from '../components/EZInput.vue'
 import { isNullOrEmpty } from '@/shared';
 import { useLoginStore } from '@/stores/login';
 import { useRoute, useRouter } from 'vue-router';
-import type { IApiResponse } from '@/fetchy';
+import type { IApiResponse } from 'fetchy';
 import { inject } from 'vue';
 
 

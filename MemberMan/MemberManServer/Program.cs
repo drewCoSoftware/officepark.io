@@ -105,7 +105,7 @@ internal class Program
   // --------------------------------------------------------------------------------------------------------------------------
   internal static ConfigHelper InitConfig(WebApplicationBuilder builder, IHostEnvironment env)
   {
-    var cfg = builder.Configuration;
+    ConfigurationManager cfg = builder.Configuration;
     cfg.SetBasePath(Directory.GetCurrentDirectory())
        .AddJsonFile("appsettings.json", false, true)
        .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true)

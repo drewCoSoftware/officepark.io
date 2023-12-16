@@ -1,11 +1,33 @@
 // This store is what we use to manage login + permission states.
 // It integrates with a MemberMan backend, and so the name of the file/store may change in the future to be more specific.
-
-
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { InlineConfig } from 'vitest';
-import { fetchy, fetchyPost, type FetchyResponse, type IApiResponse } from '@/fetchy';
+import { fetchy, fetchyPost, type FetchyResponse, type IApiResponse } from 'fetchy';
+
+// NOTE: This was copied from the RelatedSearch project.  We should find a way
+// to generalize / share it between apps (NPM?)
+let _ApiRoot: string;
+let _IsInitialized:boolean = false;
+
+// ----------------------------------------------------------------------
+export function InitLoginStore(apiRoot_:string) {
+  _ApiRoot = apiRoot_;
+  _IsInitialized = true;
+}
+
+// ----------------------------------------------------------------------
+function ResolveUrl(part:string) {
+  if (!_IsInitialized) {
+    throw Error("The MemberMan login store is not initialized!  Please call 'InitLoginStore' when your application starts!");
+  }
+  const  res = _ApiRoot + part;
+  return res;
+}
+
+// function _getAPIRoot() {
+//   import.meta.env.VITE_IS_TEST_MODE
+// }
 
 // // NOTE: This can just be the fetchy result interface.....
 // export interface IResult<T> {
@@ -64,7 +86,7 @@ export const useLoginStore = defineStore('login', {
 
     // ---------------------------------------------------
     async CheckLogin() {
-      const url = "https://localhost:7138/api/login/validate";
+      const url = ResolveUrl("/login/validate");
       let p = await fetchy<LoginResponse>(url);
       if (p.Success && p.StatusCode == 200) {
         this.IsLoggedIn = true;
@@ -80,7 +102,7 @@ export const useLoginStore = defineStore('login', {
     // ---------------------------------------------------
     async Login(username: string, password: string): Promise<FetchyResponse<LoginResponse>> {
 
-      const url = "https://localhost:7138/api/login";
+      const url = ResolveUrl( "/login");
       let p = await fetchy<LoginResponse>(url, {
         method: 'POST',
         body: JSON.stringify({
@@ -109,7 +131,7 @@ export const useLoginStore = defineStore('login', {
 
     // ---------------------------------------------------
     async Logout() {
-      const url = "https://localhost:7138/api/logout";
+      const url = ResolveUrl("/logout");
       let p = await fetchyPost(url, null);
 
       // NOTE: We just assume that the call to logout is correct.
@@ -129,7 +151,7 @@ export const useLoginStore = defineStore('login', {
 
     // ---------------------------------------------------
     async ForgotPassword(username: string): Promise<FetchyResponse<IApiResponse>> {
-      const url = "https://localhost:7138/api/forgot-password";
+      const url = ResolveUrl("/forgot-password");
       let headers: Headers = new Headers();
       headers.append("Content-Type", "application/json");
 
@@ -144,7 +166,7 @@ export const useLoginStore = defineStore('login', {
 
     // ---------------------------------------------------
     async ResetPassword(resetToken: string, newPassword: string, confirmPassword:string): Promise<FetchyResponse<IApiResponse>> {
-      const url = "https://localhost:7138/api/reset-password";
+      const url = ResolveUrl( "/reset-password");
       let headers: Headers = new Headers();
       headers.append("Content-Type", "application/json");
 
@@ -163,7 +185,7 @@ export const useLoginStore = defineStore('login', {
 
     // ---------------------------------------------------
     async SignUp(username: string, emailAddr: string, password: string): Promise<FetchyResponse<SignupResponse>> {
-      const url = "https://localhost:7138/api/signup";
+      const url = ResolveUrl("/signup");
 
       let headers: Headers = new Headers();
       headers.append("Content-Type", "application/json");

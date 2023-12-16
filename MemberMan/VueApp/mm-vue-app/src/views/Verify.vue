@@ -5,7 +5,7 @@ import EZForm from '@/components/EZForm.vue';
 import EZInput from '@/components/EZInput.vue';
 import { onMounted, ref } from 'vue';
 import { watch } from 'fs';
-import { fetchy, fetchyPost } from '@/fetchy';
+import { fetchy, fetchyPost } from 'fetchy';
 import { useRoute } from 'vue-router';
 import { inject } from 'vue';
 
