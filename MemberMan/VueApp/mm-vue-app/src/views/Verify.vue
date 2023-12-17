@@ -11,12 +11,12 @@ import { inject } from 'vue';
 
 const IsTestMode = inject('isTestMode');
 
+const form = ref<typeof EZForm>();
+
 let Username: string = "";
 let VerificationCode: string = "";
 
 const IsManualCodeRequest = ref(false);
-const IsFormValid = ref(false);
-
 
 const ENTER_CODE = "EnterCode";
 const ENTER_USERNAME = "RequestCode";
@@ -86,20 +86,22 @@ function ValidateForm() {
 
   if (CurState.value == ENTER_USERNAME) {
     // TODO: We can also validate proper email format.
-    IsFormValid.value = Username != "";
+    return  Username != "";
   }
   else if (CurState.value == ENTER_CODE) {
-    IsFormValid.value = VerificationCode != "";
+    return VerificationCode != "";
   }
   else {
-    IsFormValid.value = true;
+    return true;
   }
+
+
 }
 
 
 // -------------------------------------------------------------------------------------------
 async function DoVerificationStep() {
-  if (!IsFormValid.value || isWorking()) {
+  if (!ValidateForm() || isWorking()) {
     return;
   }
 
@@ -231,14 +233,14 @@ function verifyFail() {
       </div>
     </div>
 
-    <EZForm ref="Form" @input="ValidateForm">
+    <EZForm ref="form" :validate="ValidateForm">
       <div v-if="CurState == ENTER_USERNAME">
         <EZInput type="email" name="email" v-model="Username" placeholder="Email" />
-        <button type="button" @click="DoVerificationStep" :disabled="!IsFormValid || isWorking()">Request Code</button>
+        <button type="button" @click="DoVerificationStep">Request Code</button>
       </div>
       <div v-if="CurState == ENTER_CODE">
         <EZInput type="text" name="code" v-model="VerificationCode" placeholder="Verification Code" />
-        <button type="button" @click="DoVerificationStep" :disabled="!IsFormValid || isWorking()">Verify Account</button>
+        <button type="button" @click="DoVerificationStep">Verify Account</button>
       </div>
     </EZForm>
   </div>

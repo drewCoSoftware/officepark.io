@@ -123,21 +123,6 @@ async function trySignup() {
         <EZInput type="password" v-model="password" placeholder="Password" />
         <button data-is-submit="true" type="button" @click="trySignup">Sign Up</button>
       </EZForm>
-
-
-      <!-- <form :class="hasError ? 'has-error' : ''">
-        <div class="messages">
-          <p>{{ errMsg }}</p>
-        </div>
-        <div class="input">
-          <input type="email" name="email" v-model="emailAddr" placeholder="Email" :disabled="isWorking" />
-        </div>
-        <div class="input">
-          <input type="password" name="password" v-model="password" placeholder="Password" :disabled="isWorking"
-            @input="validateForm" />
-        </div>
-        <button type="button" @click="trySignup" :disabled="!isFormValid || isWorking">Sign Up</button>
-      </form> -->
     </div>
 
     <div class="thank-you">
