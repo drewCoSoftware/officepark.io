@@ -50,6 +50,8 @@ const app = createApp(App)
 // gobals?
 // NOTE: Use environment variable here?
 app.provide('isTestMode', import.meta.env.VITE_IS_TEST_MODE == 'true');
+app.provide('displayTODO', import.meta.env.VITE_DISPLAY_TODO == 'true');
+
 //app.config.globalProperties.$isTestMode = true;
 
 app.use(createPinia())
