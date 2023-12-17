@@ -3,13 +3,15 @@ import { RouterLink, RouterView, useRouter } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
 import { useLoginStore, InitLoginStore as initLoginStore } from './stores/login';
 import type { ILoginState } from "./stores/login";
-import { onMounted, ref } from 'vue';
+import { inject, onMounted } from 'vue';
 
 // For each page, or every so often we want to update the login status...
 // NOTE: The back-end of the application is responsible for evauluating the
 // permissions of the current user.
 const _Login = useLoginStore();
 const _Router = useRouter();
+
+const diplayTODO = inject('displayTODO');
 
 initLoginStore("https://localhost:7138/api");
 
@@ -58,7 +60,8 @@ async function logout() {
       <RouterView />
     </div>
 
-    <div class="todo">
+
+    <div v-if="diplayTODO" class="todo">
       <h2>TODO</h2>
 
       <h3>Back End</h3>

@@ -11,7 +11,6 @@ import { useLoginStore } from '../stores/login';
 import type { ILoginState, LoginResponse } from "../stores/login";
 import { onMounted, ref, watch } from 'vue';
 
-
 const _Login = useLoginStore();
 const _Router = useRouter();
 
