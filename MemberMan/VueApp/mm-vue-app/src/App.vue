@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
-import { useLoginStore, InitLoginStore as initLoginStore } from './stores/login';
-import type { ILoginState } from "./stores/login";
+import { useLoginStore, InitLoginStore } from './stores/mmlogin';
+import type { ILoginState } from "./stores/mmlogin";
 import { inject, onMounted } from 'vue';
 
 // For each page, or every so often we want to update the login status...
@@ -13,7 +13,7 @@ const _Router = useRouter();
 
 const diplayTODO = inject('displayTODO');
 
-initLoginStore("https://localhost:7138/api");
+InitLoginStore("https://localhost:7138/api");
 
 onMounted(() => {
   _Login.CheckLogin();

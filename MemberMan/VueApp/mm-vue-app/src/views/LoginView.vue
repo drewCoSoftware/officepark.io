@@ -7,8 +7,8 @@ import { useRouter } from 'vue-router';
 import EZForm from '../components/EZForm.vue'
 import EZInput from '../components/EZInput.vue'
 
-import { useLoginStore } from '../stores/login';
-import type { ILoginState, LoginResponse } from "../stores/login";
+import { useLoginStore } from '../stores/mmlogin';
+import type { ILoginState, LoginResponse } from "../stores/mmlogin";
 import { onMounted, ref, watch } from 'vue';
 
 const _Login = useLoginStore();

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 
 import { onMounted, ref } from 'vue';
-import { useLoginStore } from '../stores/login';
-import type { SignupResponse } from '../stores/login';
+import { useLoginStore } from '../stores/mmlogin';
+import type { SignupResponse } from '../stores/mmlogin';
 import { useRouter } from 'vue-router';
 
 import EZForm from '../components/EZForm.vue'
