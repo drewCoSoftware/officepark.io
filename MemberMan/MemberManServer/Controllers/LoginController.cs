@@ -43,7 +43,7 @@ public static class EmailTemplateNames
 [Route("[controller]")]
 public class LoginController : ApiController, IMemberManFeatures
 {
-  // TODO: Wrap these into their own static class.
+  // TODO: Wrap these into their own static class  / enum.
   public const int INVALID_VERIFICATION = 0x11;
   public const int VERIFICATION_EXPIRED = 0x12;
   public const int NOT_VERFIED = 0x13;
@@ -54,7 +54,7 @@ public class LoginController : ApiController, IMemberManFeatures
   /// <summary>
   /// The user is already logged in.
   /// </summary>
-  public const int LOGGED_IN = 0x15;
+  public const int LOGGED_IN = 0x17;
 
 
   public IMemberAccess DAL { get; private set; } = default!;
@@ -194,7 +194,10 @@ public class LoginController : ApiController, IMemberManFeatures
   private string GeneratePasswordResetToken()
   {
     // TODO: Some kind of crypto / random hash or something?
-    return "reset-token";
+    // NOTE: This should be a plugin type function so that users may define their own algos.....
+    var uuid = Guid.NewGuid().ToString();
+    string res = StringTools.ComputeSHA1(uuid);
+    return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -315,10 +318,11 @@ public class LoginController : ApiController, IMemberManFeatures
     // If the user is currently logged in, then we can just return OK or something....
     // TODO: Can we make this block of code part of the 'CheckMembership' attribute?
     // TODO: This is also something that should use the properties for LoginToken, IPAddress, etc.
-    if (MembershipHelper.IsLoggedIn(Request))
+    if (IsLoggedIn())
     {
       var res = OK<LoginResponse>();
       res.IsLoggedIn = true;
+      res.Code = LOGGED_IN;
       return res;
     }
 
@@ -331,6 +335,7 @@ public class LoginController : ApiController, IMemberManFeatures
       res.Code = LoginController.LOGIN_FAILED;
       return res;
     }
+    DAL.RemovePasswordResetData(m.Username);
 
     // Set the auth token cookie too?
     // NOTE: Here we can interprt options to decide if the user can be logged in, even if they aren't verifed.
@@ -451,8 +456,8 @@ public class LoginController : ApiController, IMemberManFeatures
     };
 
     string code = args.VerificationCode ?? string.Empty;
-    Member? m = DAL.GetMemberByVerification(code);
-    if (m == null)
+    Member? member = DAL.GetMemberByVerification(code);
+    if (member == null)
     {
       res.Code = INVALID_VERIFICATION;
       res.Message = "Invalid verification code";
@@ -460,7 +465,7 @@ public class LoginController : ApiController, IMemberManFeatures
     else
     {
       DateTimeOffset now = DateTimeOffset.UtcNow;
-      if (now > m.VerificationExpiration)
+      if (now > member.VerificationExpiration)
       {
 
         res.Code = VERIFICATION_EXPIRED;
@@ -468,12 +473,12 @@ public class LoginController : ApiController, IMemberManFeatures
         return res;
       }
 
-      DAL.CompleteVerification(m, now);
+      DAL.CompleteVerification(member, now);
 
 
       // Send out the final email...
       // TEST: Make sure that the email is captured in the test cases.
-      SendVerifyCompleteMessage(m);
+      SendVerifyCompleteMessage(member);
 
       res.Code = 0;
       res.Message = "OK";

@@ -53,14 +53,14 @@ public class Member : IHasPrimary
   [IsNullable]
   public DateTimeOffset? TokenExpires { get; set; } = null;
 
-    // TODO:
-    // Indicates that the user should be prompted to change their password on the next login.
-    // public bool ResetPassword { get; set; } = true;
+  // TODO:
+  // Indicates that the user should be prompted to change their password on the next login.
+  // public bool ResetPassword { get; set; } = true;
 
-    /// <summary>
-    /// Comma delimited list of permissions, to be interpreted by the application.
-    /// </summary>
-    public string? Permissions { get; set; } = null;
+  /// <summary>
+  /// Comma delimited list of permissions, to be interpreted by the application.
+  /// </summary>
+  public string? Permissions { get; set; } = null;
 
   /// <summary>
   /// The hashed password.
@@ -279,7 +279,7 @@ public class MembershipHelper
   /// </summary>
   public static string? GetLoginToken(string? cookie, string ip)
   {
-    if (cookie == null) { return null; }  
+    if (cookie == null) { return null; }
 
     int ipLen = ip.Length;
     int ipIndex = 0;
