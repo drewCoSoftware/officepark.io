@@ -609,12 +609,9 @@ public class LoginController : ApiController, IMemberManFeatures
 
 
     var mmCfg = _ConfigHelper.Get<MemberManConfig>();
-    string link = mmCfg.VerifyAccountUrl + $"?resetToken={m.VerificationCode}";
 
     // var date = new DateTimeOffset( m.VerificationExpiration
     // TODO: Localize to EST and include that in the email.
-    string expires = m.VerificationExpiration.ToString("MM/dd/yyyy at hh:mm:ss");
-
     var model = new
     {
       LoginUrl = mmCfg.LoginUrl
@@ -650,8 +647,6 @@ public class LoginController : ApiController, IMemberManFeatures
 
     var t = Template.Parse(templateText);
     string final = t.Render(Hash.FromAnonymousObject(new { model = model }));
-    Console.WriteLine(final);
-
 
     var res = new Email(MemberManConfig.VerificationSender, m.Email, "Verify your account!", final, true);
     return res;

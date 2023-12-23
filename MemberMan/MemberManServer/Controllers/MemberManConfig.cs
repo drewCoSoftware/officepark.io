@@ -11,16 +11,19 @@ public class MemberManConfig
 
   /// <summary>
   /// The url that the user should visit to verify their account.
+  /// This url is for the front end of your application and should be fully qualified.
   /// </summary>
-  public string VerifyAccountUrl { get; set; } = "https://localhost/fogotverify";
+  public string VerifyAccountUrl { get; set; } = "https://localhost/forgotverify";
 
   /// <summary>
   /// The url that is used to log into the account.
+  /// This url is for the front end of your application and should be fully qualified.
   /// </summary>
   public string LoginUrl { get; set; } = "https://localhost/login";
 
   /// <summary>
-  /// The url that is used for password reset. 
+  /// The url that is used to reset your password.
+  /// This url is for the front end of your application and should be fully qualified.
   /// </summary>
   public string PasswordResetUrl { get; set; } = "https://localhost/fogot-password";
 

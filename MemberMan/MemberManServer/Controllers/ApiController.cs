@@ -9,6 +9,37 @@ namespace MemberMan;
 public class ApiController : Controller
 {
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  protected string ResolveUrl(string url)
+  {
+    if (url.StartsWith("/"))
+    {
+      string urlRoot = GetDomain(Request);
+      string res = urlRoot + url;
+      return res;
+    }
+
+    if (!url.StartsWith("https"))
+    {
+      throw new NotSupportedException("No support for local, non-rooted urls");
+    }
+
+    return url;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  protected string GetDomain(HttpRequest request)
+  {
+    if (request == null) { return string.Empty; }
+
+    string res = $"{request.Scheme}://{request.Host.Host}";
+    if (request.Host.Port != 80)
+    {
+      res += $":{request.Host.Port}";
+    }
+    return res;
+  }
+
 
   // --------------------------------------------------------------------------------------------------------------------------
   protected void RemoveCookie(string name)
