@@ -401,7 +401,7 @@ public class LoginController : ApiController, IMemberManFeatures
   [Route("/api/reverify")]
   public IAPIResponse RequestVerification([FromBody] VerificationArgs args)
   {
-    if (MembershipHelper.IsLoggedIn(Request))
+    if (IsLoggedIn())
     {
       return new BasicResponse()
       {
@@ -440,7 +440,7 @@ public class LoginController : ApiController, IMemberManFeatures
   [Route("/api/verify")]
   public BasicResponse VerifyUser([FromBody] VerificationArgs args)
   {
-    if (MembershipHelper.IsLoggedIn(Request))
+    if (IsLoggedIn())
     {
       return new BasicResponse()
       {
@@ -496,7 +496,7 @@ public class LoginController : ApiController, IMemberManFeatures
   [Route("/api/signup")]
   public SignupResponse Signup(LoginModel login)
   {
-    if (MembershipHelper.IsLoggedIn(Request))
+    if (IsLoggedIn())
     {
       return new SignupResponse()
       {

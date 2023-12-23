@@ -99,9 +99,6 @@ public class CheckMembership : ActionFilterAttribute
   // --------------------------------------------------------------------------------------------------------------------------
   public override void OnActionExecuting(ActionExecutingContext fc)
   {
-
-
-
     // This is where we will check our membership tokens and stuff.  If we don't have the right data, we will redirect.
     HttpRequest request = fc.HttpContext.Request;
     HttpResponse response = fc.HttpContext.Response;
