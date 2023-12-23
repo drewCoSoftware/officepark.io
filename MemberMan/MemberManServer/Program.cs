@@ -14,7 +14,7 @@ using static MemberManServer.Mailer;
 // ============================================================================================================================
 internal class Program
 {
-  static SqliteMemberAccess memberAccess = default!;
+  static SqliteMemberAccess MemberAccess = default!;
 
   //// OPTIONS:
   //const string EMAIL_FROM = "info@august-harper.com";
@@ -25,7 +25,7 @@ internal class Program
   // --------------------------------------------------------------------------------------------------------------------------
   private static int Main(string[] args)
   {
-     memberAccess = InitDatabase();
+     MemberAccess = InitMMDatabase();
 
     if (HandleCommandLine(args, out int exitCode))
     {
@@ -38,7 +38,7 @@ internal class Program
     var cfgHelper = InitConfig(builder, builder.Environment);
     var mmCfg = cfgHelper.Get<MemberManConfig>();
 
-    builder.Services.AddSingleton<IMemberAccess>(memberAccess);
+    builder.Services.AddSingleton<IMemberAccess>(MemberAccess);
     builder.Services.AddSingleton<IEmailService>(new EmailService(mmCfg.SmtpServer, mmCfg.SmtpPort, mmCfg.VerificationSender, mmCfg.SmtpPassword));
 
 
@@ -151,7 +151,7 @@ internal class Program
         string username = args[1];
         Console.WriteLine($"Deleting the user: {username}!");
 
-        memberAccess.RemoveMember(username);
+        MemberAccess.RemoveMember(username);
         Console.WriteLine($"DELETED!");
 
         return true;
@@ -165,13 +165,13 @@ internal class Program
         string email = args[2];
         string password = args[3];
 
-        Member m = memberAccess.CreateMember(username, email, password, MemberManConfig.DEFAULT_VERIFY_WINDOW);
+        Member m = MemberAccess.CreateMember(username, email, password, MemberManConfig.DEFAULT_VERIFY_WINDOW);
 
         m.Permissions = "ADMIN";
         m.VerificationCode = "cli-created";
         m.VerifiedOn = DateTimeOffset.Now;
 
-        memberAccess.UpdateMember(m);
+        MemberAccess.UpdateMember(m);
 
         return true;
       }
@@ -203,7 +203,7 @@ internal class Program
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private static SqliteMemberAccess InitDatabase()
+  private static SqliteMemberAccess InitMMDatabase()
   {
     // Add services to the container.
     // ENV:

@@ -8,10 +8,11 @@ import { watch } from 'fs';
 import { fetchy, fetchyPost } from 'fetchy';
 import { useRoute } from 'vue-router';
 import { inject } from 'vue';
+import { useLoginStore } from '../stores/mmlogin';
+
+const _Login = useLoginStore();
 
 const IsTestMode = inject('isTestMode');
-
-const form = ref<typeof EZForm>();
 
 let Username: string = "";
 let VerificationCode: string = "";
@@ -27,12 +28,6 @@ const VerifyOK = ref(false);
 
 let AutoVerify = false;
 const CurState = ref(ENTER_USERNAME);
-
-
-const props = defineProps({
-  user: String,
-  xx: String,
-});
 
 // The states are:
 // 1. Verify -> enter code + auto verify.
@@ -86,7 +81,7 @@ function ValidateForm() {
 
   if (CurState.value == ENTER_USERNAME) {
     // TODO: We can also validate proper email format.
-    return  Username != "";
+    return Username != "";
   }
   else if (CurState.value == ENTER_CODE) {
     return VerificationCode != "";
@@ -101,6 +96,7 @@ function ValidateForm() {
 
 // -------------------------------------------------------------------------------------------
 async function DoVerificationStep() {
+
   if (!ValidateForm() || isWorking()) {
     return;
   }
@@ -125,6 +121,7 @@ async function DoVerificationStep() {
       let codeResponse = await VerifyCode();
       if (codeResponse.Success) {
         if (codeResponse.Data?.Code != 0) {
+
           Form.value?.SetErrorMessage(codeResponse.Data?.Message);
         }
         else {
@@ -149,36 +146,25 @@ async function DoVerificationStep() {
 async function VerifyCode() {
   Form.value?.beginWork();
 
-  let headers: Headers = new Headers();
-  headers.append("Content-Type", "application/json");
+  const res = _Login.VerifyCode(VerificationCode);
+  return res;
 
-  const p = fetchyPost('https://localhost:7138/api/verify', {
-    Username: "verify-me",
-    VerificationCode: VerificationCode
-  }, headers);
-
-  return p;
 }
 
 // -------------------------------------------------------------------------------------------
 async function RequestVerification() {
 
+  // NOTE: This should go through the loginstore.....
   Form.value?.beginWork();
 
-  let headers: Headers = new Headers();
-  headers.append("Content-Type", "application/json");
-
-  const p = fetchyPost('https://localhost:7138/api/reverify', {
-    Username: Username,
-    VerificationCode: '123'
-  }, headers);
-
-  return p;
+  // NOTE: This should go through the loginstore.....
+  const res = _Login.RequestVerify(Username);
+  return res;
 
 }
 
 // -------------------------------------------------------------------------------------------
-function SetState(newState: string, clearquerystring:boolean = true) {
+function SetState(newState: string, clearquerystring: boolean = true) {
   if (CurState.value != newState) {
     CurState.value = newState;
 
@@ -233,7 +219,7 @@ function verifyFail() {
       </div>
     </div>
 
-    <EZForm ref="form" :validate="ValidateForm">
+    <EZForm ref="Form" :validate="ValidateForm">
       <div v-if="CurState == ENTER_USERNAME">
         <EZInput type="email" name="email" v-model="Username" placeholder="Email" />
         <button type="button" @click="DoVerificationStep">Request Code</button>
@@ -267,5 +253,4 @@ function verifyFail() {
 </template>
 
 
-<style lang="less">
-</style>
+<style lang="less"></style>

@@ -9,13 +9,45 @@ namespace officepark.io.Membership;
 // ==========================================================================
 public record MemberAvailability(bool IsUsernameAvailable, bool IsEmailAvailable);
 
-// ==========================================================================
-public interface IMemberAccess
+// ============================================================================================================================
+public interface IPasswordHandler
+{
+  string GetPasswordHash(string password);
+  bool CheckPassword(string password, string hash);
+}
+
+// ============================================================================================================================
+public class BCryptPasswordHandler : IPasswordHandler
 {
   // OPTIONS / PRE-PROCESSOER:
   public const int DEFAULT_WORK_FACTOR = 15;
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  // Cool.  With default implementations, we complete the loop and have ABCs! Lol, j/k.
+  public string GetPasswordHash(string password)
+  {
+    string hashed = BC.HashPassword(password, DEFAULT_WORK_FACTOR);
+    return hashed;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// Compares the given password to the hash.  This will tell us if the password is actually correct or not.
+  /// </summary>
+  /// TODO: We should allow plugins for different pasword checking schemes...
+  public bool CheckPassword(string password, string hash)
+  {
+    bool res = BC.Verify(password, hash);
+    return res;
+  }
+}
+
+// ==========================================================================
+public interface IMemberAccess
+{
+
   MemberAvailability CheckAvailability(string username, string email);
+  IPasswordHandler PasswordHandler { get; }
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
@@ -25,10 +57,9 @@ public interface IMemberAccess
 
   // --------------------------------------------------------------------------------------------------------------------------
   // Cool.  With default implementations, we complete the loop and have ABCs! Lol, j/k.
-  string GetPasswordHash(string password, int workFactor = DEFAULT_WORK_FACTOR)
+  string GetPasswordHash(string password)
   {
-    string hashed = BC.HashPassword(password, workFactor);
-    return hashed;
+    return PasswordHandler.GetPasswordHash(password);
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -38,8 +69,7 @@ public interface IMemberAccess
   /// TODO: We should allow plugins for different pasword checking schemes...
   bool CheckPassword(string password, string hash)
   {
-    bool res = BC.Verify(password, hash);
-    return res;
+    return PasswordHandler.CheckPassword(password, hash);
   }
 
   Member? GetMember(string username);

@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics;
+using System.Net.Mime;
+using System.Threading.Tasks.Dataflow;
 using DataHelpers.Data;
 using DotLiquid;
 using HtmlAgilityPack;
@@ -19,6 +21,46 @@ namespace MemberManTesters;
 // ==========================================================================
 public class ServiceTesters : TestBase
 {
+
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// This test case shows that if a user is currently logged in, we get a response indicating as such.
+  /// </summary>
+  [Fact]
+  public void CantLogInLoggedInUser()
+  {
+    const string USERNAME = nameof(CantLogInLoggedInUser) + "@test.com";
+    const string EMAIL = USERNAME;
+    const string PASSWORD = "DEF";
+
+    SignupAndVerifyNewUser(USERNAME, EMAIL, PASSWORD, out var context);
+    context.NextRequest();
+
+    {
+      var res = context.LoginCtl.Login(new LoginModel()
+      {
+        username = USERNAME,
+        password = PASSWORD
+      });
+      Assert.Equal(0, res.Code);
+      Assert.True(res.IsLoggedIn, "We should be logged in!");
+    }
+
+    // Now login again.  We should get a code indicating that we are already there....
+    {
+      var res = context.LoginCtl.Login(new LoginModel()
+      {
+        username = USERNAME,
+        password = PASSWORD
+      });
+      Assert.True(res.IsLoggedIn, "We should be logged in!");
+      Assert.Equal(LoginController.LOGGED_IN, res.Code);
+    }
+
+
+  }
+
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
@@ -105,20 +147,49 @@ public class ServiceTesters : TestBase
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  [Fact]
-  public void LogginInAfterPasswordResetOperationResetsIt()
-  {
-    Assert.True(false);
-  }
-
-  // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
-  /// This test case shows that if a user is currently logged in, we can't log them in again.
+  /// This test case shows that if we request a password reset, and then log in, the reset data will be
+  /// cleared from the data store.
   /// </summary>
   [Fact]
-  public void CantLogInLoggedInUser()
+  public void LogginInAfterPasswordResetOperationClearsResetData()
   {
-    Assert.True(false);
+
+    const string USER_NAME = nameof(LogginInAfterPasswordResetOperationClearsResetData) + "@test.com";
+    const string EMAIL = USER_NAME;
+    const string PASS = "ABC";
+
+    SignupAndVerifyNewUser(USER_NAME, EMAIL, PASS, out TestContext? context);
+
+    // Use the reset feature + parse the email for the reset URL / code.
+    var response = context.LoginCtl.ForgotPassword(new ForgotPasswordArgs()
+    {
+      Username = USER_NAME
+    });
+    Assert.True(response.Code == 0, "Invalid response code!");
+
+    // Make sure we are not logged in....
+    {
+      var vr = context.LoginCtl.ValidateLogin();
+      Assert.False(vr.IsLoggedIn, "The user should not be logged in!");
+    }
+
+    // Login + check the password reset data in the DB.
+    {
+      var vr = context.LoginCtl.Login(new LoginModel()
+      {
+        username = USER_NAME,
+        password = PASS,
+      });
+      Assert.True(vr.IsLoggedIn, "We should be logged in now!");
+    }
+
+    // Make sure that there isn't any reset data in the DB after logging in....
+    Member? m = context.LoginCtl.DAL.GetMember(USER_NAME);
+    Assert.NotNull(m);
+    Assert.Null(m.ResetToken);
+    Assert.Null(m.TokenExpires);
+
   }
 
 

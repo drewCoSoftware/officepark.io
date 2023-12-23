@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
-import { useLoginStore, InitLoginStore as initLoginStore } from './stores/login';
-import type { ILoginState } from "./stores/login";
+import { useLoginStore, InitLoginStore } from './stores/mmlogin';
+import type { ILoginState } from "./stores/mmlogin";
 import { inject, onMounted } from 'vue';
 
 // For each page, or every so often we want to update the login status...
@@ -13,7 +13,7 @@ const _Router = useRouter();
 
 const diplayTODO = inject('displayTODO');
 
-initLoginStore("https://localhost:7138/api");
+InitLoginStore("https://localhost:7138/api");
 
 onMounted(() => {
   _Login.CheckLogin();
@@ -65,17 +65,20 @@ async function logout() {
       <h2>TODO</h2>
 
       <h3>Back End</h3>
-        <li>Fetchy should be a functor type deal....</li>
-        <li>Look into getting the 'login store' + other functions moved off to some kind of local NPM (or repository style) package....
-<br />
-<a href="https://stackoverflow.com/questions/7575627/can-you-host-a-private-repository-for-your-organization-to-use-with-npm">https://stackoverflow.com/questions/7575627/can-you-host-a-private-repository-for-your-organization-to-use-with-npm</a>
-<p>NOTE: Local modules in VITE and possibly NPM probably aren't possible.  Of course there is a littany of excuses as to why this is OK, but it just isn't.  All we can
-  really do is create some other kind of NPM package to get this to actually work :(
-</p>
-        </li>
+      <li>Fetchy should be a functor type deal....</li>
+      <li>Look into getting the 'login store' + other functions moved off to some kind of local NPM (or repository style)
+        package....
+        <br />
+        <a
+          href="https://stackoverflow.com/questions/7575627/can-you-host-a-private-repository-for-your-organization-to-use-with-npm">https://stackoverflow.com/questions/7575627/can-you-host-a-private-repository-for-your-organization-to-use-with-npm</a>
+        <p>NOTE: Local modules in VITE and possibly NPM probably aren't possible. Of course there is a littany of excuses
+          as to why this is OK, but it just isn't. All we can
+          really do is create some other kind of NPM package to get this to actually work :(
+        </p>
+      </li>
       <h3>Front-end</h3>
       <ul>
-        <li>Review all forms + get them up to date with the new :validated function.</li>
+        <li>Have some kind of proper transitional state for when a user is logged in, but haven't been redirected yet.</li>
       </ul>
     </div>
 
@@ -185,7 +188,7 @@ button.link-button:hover {
   border: solid 1px black;
   padding: 1.5rem;
 
-  button { margin: 0 0.25rem; }
-}
-
-</style>
+  button {
+    margin: 0 0.25rem;
+  }
+}</style>

@@ -13,11 +13,14 @@ namespace officepark.io.Membership;
 // ==========================================================================  
 public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAccess
 {
+  public IPasswordHandler PasswordHandler { get; private set; }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public SqliteMemberAccess(string dataDir, string dbFileName)
-    : base(dataDir, dbFileName)
-  { }
+  public SqliteMemberAccess(string dataDir, string dbFileName, IPasswordHandler? pwHandler_ = null)
+  : base(dataDir, dbFileName)
+  {
+    PasswordHandler = pwHandler_ ?? new BCryptPasswordHandler();
+  }
 
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMember(string username, string password)
@@ -158,7 +161,7 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMemberByVerification(string code)
   {
-    var byVerification = "SELECT username, verificationexpiration FROM members WHERE verificationcode = @verificationcode";
+    var byVerification = "SELECT username, email, verificationexpiration FROM members WHERE verificationcode = @verificationcode";
     var byVerify = RunSingleQuery<Member>(byVerification, new { @verificationcode = code });
     return byVerify;
   }
