@@ -32,4 +32,21 @@ public class ConfigHelper
     return res;
   }
 
+  //// --------------------------------------------------------------------------------------------------------------------------
+  //public void SetUrls(ICollection<string> urls, bool httpsOnly = true)
+  //{
+  //  if (!httpsOnly)
+  //  {
+  //    throw new NotSupportedException("This is not supported!");
+  //  }
+  //  else
+  //  {
+  //    foreach (string url in urls)
+  //    {
+  //      if (url.StartsWith("https://
+  //    }
+  //  }
+
+  //  throw new NotImplementedException();
+  //}
 }
