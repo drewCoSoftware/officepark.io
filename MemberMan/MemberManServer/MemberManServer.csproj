@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\DataHelpers\DataHelpers\DataHelpers.csproj" />
+    <ProjectReference Include="..\DataHelpers\DataHelpers\DataHelpers.csproj" />
     <ProjectReference Include="..\..\Common\CommonTypes\CommonTypes.csproj" />
   </ItemGroup>
 
