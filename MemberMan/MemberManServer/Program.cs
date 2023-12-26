@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using System.Net;
 using System.Text.RegularExpressions;
+using CommandLine;
 using DotLiquid;
+using DotLiquid.Util;
 using drewCo.Tools;
 using MemberMan;
 using MemberManServer;
@@ -25,12 +27,13 @@ internal class Program
   // --------------------------------------------------------------------------------------------------------------------------
   private static int Main(string[] args)
   {
-     MemberAccess = InitMMDatabase();
 
     if (HandleCommandLine(args, out int exitCode))
     {
       return exitCode;
     }
+
+    MemberAccess = InitMMDatabase();
 
 
     var builder = WebApplication.CreateBuilder(args);
@@ -135,60 +138,99 @@ internal class Program
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private static bool HandleCommandLine(string[] args, out int exitCode)
+  private static int CreateUser(Create options)
   {
-    exitCode = 0;
-
     try
     {
-      // TODO: Proper commandline args?
-      // Care about validation? --> Not at this time!
-      // NOTE: A more secure scenario would require us to use a specific DB login/other creds
-      // for this kind of thing.
+      InitMMDatabase(options.DatabaseFile);
 
-      if (args.Length > 0 && args[0] == "delete-user")
+      string username = string.IsNullOrWhiteSpace(options.Username) ? options.Email : options.Username;
+      Member m = MemberAccess.CreateMember(username, options.Email, options.Password, MemberManConfig.DEFAULT_VERIFY_WINDOW);
+
+      if (!string.IsNullOrWhiteSpace(options.Permissions))
       {
-        string username = args[1];
-        Console.WriteLine($"Deleting the user: {username}!");
-
-        MemberAccess.RemoveMember(username);
-        Console.WriteLine($"DELETED!");
-
-        return true;
+        m.Permissions = options.Permissions;
       }
 
-      if (args.Length > 0 && args[0] == "create-admin")
-      {
-        Console.WriteLine("Creating admin user for database!");
+      m.VerificationCode = "cli-created";
+      m.VerifiedOn = DateTimeOffset.Now;
+      MemberAccess.UpdateMember(m);
 
-        string username = args[1];
-        string email = args[2];
-        string password = args[3];
-
-        Member m = MemberAccess.CreateMember(username, email, password, MemberManConfig.DEFAULT_VERIFY_WINDOW);
-
-        m.Permissions = "ADMIN";
-        m.VerificationCode = "cli-created";
-        m.VerifiedOn = DateTimeOffset.Now;
-
-        MemberAccess.UpdateMember(m);
-
-        return true;
-      }
-
-      // ..... Other CLI stuff?
-
-      return false;
     }
     catch (Exception ex)
     {
-      // TODO: Log exception?
+      Console.WriteLine("Create user failed!");
       Console.WriteLine(ex.Message);
-      exitCode = 1;
+      return -1;
     }
 
-    // No special command line stuff was used.
-    return false;
+    return 0;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private static bool HandleCommandLine(string[] args, out int exitCode)
+  {
+    exitCode = 0;
+    if (args.Length > 0)
+    {
+      exitCode = Parser.Default.ParseArguments<Create>(args).MapResult((Create ops) => CreateUser(ops), err => 1);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+
+    // try
+    // {
+    //   // TODO: Proper commandline args?
+    //   // Care about validation? --> Not at this time!
+    //   // NOTE: A more secure scenario would require us to use a specific DB login/other creds
+    //   // for this kind of thing.
+
+    //   if (args.Length > 0 && args[0] == "delete-user")
+    //   {
+    //     string username = args[1];
+    //     Console.WriteLine($"Deleting the user: {username}!");
+
+    //     MemberAccess.RemoveMember(username);
+    //     Console.WriteLine($"DELETED!");
+
+    //     return true;
+    //   }
+
+    //   if (args.Length > 0 && args[0] == "create-admin")
+    //   {
+    //     Console.WriteLine("Creating admin user for database!");
+
+    //     string username = args[1];
+    //     string email = args[2];
+    //     string password = args[3];
+
+    //     Member m = MemberAccess.CreateMember(username, email, password, MemberManConfig.DEFAULT_VERIFY_WINDOW);
+
+    //     m.Permissions = "ADMIN";
+    //     m.VerificationCode = "cli-created";
+    //     m.VerifiedOn = DateTimeOffset.Now;
+
+    //     MemberAccess.UpdateMember(m);
+
+    //     return true;
+    //   }
+
+    //   // ..... Other CLI stuff?
+
+    //   return false;
+    // }
+    // catch (Exception ex)
+    // {
+    //   // TODO: Log exception?
+    //   Console.WriteLine(ex.Message);
+    //   exitCode = 1;
+    // }
+
+    // // No special command line stuff was used.
+    // return false;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -202,19 +244,41 @@ internal class Program
         Regex.IsMatch(host, $@"^http(s)?://.*{origin}(:[0-9]+)?$", RegexOptions.IgnoreCase));
   }
 
+  private static bool IsDBInitialized = false;
+  // private static IMemberAccess MemberAccess = default!;
+
+  const string DEFAULT_DATA_DIR = "data";
+  const string DEFAULT_DB_FILE_NAME = "member-man";
+
   // --------------------------------------------------------------------------------------------------------------------------
-  private static SqliteMemberAccess InitMMDatabase()
+  private static SqliteMemberAccess InitMMDatabase(string? dbFilePath = null)
   {
-    // Add services to the container.
-    // ENV:
-    const string DATA_DIR = "data";
-    const string DB_FILE = "member-man";
-    var memberAccess = new SqliteMemberAccess(DATA_DIR, DB_FILE);
-    if (!File.Exists(memberAccess.DBFilePath))
+    if (!IsDBInitialized)
     {
-      memberAccess.SetupDatabase();
+      // NOTE: We may even want to extract these from some environment variables?
+      string dir = DEFAULT_DATA_DIR;
+      string filename = DEFAULT_DB_FILE_NAME;
+      if (!string.IsNullOrEmpty(dbFilePath))
+      {
+        dir = Path.GetDirectoryName(dbFilePath)!;
+        filename = Path.GetFileName(dbFilePath);
+        filename = StringTools_Local.TrimEnd(filename, ".sqlite");
+      }
+
+      FileTools.CreateDirectory(dir);
+      
+      MemberAccess = new SqliteMemberAccess(dir, filename);
+      if (!File.Exists(MemberAccess.DBFilePath))
+      {
+        MemberAccess.SetupDatabase();
+      }
+      IsDBInitialized = true;
+    }
+    else
+    {
+      Console.WriteLine("The database has already been initialized!");
     }
 
-    return memberAccess;
+    return MemberAccess;
   }
 }

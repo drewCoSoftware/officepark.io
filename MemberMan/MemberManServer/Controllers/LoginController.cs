@@ -689,6 +689,20 @@ public class StringTools_Local
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
+  /// Remove <paramref name="toTrim"/> from the end of the <paramref name="input"/> string.
+  /// Multiple instances of <paramref name="toTrim"/> will be removed from the input string.
+  /// </summary>
+  public static string TrimEnd(string input, string toTrim) 
+  {
+    int removeLen = toTrim.Length;
+    while(input.EndsWith(toTrim)) {
+      input = input.Substring(0, input.Length - toTrim.Length);
+    }
+    return input;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
   /// Tells us if the given email address is valid or not.
   /// </summary>
   /// <remarks>
