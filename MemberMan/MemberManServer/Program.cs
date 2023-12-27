@@ -18,11 +18,6 @@ internal class Program
 {
   static SqliteMemberAccess MemberAccess = default!;
 
-  //// OPTIONS:
-  //const string EMAIL_FROM = "info@august-harper.com";
-  //const string SMTP_SERVER = "mx-s3.vivawebhost.com";
-  //const int SMTP_PORT = 465;
-
 
   // --------------------------------------------------------------------------------------------------------------------------
   private static int Main(string[] args)
@@ -138,7 +133,42 @@ internal class Program
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private static int CreateUser(Create options)
+  private static int ListUsers(ListUsersOptions options)
+  {
+    InitMMDatabase(options.DatabaseFile);
+    List<Member> members = MemberAccess.GetMemberList();
+
+    Console.WriteLine("USERNAME\t|\tEMAIL");
+    Console.WriteLine("------------------------------------");
+    foreach(var m in members) 
+    {
+      Console.WriteLine($"{m.Username}\t|\t{m.Email}");
+    }
+
+    return 0;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private static int DeleteUser(DeleteUserOptions options)
+  {
+    try
+    {
+      InitMMDatabase(options.DatabaseFile);
+      MemberAccess.RemoveMember(options.Username!, true);
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine("Delete user failed!");
+      Console.WriteLine(ex.Message);
+      return -1;
+
+    }
+    return 0;
+
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private static int CreateUser(CreateUserOptions options)
   {
     try
     {
@@ -152,7 +182,6 @@ internal class Program
         m.Permissions = options.Permissions;
       }
 
-      m.VerificationCode = "cli-created";
       m.VerifiedOn = DateTimeOffset.Now;
       MemberAccess.UpdateMember(m);
 
@@ -173,7 +202,11 @@ internal class Program
     exitCode = 0;
     if (args.Length > 0)
     {
-      exitCode = Parser.Default.ParseArguments<Create>(args).MapResult((Create ops) => CreateUser(ops), err => 1);
+      exitCode = Parser.Default.ParseArguments<CreateUserOptions, DeleteUserOptions, ListUsersOptions>(args)
+                       .MapResult((CreateUserOptions ops) => CreateUser(ops),
+                                  (DeleteUserOptions ops) => DeleteUser(ops),
+                                  (ListUsersOptions ops) => ListUsers(ops),
+                       err => 1);
       return true;
     }
     else
@@ -266,7 +299,7 @@ internal class Program
       }
 
       FileTools.CreateDirectory(dir);
-      
+
       MemberAccess = new SqliteMemberAccess(dir, filename);
       if (!File.Exists(MemberAccess.DBFilePath))
       {

@@ -2,11 +2,28 @@ using CommandLine;
 using Org.BouncyCastle.Ocsp;
 
 // ==========================================================================
-// [Verb("create-user")]
+[Verb("list-users")]
+public class ListUsersOptions
+{
+  [Option("db-file", Required = false, HelpText = "Path to the database file.")]
+  public string? DatabaseFile { get; set; }
+}
+
+// ==========================================================================
+[Verb("delete-user")]
+public class DeleteUserOptions
+{
+  [Option("username", Required = true, HelpText = "Name of the user to delete.")]
+  public string Username { get; set; } = default!;
+
+  [Option("db-file", Required = false, HelpText = "Path to the database file.")]
+  public string? DatabaseFile { get; set; }
+}
 
 // ==========================================================================
 [Verb("create-user")]
-public class Create {
+public class CreateUserOptions
+{
 
   [Option("username", Required = false, HelpText = "Name of the user to create.  If omitted, --email will be used instead.")]
   public string? Username { get; set; } = null;
@@ -14,7 +31,7 @@ public class Create {
   [Option("email", Required = true, HelpText = "Email address of the user to be created.")]
   public string Email { get; set; } = default!;
 
-  [Option("password", Required =true, HelpText = "Password for the user.")]
+  [Option("password", Required = true, HelpText = "Password for the user.")]
   public string Password { get; set; } = default!;
 
   [Option("permissions", Required = false, HelpText = "Permissions that the user should be created with.")]
