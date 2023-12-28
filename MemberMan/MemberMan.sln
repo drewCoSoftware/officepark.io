@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MemberManServer", "MemberMa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonTypes", "..\Common\CommonTypes\CommonTypes.csproj", "{88BBB0B1-FB82-4224-83E0-2AB6AF04B39B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataHelpers", "DataHelpers\DataHelpers\DataHelpers.csproj", "{CE497DAA-7B79-4423-883E-39A87FE0A873}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,10 +27,6 @@ Global
 		{88BBB0B1-FB82-4224-83E0-2AB6AF04B39B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88BBB0B1-FB82-4224-83E0-2AB6AF04B39B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{88BBB0B1-FB82-4224-83E0-2AB6AF04B39B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CE497DAA-7B79-4423-883E-39A87FE0A873}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CE497DAA-7B79-4423-883E-39A87FE0A873}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CE497DAA-7B79-4423-883E-39A87FE0A873}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CE497DAA-7B79-4423-883E-39A87FE0A873}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -105,7 +105,7 @@ internal class Program
   {
     ConfigurationManager cfg = builder.Configuration;
     cfg.SetBasePath(Directory.GetCurrentDirectory())
-       .AddJsonFile("igns.", false, true)
+       .AddJsonFile("appsettings.json", false, true)
        .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true)
        .AddJsonFile("appsettings.local.json", true, true);
 

@@ -1,6 +1,3 @@
-[submodule "MemberMan/DataHelpers"]
-	path = MemberMan/DataHelpers
-	url = https://github.com/drewCoSoftware/DataHelpers.git
 [submodule "MemberMan/VueApp/fetchy"]
 	path = MemberMan/VueApp/fetchy
 	url = https://github.com/drewCoSoftware/fetchy.git
