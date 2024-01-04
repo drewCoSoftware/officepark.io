@@ -69,6 +69,8 @@ namespace MemberManServer
       }
       catch (Exception ex)
       {
+        Console.WriteLine("Could not send the email due to an error.....");
+        Console.Write(ex.Message);
         throw new SendEmailException("Email send failed!", ex);
       }
 

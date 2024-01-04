@@ -51,6 +51,12 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     return res;
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  public bool HasPermission(string username, string? requiredPermissions)
+  {
+    throw new NotSupportedException("Permission checks against the database are not supported at this time!");
+  }
+
   //// --------------------------------------------------------------------------------------------------------------------------
   //public Member? GetMember(string username)
   //{

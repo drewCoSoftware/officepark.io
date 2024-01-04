@@ -1,4 +1,5 @@
-﻿using officepark.io.API;
+﻿using drewCo.Tools;
+using officepark.io.API;
 using System.Net;
 using System.Text.Json;
 
@@ -25,7 +26,29 @@ namespace MemberManServer
       }
       catch (Exception ex)
       {
+        LogException(ex);
         await HandleException(context, ex);
+      }
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    private static object ExFileLock = new object();
+    private void LogException(Exception ex)
+    {
+      lock (ExFileLock)
+      {
+        Console.WriteLine("An Unhandled exception was encounterd!");
+        Console.WriteLine(ex.Message);
+        Console.WriteLine(ex.StackTrace);
+
+        // We would use some kind of external service in the future.  For now, we will just log it all
+        // locally.
+        string exDir = FileTools.GetLocalDir("Exceptions");
+        FileTools.CreateDirectory(exDir);
+        string writePath = FileTools.GetSequentialFileName(exDir, "ExceptionLog", ".json");
+
+        var exDetail = new ExceptionDetail(ex);
+        FileTools.SaveJson(writePath, exDetail);
       }
     }
 

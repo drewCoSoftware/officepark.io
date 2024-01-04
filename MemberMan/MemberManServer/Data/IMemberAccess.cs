@@ -100,5 +100,7 @@ public interface IMemberAccess
   void RemovePasswordResetData(string username);
   Member GetMemberByResetToken(string resetToken);
   void SetPassword(string username, string newPassword);
+
+  bool HasPermission(string username, string? requiredPermissions);
 }
 

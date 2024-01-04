@@ -37,7 +37,7 @@ internal class Program
     var mmCfg = cfgHelper.Get<MemberManConfig>();
 
     builder.Services.AddSingleton<IMemberAccess>(MemberAccess);
-    builder.Services.AddSingleton<IEmailService>(new EmailService(mmCfg.SmtpServer, mmCfg.SmtpPort, mmCfg.VerificationSender, mmCfg.SmtpPassword));
+    builder.Services.AddSingleton<IEmailService>(new EmailService(mmCfg.EmailConfig));
 
 
     var ctl = builder.Services.AddControllers();
@@ -110,7 +110,6 @@ internal class Program
        .AddJsonFile("appsettings.local.json", true, true);
 
     var helper = new ConfigHelper(cfg);
-
     builder.Services.AddSingleton(helper);
 
 

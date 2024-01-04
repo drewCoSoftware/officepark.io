@@ -588,7 +588,7 @@ public class LoginController : ApiController, IMemberManFeatures
     var t = Template.Parse(templateText);
     string final = t.Render(Hash.FromAnonymousObject(new { model = model }));
 
-    var res = new Email(MemberManConfig.VerificationSender, member.Email, "Reset your Password!", final, true);
+    var res = new Email(MemberManConfig.EmailConfig.Username, member.Email, "Reset your Password!", final, true);
     return res;
   }
 
@@ -625,7 +625,7 @@ public class LoginController : ApiController, IMemberManFeatures
     var t = Template.Parse(templateText);
     string final = t.Render(Hash.FromAnonymousObject(new { model = model }));
 
-    var res = new Email(MemberManConfig.VerificationSender, m.Email, "Verify your account!", final, true);
+    var res = new Email(MemberManConfig.EmailConfig.Username, m.Email, "Verify your account!", final, true);
     return res;
   }
 
@@ -653,7 +653,7 @@ public class LoginController : ApiController, IMemberManFeatures
     var t = Template.Parse(templateText);
     string final = t.Render(Hash.FromAnonymousObject(new { model = model }));
 
-    var res = new Email(MemberManConfig.VerificationSender, m.Email, "Verify your account!", final, true);
+    var res = new Email(MemberManConfig.EmailConfig.Username, m.Email, "Verify your account!", final, true);
     return res;
   }
 

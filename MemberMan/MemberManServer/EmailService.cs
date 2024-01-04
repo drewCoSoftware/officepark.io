@@ -1,6 +1,8 @@
 using MemberManServer;
+using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using System.Net;
+using System.Text.Json;
 using static MemberManServer.Mailer;
 
 // ==========================================================================      
@@ -9,14 +11,6 @@ public class EmailSendResult
   public bool SendOK = false;
 }
 
-//// ==========================================================================      
-//public class Email
-//{
-//  // CONTENT TBD.
-//  public string Body { get; set; } = string.Empty;
-//  public bool IsHtml { get; set; } = false;
-//}
-
 // ==========================================================================      
 public interface IEmailService
 {
@@ -24,24 +18,49 @@ public interface IEmailService
 }
 
 // ==========================================================================      
+public class EmailServiceConfiguration
+{
+  public string SmtpServer { get; set; } = default!;
+  public int Port { get; set; } = 465;
+  public string Username { get; set; } = default!;
+  public string Password { get; set; } = default!;
+
+  /// <summary>
+  /// When set, these are the domains that we are allowed to send email to.
+  /// ALL other domains will be disallowed when this is set.
+  /// </summary>
+  public List<string> AllowSendToDomains { get; set; } = new List<string>();
+
+  /// <summary>
+  /// When set, these are the domains that we are not allowed to send email to.
+  /// </summary>
+  public List<string> DisallowSendToDomains { get; set; } = new List<string>();
+}
+
+// ==========================================================================      
 public class EmailService : IEmailService
 {
-  private string SmtpHost = null!;
-  private int Port = 0;
-  private string User = null!;
-  private string Password = null!;
+  private EmailServiceConfiguration Options = default!;
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public EmailService(string smtpHost_, int port_, string user, string password)
+  public EmailService(EmailServiceConfiguration options_)
   {
-    SmtpHost = smtpHost_;
-    Port = port_;
-    User = user;
+    Options = options_;
+    ValidateOptions();
+  }
 
-    if (string.IsNullOrEmpty(password)) {
+  // --------------------------------------------------------------------------------------------------------------------------
+  private void ValidateOptions()
+  {
+    if (string.IsNullOrEmpty(Options.Username))
+    {
+      throw new ArgumentNullException("Username may not be null or empty!");
+    }
+
+    if (string.IsNullOrEmpty(Options.Password))
+    {
       throw new ArgumentNullException("Password may not be null or empty!");
     }
-    Password = password;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -50,12 +69,23 @@ public class EmailService : IEmailService
   {
     try
     {
-      // TEMP: We are testing some email features....
-      //Email mail = new Email(EMAIL_FROM, "drew@august-harper.com", "test", "This is a test!", false);
 
-      //const string PASSWORD = "your password here!";
-      var creds = new NetworkCredential(User, Password);
-      Mailer.SendMail(mail, SmtpHost, Port, false, creds);
+      // Check the allow / disallow lists....
+      ValidateToAddresses(mail.To);
+
+
+      // NOTE: This could be some kind of trace?
+      //Console.WriteLine("Sending mail with:");
+      //Console.WriteLine(JsonSerializer.Serialize(new
+      //{
+      //  SmtpHost,
+      //  Port,
+      //  User,
+      //  Password    // NOTE: HIDE THE PASSWORD! (stringtools?)
+      //}, new JsonSerializerOptions() { WriteIndented = true }));
+
+      var creds = new NetworkCredential(Options.Username, Options.Password);
+      Mailer.SendMail(mail, Options.SmtpServer, Options.Port, false, creds);
 
     }
     catch (Exception ex)
@@ -69,5 +99,44 @@ public class EmailService : IEmailService
       SendOK = true
     };
     return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public static string? GetEmailDomain(string emailAddress)
+  {
+    var parts = emailAddress.Split("@");
+    if (parts.Length < 2)
+    {
+      return null;
+    }
+    string res = parts.Last();
+    return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private void ValidateToAddresses(List<EmailAddress> to)
+  {
+    if (Options.AllowSendToDomains.Count > 0)
+    {
+      foreach (var addr in to)
+      {
+        string? domain = GetEmailDomain(addr.Address);
+        if (domain != null && !Options.AllowSendToDomains.Contains(domain))
+        {
+          throw new InvalidOperationException($"The email address: {addr.Address} is in a domain that is not allowed!");
+        }
+      }
+    }
+    if (Options.DisallowSendToDomains.Count > 0)
+    {
+      foreach (var addr in to)
+      {
+        string? domain = GetEmailDomain(addr.Address);
+        if (domain != null && Options.DisallowSendToDomains.Contains(domain))
+        {
+          throw new InvalidOperationException($"The email address: {addr.Address} is in a domain that is not allowed!");
+        }
+      }
+    }
   }
 }
