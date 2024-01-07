@@ -5,6 +5,7 @@ using DotLiquid;
 using drewCo.Tools;
 using Humanizer;
 using Humanizer.Localisation;
+using MailKit.Search;
 using MemberManServer;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Mvc;
@@ -123,9 +124,6 @@ public class LoginController : ApiController, IMemberManFeatures
   }
 
   #endregion
-
-
-
 
   // --------------------------------------------------------------------------------------------------------------------------
   public IMemberAccess GetDAL()
@@ -283,8 +281,6 @@ public class LoginController : ApiController, IMemberManFeatures
     }
   }
 
-
-
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
   /// This is a simple way to validate that the user is currently logged in.
@@ -391,7 +387,6 @@ public class LoginController : ApiController, IMemberManFeatures
     };
   }
 
-
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
   /// This will request that the system re-send the verification email (or whatever).
@@ -449,28 +444,24 @@ public class LoginController : ApiController, IMemberManFeatures
       };
     }
 
-    var res = new BasicResponse()
+    BasicResponse? testResponse = HandleVerifyTest();
+    if (testResponse != null)
     {
-      Code = 0,
-      Message = "OK"
-    };
+      return testResponse;
+    }
 
     string code = args.VerificationCode ?? string.Empty;
     Member? member = DAL.GetMemberByVerification(code);
     if (member == null)
     {
-      res.Code = INVALID_VERIFICATION;
-      res.Message = "Invalid verification code";
+      return InvalidVerificationCode();
     }
     else
     {
       DateTimeOffset now = DateTimeOffset.UtcNow;
       if (now > member.VerificationExpiration)
       {
-
-        res.Code = VERIFICATION_EXPIRED;
-        res.Message = "Verification code is expired.";
-        return res;
+        return VerfiyExpired();
       }
 
       DAL.CompleteVerification(member, now);
@@ -480,12 +471,54 @@ public class LoginController : ApiController, IMemberManFeatures
       // TEST: Make sure that the email is captured in the test cases.
       SendVerifyCompleteMessage(member);
 
-      res.Code = 0;
-      res.Message = "OK";
+      return OK();
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private static BasicResponse InvalidVerificationCode()
+  {
+    return new BasicResponse()
+    {
+      Code = INVALID_VERIFICATION,
+      Message = "Invalid verification code",
+    };
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private static BasicResponse VerfiyExpired()
+  {
+    return new BasicResponse()
+    {
+      Code = VERIFICATION_EXPIRED,
+      Message = "Verification code is expired.",
+    };
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private BasicResponse? HandleVerifyTest()
+  {
+    // In test scenarios we don't actually create the user account.
+    // NOTE: 'Request' is null when we are running unit tests.  There may be a better way to wrap the
+    // code that gets the headers so that we can test them too.
+    if (HasHeader(Headers.MM_TEST_MODE))
+    {
+      // The service pretends that everything is OK, so we don't actually do anything in test mode....
+      string testType = GetTestType(Request);
+      if (testType != Headers.TestTypes.TEST_PASS)
+      {
+        throw new NotImplementedException("Invalid test type!");
+      }
+      else
+      {
+        // Everything is fine!
+        return OK();
+      }
     }
 
-    return res;
+    return null;
   }
+
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
   /// This will create a new, unverifed member in the system.
@@ -505,10 +538,15 @@ public class LoginController : ApiController, IMemberManFeatures
       };
     }
 
+    SignupResponse? testResponse = HandleSignupTest();
+    if (testResponse != null)
+    {
+      return testResponse;
+    }
+
     // TEST:  How can we test attributes / filters in netcore? (we would have to pass cookies around....)
     // TODO: A logged in user should get a 404 or some other error for this... (is there a 200 level code that can articulate this correctly?  are we getting ballz deep into semantics?)
     // The return code should also indicate that the user is already logged in.....
-
     ValidateLoginData(login);
 
     MemberAvailability availability = DAL.CheckAvailability(login.username, login.email);
@@ -535,25 +573,61 @@ public class LoginController : ApiController, IMemberManFeatures
       };
     }
 
+
+    Member m = DAL.CreateMember(login.username, login.email, login.password, MemberManConfig.VerifyWindow);
+
+    // This is where we will send out the verification, etc. emails.
+    SendVerificationMessage(m);
+
+    return SignupOK();
+
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private SignupResponse? HandleSignupTest()
+  {
     // In test scenarios we don't actually create the user account.
     // NOTE: 'Request' is null when we are running unit tests.  There may be a better way to wrap the
     // code that gets the headers so that we can test them too.
-    if (!HasHeader("X-Test-Api-Call"))
+    if (HasHeader(Headers.MM_TEST_MODE))
     {
-
-      Member m = DAL.CreateMember(login.username, login.email, login.password, MemberManConfig.VerifyWindow);
-
-      // This is where we will send out the verification, etc. emails.
-      SendVerificationMessage(m);
+      // The service pretends that everything is OK, so we don't actually do anything in test mode....
+      string testType = GetTestType(Request);
+      if (testType != Headers.TestTypes.TEST_PASS)
+      {
+        throw new NotImplementedException("Invalid test type!");
+      }
+      else
+      {
+        return SignupOK();
+      }
     }
 
+    return null;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private static SignupResponse SignupOK()
+  {
     return new SignupResponse()
     {
       IsUsernameAvailable = true,
       AuthRequired = false,
       Message = "Signup OK!",
     };
+  }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  private string GetTestType(HttpRequest request)
+  {
+    // TODO: Wrap this header handling code (get + check) into the base class...
+    string res = Headers.TestTypes.TEST_PASS;
+    var vals = request.Headers[Headers.MM_TEST_TYPE];
+    if (vals.Count > 0)
+    {
+      res = vals[0];
+    }
+    return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -692,10 +766,11 @@ public class StringTools_Local
   /// Remove <paramref name="toTrim"/> from the end of the <paramref name="input"/> string.
   /// Multiple instances of <paramref name="toTrim"/> will be removed from the input string.
   /// </summary>
-  public static string TrimEnd(string input, string toTrim) 
+  public static string TrimEnd(string input, string toTrim)
   {
     int removeLen = toTrim.Length;
-    while(input.EndsWith(toTrim)) {
+    while (input.EndsWith(toTrim))
+    {
       input = input.Substring(0, input.Length - toTrim.Length);
     }
     return input;
@@ -734,31 +809,6 @@ public class StringTools_Local
 }
 
 
-// ============================================================================================================================
-public class LoginResponse : BasicResponse
-{
-  /// <summary>
-  /// Is the user logged in?
-  /// </summary>
-  public bool IsLoggedIn { get; set; }
-
-  /// <summary>
-  /// Is this a verified user?  Depending on the application, the user may or may not be allowed to 
-  /// access certain features or even the entire system.
-  /// </summary>
-  public bool IsVerified { get; set; }
-
-  /// <summary>
-  /// The name that should be displayed in a UI.  This doesn't have to be the same thing
-  /// as the username used on login.
-  /// </summary>
-  public string DisplayName { get; set; } = default!;
-
-  /// <summary>
-  /// Url to user avatar.  Can be an image, gravatar, whatever....
-  /// </summary>
-  public string? Avatar { get; set; } = null;
-}
 
 // ============================================================================================================================
 public class LoginModel
@@ -775,24 +825,8 @@ public class LoginModel
   public string password { get; set; } = string.Empty;
 }
 
-// ============================================================================================================================
-public class SignupResponse : BasicResponse
-{
-  public bool IsUsernameAvailable { get; set; }
-  public bool IsEmailAvailable { get; set; }
-}
-
-
-// ============================================================================================================================
-public static class Cookies
-{
-  public const string REVERIFY = "reverifytoken";
-
-}
-
 // ===========================================================================================
 public record class ResetPasswordArgs(string ResetToken, string NewPassword, string ConfirmPassword);
-
 
 // ===========================================================================================
 public class ForgotPasswordArgs
