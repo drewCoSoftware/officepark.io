@@ -1,6 +1,5 @@
 <script setup lang="ts">
 
-import type EZInputVue from '@/components/EZInput.vue';
 import EZForm from '@/components/EZForm.vue';
 import EZInput from '@/components/EZInput.vue';
 import { onMounted, ref } from 'vue';
@@ -9,6 +8,7 @@ import { fetchy, fetchyPost } from 'fetchy';
 import { useRoute } from 'vue-router';
 import { inject } from 'vue';
 import { useLoginStore } from '../stores/mmlogin';
+import { setDefaultResultOrder } from 'dns';
 
 const _Login = useLoginStore();
 
@@ -22,11 +22,8 @@ const IsManualCodeRequest = ref(false);
 const ENTER_CODE = "EnterCode";
 const ENTER_USERNAME = "RequestCode";
 const VERIFY_COMPLETE = "VerifyComplete";
-const VerifyOK = ref(false);
+const VERIFY_FAIL = "VerifyFail";
 
-// get errors set on form?
-
-let AutoVerify = false;
 const CurState = ref(ENTER_USERNAME);
 
 // The states are:
@@ -110,19 +107,17 @@ async function DoVerificationStep() {
         ValidateForm();
       }
       else {
-        // Print the error message to the form....
-        // alert('there was an error!');
-        //        console.log(response.Error);
         Form.value?.SetErrorMessage("Could not request verification at this time.  Please try again later.");
       }
       break;
 
     case ENTER_CODE:
       let codeResponse = await VerifyCode();
+
       if (codeResponse.Success) {
         if (codeResponse.Data?.Code != 0) {
-
           Form.value?.SetErrorMessage(codeResponse.Data?.Message);
+          SetState(VERIFY_FAIL);
         }
         else {
           SetState(VERIFY_COMPLETE);
@@ -189,12 +184,10 @@ function codeInput(isManual: boolean = false) {
 // -------------------------------------------------------------------------------------------
 function verifyOK() {
   SetState(VERIFY_COMPLETE);
-  VerifyOK.value = true;
 }
 // -------------------------------------------------------------------------------------------
 function verifyFail() {
-  SetState(VERIFY_COMPLETE);
-  VerifyOK.value = false;
+  SetState(VERIFY_FAIL);
 }
 
 </script>
@@ -205,7 +198,7 @@ function verifyFail() {
     <div v-if="CurState == ENTER_USERNAME">
       <h4>Verify Your Account</h4>
       <p>Enter your email address and click <span>Request Code</span> below.</p>
-      <p><a @click="codeInput(true)">I already have a code</a></p>
+      <p><a class="link" @click="codeInput(true)">I already have a code</a></p>
     </div>
     <div v-if="CurState == ENTER_CODE">
       <div v-if="IsManualCodeRequest == false">
@@ -233,7 +226,7 @@ function verifyFail() {
 
   <div v-else class="complete">
     <h4>Verification Status</h4>
-    <div v-if="VerifyOK">
+    <div v-if="CurState == VERIFY_COMPLETE">
       <p>Your account has been successfully verified! You may now <a href="/login">log in!</a></p>
     </div>
     <div v-else>
@@ -253,4 +246,8 @@ function verifyFail() {
 </template>
 
 
-<style lang="less"></style>
+<style lang="less">
+
+// a.as-link {
+// }
+</style>
