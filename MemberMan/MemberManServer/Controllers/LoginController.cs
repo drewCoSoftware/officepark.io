@@ -638,6 +638,13 @@ public class LoginController : ApiController, IMemberManFeatures
     {
       throw new InvalidOperationException("Invalid email address!");
     }
+
+    PasswordValidationResult result = DAL.PasswordValidator.Validate(login.password);
+    if (!result.IsValid)
+    {
+      throw new InvalidOperationException(result.Message);
+    }
+
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

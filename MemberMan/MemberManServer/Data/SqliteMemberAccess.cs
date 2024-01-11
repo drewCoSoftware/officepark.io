@@ -14,13 +14,16 @@ namespace officepark.io.Membership;
 public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAccess
 {
   public IPasswordHandler PasswordHandler { get; private set; }
+  public IPasswordValidator PasswordValidator { get; private set; }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public SqliteMemberAccess(string dataDir, string dbFileName, IPasswordHandler? pwHandler_ = null)
+  public SqliteMemberAccess(string dataDir, string dbFileName, IPasswordHandler? pwHandler_ = null, IPasswordValidator? pwValidator_ = null)
   : base(dataDir, dbFileName)
   {
     PasswordHandler = pwHandler_ ?? new BCryptPasswordHandler();
+    PasswordValidator = pwValidator_ ?? new DefaultPasswordValidator();
   }
+
 
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMember(string username, string password)

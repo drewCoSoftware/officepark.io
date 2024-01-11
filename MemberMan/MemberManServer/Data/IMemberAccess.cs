@@ -17,6 +17,60 @@ public interface IPasswordHandler
 }
 
 // ============================================================================================================================
+/// <summary>
+/// Password validators are responsible for making sure that the given password format is correct.
+/// Length, characters, etc. 
+/// </summary>
+public interface IPasswordValidator
+{
+  PasswordValidationResult Validate(string password);
+}
+
+// ============================================================================================================================
+/// <param name="IsValid"></param>
+/// <param name="Message">Custom message to describe any issues with the password if it is not valid, etc.</param>
+public record class PasswordValidationResult(bool IsValid, string? Message = null);
+
+// ============================================================================================================================
+public class DefaultPasswordValidator : IPasswordValidator
+{
+  public const int MIN_LENGTH = 8;
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public PasswordValidationResult Validate(string password)
+  {
+    var reasons = new List<string>();
+
+    if (string.IsNullOrWhiteSpace(password))
+    {
+      reasons.Add("The password may not be empty!");
+    }
+    else
+    {
+      int len = password.Length;
+      if (len < MIN_LENGTH)
+      {
+        reasons.Add($"The password must be at least {MIN_LENGTH} characters!");
+      }
+
+    }
+
+
+    // Validation steps complete, return some results....
+    if (reasons.Count == 0)
+    {
+      return new PasswordValidationResult(true);
+    }
+    else
+    {
+      string msg = string.Join(Environment.NewLine, reasons);
+      return new PasswordValidationResult(false, msg);
+    }
+
+  }
+}
+
+// ============================================================================================================================
 public class BCryptPasswordHandler : IPasswordHandler
 {
   // OPTIONS / PRE-PROCESSOER:
@@ -48,6 +102,7 @@ public interface IMemberAccess
 
   MemberAvailability CheckAvailability(string username, string email);
   IPasswordHandler PasswordHandler { get; }
+  IPasswordValidator PasswordValidator { get; }
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>

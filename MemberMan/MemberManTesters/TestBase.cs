@@ -26,7 +26,9 @@ public class TestBase
 
     // NOTE: We have nothing in here for username/password, and we really should for security purposes.
     var pwHandler = new TestPasswordHandler();
-    var res = new SqliteMemberAccess(testDir, "MemberMan", pwHandler); 
+    var pwValidator = new TestPasswordValidator();  
+
+    var res = new SqliteMemberAccess(testDir, "MemberMan", pwHandler, pwValidator); 
     if (!File.Exists(res.DBFilePath))
     {
       res.SetupDatabase();
@@ -44,6 +46,17 @@ public class TestBase
 
 }
 
+
+// ============================================================================================================================
+public class TestPasswordValidator : IPasswordValidator
+{
+  // --------------------------------------------------------------------------------------------------------------------------
+  public PasswordValidationResult Validate(string password)
+  {
+    bool ok = !string.IsNullOrWhiteSpace(password);
+    return new PasswordValidationResult(ok, ok ? null : "The password cannot be empty!");  
+  }
+}
 
 // ============================================================================================================================
 /// <summary>
