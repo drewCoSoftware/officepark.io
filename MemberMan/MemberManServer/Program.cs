@@ -294,7 +294,7 @@ internal class Program
       {
         dir = Path.GetDirectoryName(dbFilePath)!;
         filename = Path.GetFileName(dbFilePath);
-        filename = StringTools_Local.TrimEnd(filename, ".sqlite");
+        filename = StringTools.TrimEnd(filename, ".sqlite");
       }
 
       FileTools.CreateDirectory(dir);

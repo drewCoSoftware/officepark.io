@@ -83,7 +83,7 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   // --------------------------------------------------------------------------------------------------------------------------
   public Member CreateMember(string username, string email, string password, TimeSpan verifyWindow)
   {
-    if (!StringTools_Local.IsValidEmail(email))
+    if (!StringTools.IsValidEmail(email))
     {
       throw new InvalidOperationException("Invalid email address!");
     }

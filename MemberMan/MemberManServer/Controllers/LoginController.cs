@@ -634,7 +634,7 @@ public class LoginController : ApiController, IMemberManFeatures
   protected void ValidateLoginData(LoginModel login)
   {
     login.username = login.email;
-    if (!StringTools_Local.IsValidEmail(login.email))
+    if (!StringTools.IsValidEmail(login.email))
     {
       throw new InvalidOperationException("Invalid email address!");
     }
@@ -751,7 +751,6 @@ public class LoginController : ApiController, IMemberManFeatures
   }
 }
 
-
 // ============================================================================================================================
 /// <summary>
 /// M$FT hates us and makes model binding as hard as possible.
@@ -762,60 +761,6 @@ public class VerificationArgs
   public string Username { get; set; } = default!;
   public string? VerificationCode { get; set; } = default!;
 }
-
-// ============================================================================================================================
-// TODO: Move this functionality to drewCo.Tools.
-public class StringTools_Local
-{
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  /// <summary>
-  /// Remove <paramref name="toTrim"/> from the end of the <paramref name="input"/> string.
-  /// Multiple instances of <paramref name="toTrim"/> will be removed from the input string.
-  /// </summary>
-  public static string TrimEnd(string input, string toTrim)
-  {
-    int removeLen = toTrim.Length;
-    while (input.EndsWith(toTrim))
-    {
-      input = input.Substring(0, input.Length - toTrim.Length);
-    }
-    return input;
-  }
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  /// <summary>
-  /// Tells us if the given email address is valid or not.
-  /// </summary>
-  /// <remarks>
-  /// Email addres validation is difficult.  This function may not cover all cases.
-  /// Please report any valid email address that causes this function to return false.
-  /// </remarks>
-  public static bool IsValidEmail(string email)
-  {
-    // Thanks Internet!
-    // Original version from:
-    // https://stackoverflow.com/questions/1365407/c-sharp-code-to-validate-email-address
-
-    var trimmedEmail = email.Trim();
-
-    if (trimmedEmail.EndsWith("."))
-    {
-      return false; // suggested by @TK-421
-    }
-    try
-    {
-      var addr = new System.Net.Mail.MailAddress(email);
-      return addr.Address == trimmedEmail;
-    }
-    catch
-    {
-      return false;
-    }
-  }
-}
-
-
 
 // ============================================================================================================================
 public class LoginModel
