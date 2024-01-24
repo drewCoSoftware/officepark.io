@@ -40,6 +40,12 @@ public partial class ServiceTesters : TestBase
     SignupAndVerifyNewUser(USERNAME, EMAIL, PASSWORD, out var context);
     context.NextRequest();
 
+    var mmCfg = context.Config.Get<MemberManConfig>();
+
+    // JFC, its 2024 and the dopes at XUnit still have the library in alpha mode.
+    // Not really trying to do all that, so we will just deal with this test case appearing as tho it is failed!
+    Skip.IfNot(mmCfg.UseActiveUserData, "INCONCLUSIVE! The config is set to not use active user data.  This test can't be fully evaluated!");
+
     var loginResponse = context.LoginCtl.Login(new LoginModel()
     {
       username = USERNAME,

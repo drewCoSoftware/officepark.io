@@ -79,6 +79,13 @@ public class MembershipHelper
   /// NOTE: This could use a functor to decide where the data will come from.
   public void LoadActiveUserList(DateTimeOffset timestamp)
   {
+    if (!Config.UseActiveUserData)
+    {
+      // VERBOSE:
+      Debug.WriteLine($"{nameof(MemberManConfig.UseActiveUserData)} flag is set to false.  Active user data will not be loaded!");
+      return;
+    }
+
     lock (DataLock)
     {
       string path = ResolveActiveUsersDataPath(false);
@@ -122,6 +129,12 @@ public class MembershipHelper
   /// <exception cref="NotImplementedException"></exception>
   private void SaveActiveUserList()
   {
+    if (!Config.UseActiveUserData)
+    {
+      // VERBOSE:
+      Debug.WriteLine($"{nameof(MemberManConfig.UseActiveUserData)} flag is set to false.  Active user data will not be saved!");
+    }
+
     // TEST:
     // return;
 

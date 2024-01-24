@@ -27,21 +27,16 @@ public class MemberManConfig
   /// </summary>
   public string PasswordResetUrl { get; set; } = "https://localhost/fogot-password";
 
-  ///// <summary>
-  ///// Email account that sends verification emails.
-  ///// </summary>
-  //public string EmailConfig.Username { get; set; } = default!;
-
-  ///// <summary>
-  ///// The server address that emails are sent through....
-  ///// </summary>
-  //public string SmtpServer { get; set; } = default!;
-  //public int SmtpPort { get; set; } = 465;
-  //public string SmtpPassword { get; set; } = default!;
-
   public EmailServiceConfiguration EmailConfig { get; set; } = new EmailServiceConfiguration();
 
   public TimeSpan VerifyWindow { get; set; } = DEFAULT_VERIFY_WINDOW;
 
   public TimeSpan PasswordResetWindow { get; set; } = DEFAULT_RESET_PASSWORD_WINDOW;
+
+
+  /// <summary>
+  /// Save/Load active user data between application startup cycles.  If false, all cookie + tokens
+  /// are cleared and not reloaded when the application starts up.
+  /// </summary>
+  public bool UseActiveUserData { get; set; } = false;
 }
