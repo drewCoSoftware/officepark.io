@@ -7,8 +7,8 @@ using officepark.io.Membership;
 public class SimLoginController : LoginController
 {
   // --------------------------------------------------------------------------------------------------------------------------
-  public SimLoginController(IMemberAccess dal_, IEmailService email_, ConfigHelper config_)
-   : base(dal_, email_, config_)
+  public SimLoginController(IMemberAccess dal_, IEmailService email_, ConfigHelper config_, MembershipHelper mmHelper_)
+   : base(dal_, email_, config_, mmHelper_)
   {
     _IPAddress = "127.0.0.1";
     _LoginToken = null; // "abc-def";

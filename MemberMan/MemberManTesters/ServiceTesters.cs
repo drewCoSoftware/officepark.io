@@ -4,10 +4,13 @@ using System.Net.Mime;
 using System.Threading.Tasks.Dataflow;
 using DataHelpers.Data;
 using DotLiquid;
+using drewCo.Tools;
 using HtmlAgilityPack;
 using MemberMan;
 using MemberManServer;
+using MemberManTesters.SimTypes;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Configuration;
 using officepark.io.API;
@@ -19,8 +22,39 @@ using static MemberManServer.Mailer;
 namespace MemberManTesters;
 
 // ==========================================================================
-public class ServiceTesters : TestBase
+public partial class ServiceTesters : TestBase
 {
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// This test case was provided to solve an issue where restarting the server that runs MemberMan will lose information
+  /// about which users may be currently logged in.
+  /// </summary>
+  [Fact]
+  public void MembershipHelperCanPreserveStateBetweenActivations()
+  {
+    const string USERNAME = nameof(CantLogInLoggedInUser) + "@test.com";
+    const string EMAIL = USERNAME;
+    const string PASSWORD = "DEF";
+
+    SignupAndVerifyNewUser(USERNAME, EMAIL, PASSWORD, out var context);
+    context.NextRequest();
+
+    var loginResponse = context.LoginCtl.Login(new LoginModel()
+    {
+      username = USERNAME,
+      password = PASSWORD
+    });
+    Assert.True(loginResponse.Code == 0);
+    Assert.True(context.MembershipHelper.IsUserActive(USERNAME));
+
+
+    // This test context should also have the logged in user data!
+    var context2 = CreateTestContext();
+    bool isActive = context2.MembershipHelper.IsUserActive(USERNAME);
+    Assert.True(isActive, $"The user '{USERNAME}' should be marked as active!");
+  }
+
 
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -55,7 +89,7 @@ public class ServiceTesters : TestBase
         password = PASSWORD
       });
       Assert.True(res.IsLoggedIn, "We should be logged in!");
-      Assert.Equal(LoginController.LOGGED_IN, res.Code);
+      Assert.Equal(LoginController.LOGGED_IN_CODE, res.Code);
     }
 
 
@@ -269,31 +303,6 @@ public class ServiceTesters : TestBase
     return verifyCode;
   }
 
-  // ============================================================================================================================
-  class TestContext
-  {
-    // --------------------------------------------------------------------------------------------------------------------------
-    internal TestContext(ConfigHelper config_, SimEmailService emailSvc_, LoginController loginCtl_)
-    {
-      Config = config_;
-      EmailSvc = emailSvc_;
-      LoginCtl = loginCtl_;
-    }
-    public ConfigHelper Config { get; private set; } = null!;
-    public SimEmailService EmailSvc { get; private set; } = null!;
-    public LoginController LoginCtl { get; private set; } = null!;
-
-    // --------------------------------------------------------------------------------------------------------------------------
-    /// <summary>
-    /// Resets the state of the context, last emails sent and whatnot....
-    /// </summary>
-    /// NOTE: Not really sure what to name this thing.....
-    internal void NextRequest()
-    {
-      EmailSvc.ClearLastEmail();
-    }
-  }
-
   // --------------------------------------------------------------------------------------------------------------------------
   private void SignupAndVerifyNewUser(string username, string email, string password, out TestContext context)
   {
@@ -304,17 +313,12 @@ public class ServiceTesters : TestBase
   // --------------------------------------------------------------------------------------------------------------------------
   private void SignupNewUser(string username, string email, string password, out TestContext context)
   {
-    var appBuilder = WebApplication.CreateBuilder();
-    var cfgHelper = Program.InitConfig(appBuilder, appBuilder.Environment);
-
     // Remove the test user.
     CleanupTestUser(username);
 
-    // Create the login controller.
-    // Signup the user + validate availability.
-    var emailSvc = GetEmailService();
-    var loginCtl = new SimLoginController(GetMemberAccess(), emailSvc, cfgHelper);
-    SignupResponse response = loginCtl.Signup(new LoginModel()
+    context = CreateTestContext();
+
+    SignupResponse response = context.LoginCtl.Signup(new LoginModel()
     {
       username = username,
       email = email,
@@ -322,7 +326,35 @@ public class ServiceTesters : TestBase
     });
     Assert.Equal(0, response.Code);
 
-    context = new TestContext(cfgHelper, emailSvc, loginCtl);
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private TestContext CreateTestContext()
+  {
+    var appBuilder = WebApplication.CreateBuilder();
+    var cfgHelper = Program.InitConfig(appBuilder, appBuilder.Environment);
+
+    // Create the login controller.
+    // Signup the user + validate availability.
+    var emailSvc = GetEmailService();
+
+    // NOTE: The membershiphelpers are all using the same path for the active login data.
+    // We should maybe find a way to isolate those?
+    var mmHelper = GetMembershipHelper(cfgHelper);
+    var loginCtl = new SimLoginController(GetMemberAccess(), emailSvc, cfgHelper, mmHelper);
+    var context = new TestContext(cfgHelper, emailSvc, loginCtl, mmHelper);
+
+    return context;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private SimMembershipHelper GetMembershipHelper(ConfigHelper cfgHelper)
+  {
+    var cfg = cfgHelper.Get<MemberManConfig>();
+    var res = new SimMembershipHelper(cfg);
+    res.LoadActiveUserList(DateTimeOffset.Now);
+
+    return res;
   }
 
 

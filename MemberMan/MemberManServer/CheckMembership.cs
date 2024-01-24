@@ -28,12 +28,16 @@ public class CheckMembership : ActionFilterAttribute
   /// </summary>
   public string? RequiredPermissions { get; set; } = null;
 
+  private IMemberManFeatures? MMFeatures = null;
+
   // --------------------------------------------------------------------------------------------------------------------------
   public override void OnActionExecuting(ActionExecutingContext context)
   {
     // This is where we will check our membership tokens and stuff.  If we don't have the right data, we will redirect.
     HttpRequest request = context.HttpContext.Request;
     HttpResponse response = context.HttpContext.Response;
+
+    MMFeatures = ResolveMemberManFeatures(context);
 
     bool isLoggedIn = HandleLoginCheck(context, request);
 
@@ -49,8 +53,8 @@ public class CheckMembership : ActionFilterAttribute
     {
       // The cookie is good, so we will make sure that we have a valid login handle.  If we do, then we can
       // update the window time of the login cookie.
-      Member? m = MembershipHelper.GetMember(request);
-      MembershipHelper.UpdateLoginCookie(request, response);
+      Member? m = MMFeatures.MemberHelper.GetMember(request);
+      MMFeatures.MemberHelper.UpdateLoginCookie(request, response);
 
       // TODO: The 'last visited / active data' in the db should be updated here...?
 
@@ -65,26 +69,31 @@ public class CheckMembership : ActionFilterAttribute
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
+  private IMemberManFeatures? ResolveMemberManFeatures(ActionExecutingContext context)
+  {
+    var res = context.Controller as IMemberManFeatures;
+    if (MMFeatures == null)
+    {
+      string msg = $"This controller does not implement the {nameof(IMemberManFeatures)} features interface and can't be used to check login status!";
+      msg += Environment.NewLine + $"Please implement the interface, or override the {nameof(HandleLoginCheck)} function in a {nameof(CheckMembership)} subclass!";
+      Debug.WriteLine(msg);
+    }
+    return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
   protected virtual bool HasPermission(ActionExecutingContext context, Member m, string? requiredPermissions)
   {
     // Since we just pulled a fresh copy of the member from DB / memory, we can
     // check the permissions directly....
-    bool res = MembershipHelper.HasPermission(m, requiredPermissions);
+    bool res = MMFeatures.MemberHelper.HasPermission(m, requiredPermissions);
     return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
   protected virtual bool HandleLoginCheck(ActionExecutingContext context, HttpRequest request)
   {
-    bool res = false;
-    IMemberManFeatures? ctl = context.Controller as IMemberManFeatures;
-    if (ctl == null)
-    {
-      string msg = $"This controller does not implement the {nameof(IMemberManFeatures)} features interface and can't be used to check login status!";
-      msg += Environment.NewLine + $"Please implement the interface, or override the {nameof(HandleLoginCheck)} function in a {nameof(CheckMembership)} subclass!";
-      Debug.WriteLine(msg);
-    }
-    res = MembershipHelper.IsLoggedIn(request);
+    bool res = MMFeatures != null && MMFeatures.MemberHelper.IsLoggedIn(request);
     return res;
   }
 

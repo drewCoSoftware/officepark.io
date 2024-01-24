@@ -36,9 +36,13 @@ internal class Program
     var cfgHelper = InitConfig(builder, builder.Environment);
     var mmCfg = cfgHelper.Get<MemberManConfig>();
 
+
     builder.Services.AddSingleton<IMemberAccess>(MemberAccess);
     builder.Services.AddSingleton<IEmailService>(new EmailService(mmCfg.EmailConfig));
 
+    var mmHelper = new MembershipHelper(mmCfg);
+    mmHelper.LoadActiveUserList(DateTimeOffset.Now);
+    builder.Services.AddSingleton<MembershipHelper>(mmHelper);  
 
     var ctl = builder.Services.AddControllers();
     ctl.AddJsonOptions((ops) =>

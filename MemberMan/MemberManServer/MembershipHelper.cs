@@ -1,5 +1,6 @@
 ﻿using drewCo.Tools;
-
+using MemberMan;
+using System.Diagnostics;
 
 namespace officepark.io.Membership;
 
@@ -15,12 +16,20 @@ public class MembershipHelper
   public const int LOGIN_COOKIE_TIME = 30;
   public const string MEMBERSHIP_COOKIE = "fsmid";
 
-  private static Dictionary<string, Member> LoggedInMembers = new Dictionary<string, Member>();
+  protected Dictionary<string, Member> LoggedInMembers = new Dictionary<string, Member>();
+  protected object DataLock = new object();
 
-  private static object DataLock = new object();
+  private MemberManConfig Config = null!;
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public static bool IsLoginActive(string cookieVal, string ip)
+  public MembershipHelper(MemberManConfig config_)
+  {
+    Config = config_;
+  }
+
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public bool IsLoginActive(string cookieVal, string ip)
   {
     string token = GetLoginToken(cookieVal, ip);
 
@@ -29,6 +38,7 @@ public class MembershipHelper
     {
       ExpireMembers();
       bool res = LoggedInMembers.TryGetValue(token, out Member? m);
+
       return res;
     }
   }
@@ -37,7 +47,7 @@ public class MembershipHelper
   /// <summary>
   /// This will flush any members in the cache from the system.
   /// </summary>
-  private static void ExpireMembers()
+  private void ExpireMembers()
   {
     lock (DataLock)
     {
@@ -55,35 +65,105 @@ public class MembershipHelper
       {
         LoggedInMembers.Remove(item);
       }
+
+      SaveActiveUserList();
+
     }
   }
 
-  // // --------------------------------------------------------------------------------------------------------------------------
-  // public static string CreateLoginCookie(HttpResponse response)
-  // {
-  //   string val = CreateLoginCookieVal();
-  //   response.Cookies.Append(MEMBERSHIP_COOKIE, val, new CookieOptions()
-  //   {
-  //     Expires = DateTime.Now + TimeSpan.FromMinutes(LOGIN_COOKIE_TIME),
-  //     HttpOnly = false,
-  //   });
-  //   //);
-
-  //   return val;
-  //   //HttpCookie c = new HttpCookie(MEMBERSHIP_COOKIE, );
-  //   //c.Expires = DateTime.UtcNow + TimeSpan.FromMinutes(LOGIN_COOKIE_TIME);
-  //   //c.HttpOnly = true;
-
-  //   //return c;
-  // }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal static void UpdateLoginCookie(HttpRequest request, HttpResponse response)
+  /// <summary>
+  /// This will reload the current login data from the data store.
+  /// </summary>
+  /// NOTE: This could use a functor to decide where the data will come from.
+  public void LoadActiveUserList(DateTimeOffset timestamp)
   {
-    //      HttpCookie c = response.Cookies[MEMBERSHIP_COOKIE];
-    //HttpCookie res = new HttpCookie(MEMBERSHIP_COOKIE, request.Cookies[MEMBERSHIP_COOKIE]?.Value);
-    //res.Expires = DateTime.UtcNow + TimeSpan.FromMinutes(LOGIN_COOKIE_TIME);
-    //res.HttpOnly = true;
+    lock (DataLock)
+    {
+      string path = ResolveActiveUsersDataPath(false);
+      if (!File.Exists(path)) { return; }
+
+      var data = FileTools.LoadJson<List<ActiveUserData>>(path);
+      if (data != null)
+      {
+        LoggedInMembers.Clear();
+
+        foreach (var item in data)
+        {
+          if (string.IsNullOrWhiteSpace(item.Username)) { continue; }
+          if (item.CookieExpireTime >= timestamp)
+          {
+            // VERBOSE:
+            Debug.WriteLine($"The cookie for member: {item.Username} expired on: {item.CookieExpireTime}.  User will not be loaded!");
+            continue;
+          }
+
+          // NOTE: We might actually need to capture more information about the users.  If not, then
+          // we should modify the records that we actually store in 'LoggedInMembers'
+          LoggedInMembers.Add(item.Username, new Member()
+          {
+            Username = item.Username,
+            CookieVal = item.CookieVal,
+            TokenExpires = item.CookieExpireTime,
+          });
+        }
+
+      }
+
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// Write the currentl list of logged in members to storage.
+  /// This data is used on application start so that we can determine who is still active in our system.
+  /// </summary>
+  /// <exception cref="NotImplementedException"></exception>
+  private void SaveActiveUserList()
+  {
+    // TEST:
+    // return;
+
+    // NOTE: we could / use a functor to determine where we actually save this data (database, filesystem, etc.)
+    // For now it is easy enough to just write it all to disk.....
+
+    // OPTIONS:
+    string savePath = ResolveActiveUsersDataPath();
+    var used = new HashSet<string>();
+
+    var toWrite = new List<ActiveUserData>();
+    lock (DataLock)
+    {
+      foreach (var item in LoggedInMembers)
+      {
+        if (used.Contains(item.Value.Username)) { continue; }
+        used.Add(item.Value.Username);
+
+        var val = item.Value;
+        toWrite.Add(new ActiveUserData(val.Username, val.CookieVal, val.TokenExpires));
+      }
+
+      FileTools.SaveJson(savePath, toWrite);
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public string ResolveActiveUsersDataPath(bool createDir = true)
+  {
+    string dataDir = FileTools.GetLocalDir("Data", "Logins");
+    if (createDir)
+    {
+      FileTools.CreateDirectory(dataDir);
+    }
+    string savePath = Path.Combine(dataDir, "active-users.json");
+    return savePath;
+  }
+
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  internal void UpdateLoginCookie(HttpRequest request, HttpResponse response)
+  {
 
     string cookieVal = request.Cookies[MEMBERSHIP_COOKIE] ?? "";
     response.Cookies.Append(MEMBERSHIP_COOKIE, cookieVal, new CookieOptions()
@@ -91,12 +171,10 @@ public class MembershipHelper
       Expires = DateTime.UtcNow + TimeSpan.FromMinutes(LOGIN_COOKIE_TIME),
       HttpOnly = true,
     });
-
-    // return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal static void Logout(HttpRequest request, HttpResponse response)
+  internal void Logout(HttpRequest request, HttpResponse response)
   {
     string? token = GetLoginToken(request);
     bool isLoggedIn = token != null && LoggedInMembers.TryGetValue(token, out Member? m);
@@ -105,6 +183,8 @@ public class MembershipHelper
       LoggedInMembers.Remove(token!);
     }
     response.Cookies.Delete(MEMBERSHIP_COOKIE);
+
+    SaveActiveUserList();
   }
 
 
@@ -161,13 +241,14 @@ public class MembershipHelper
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal static void SetLoggedInUser(Member m, string loginToken)
+  internal void SetLoggedInUser(Member m, string loginToken)
   {
     LoggedInMembers[loginToken] = m;
+    SaveActiveUserList();
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal static bool IsLoggedIn(string? cookie, string ipAddress)
+  internal bool IsLoggedIn(string? cookie, string ipAddress)
   {
     if (cookie == null) { return false; }
     bool res = IsLoginActive(cookie, ipAddress);
@@ -175,7 +256,7 @@ public class MembershipHelper
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal static bool IsLoggedIn(HttpRequest? request)
+  internal bool IsLoggedIn(HttpRequest? request)
   {
     if (request == null) { return false; }
 
@@ -190,7 +271,7 @@ public class MembershipHelper
 
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public static bool TryGetLoggedInMember(string? loginToken, out Member member)
+  public bool TryGetLoggedInMember(string? loginToken, out Member member)
   {
     if (loginToken != null)
     {
@@ -210,25 +291,34 @@ public class MembershipHelper
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal static Member? GetMember(HttpRequest request)
+  internal Member? GetMember(HttpRequest request)
   {
     string? token = GetLoginToken(request);
     return GetMember(token);
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal static Member? GetMember(string? loginToken)
+  internal Member? GetMember(string? loginToken)
   {
     if (loginToken == null) { return null; }
     if (LoggedInMembers.TryGetValue(loginToken, out Member? res))
     {
-      res.LastActive = DateTime.UtcNow;
+      UpdateActiveUserTime(res);
     }
     return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal static bool HasPermission(Member m, string? requiredPermissions, string? defaultScope = null)
+  private void UpdateActiveUserTime(Member res)
+  {
+    res.LastActive = DateTime.UtcNow;
+
+    // TODO: We aren't actually writing any of this data to the DB / active user store, and we probably should be.
+    // We should also updating the expire date on any associated cookies here too!
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  internal bool HasPermission(Member m, string? requiredPermissions, string? defaultScope = null)
   {
     if (!string.IsNullOrWhiteSpace(defaultScope))
     {
@@ -299,6 +389,8 @@ public class MembershipHelper
   }
 
   record class PermissionEntry(string? Scope, string Permission);
+
+  public record class ActiveUserData(string Username, string CookieVal, DateTimeOffset? CookieExpireTime);
 
 }
 

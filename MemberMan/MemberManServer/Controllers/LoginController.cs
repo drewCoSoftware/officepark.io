@@ -30,6 +30,7 @@ internal interface IMemberManFeatures
 {
   IMemberAccess DAL { get; }
   MemberManConfig MemberManConfig { get; }
+  MembershipHelper MemberHelper { get; }
 }
 
 // ============================================================================================================================
@@ -55,18 +56,17 @@ public class LoginController : ApiController, IMemberManFeatures
   /// <summary>
   /// The user is already logged in.
   /// </summary>
-  public const int LOGGED_IN = 0x17;
-
+  public const int LOGGED_IN_CODE = 0x17;
 
   public IMemberAccess DAL { get; private set; } = default!;
   public MemberManConfig MemberManConfig { get; private set; } = null!;
+  public MembershipHelper MemberHelper{ get; private set; } = null!;
 
   private IEmailService _Email = default!;
   private ConfigHelper _ConfigHelper = null!;
 
-
   // --------------------------------------------------------------------------------------------------------------------------
-  public LoginController(IMemberAccess dal_, IEmailService email_, ConfigHelper config_)
+  public LoginController(IMemberAccess dal_, IEmailService email_, ConfigHelper config_, MembershipHelper mmHelper_)
   {
     if (dal_ == null) { throw new ArgumentNullException("dal_"); }
     if (email_ == null) { throw new ArgumentNullException("email_"); }
@@ -76,6 +76,7 @@ public class LoginController : ApiController, IMemberManFeatures
     _ConfigHelper = config_;
 
     MemberManConfig = _ConfigHelper.Get<MemberManConfig>();
+    MemberHelper = mmHelper_;
   }
 
 
@@ -140,7 +141,7 @@ public class LoginController : ApiController, IMemberManFeatures
   [Route("/api/logout")]
   public IAPIResponse Logout()
   {
-    MembershipHelper.Logout(Request, Response);
+    MemberHelper.Logout(Request, Response);
     _LoginToken = null;
 
     var res = OK<BasicResponse>();
@@ -202,7 +203,7 @@ public class LoginController : ApiController, IMemberManFeatures
   private Member? GetLoggedInMember()
   {
     string? token = MembershipHelper.GetLoginToken(MembershipCookie, IPAddress);
-    var res = MembershipHelper.GetMember(token);
+    var res = MemberHelper.GetMember(token);
     return res;
   }
 
@@ -210,7 +211,7 @@ public class LoginController : ApiController, IMemberManFeatures
   // TODO: This could also go with some kind of base class?
   private bool IsLoggedIn()
   {
-    bool res = MembershipHelper.IsLoggedIn(MembershipCookie, IPAddress);
+    bool res = MemberHelper.IsLoggedIn(MembershipCookie, IPAddress);
     return res;
   }
 
@@ -318,7 +319,7 @@ public class LoginController : ApiController, IMemberManFeatures
     {
       var res = OK<LoginResponse>();
       res.IsLoggedIn = true;
-      res.Code = LOGGED_IN;
+      res.Code = LOGGED_IN_CODE;
       return res;
     }
 
@@ -372,7 +373,7 @@ public class LoginController : ApiController, IMemberManFeatures
       {
         throw new InvalidOperationException("Could not generate a login token!");
       }
-      MembershipHelper.SetLoggedInUser(m, _LoginToken);
+      MemberHelper.SetLoggedInUser(m, _LoginToken);
     }
 
 
@@ -400,7 +401,7 @@ public class LoginController : ApiController, IMemberManFeatures
     {
       return new BasicResponse()
       {
-        Code = LoginController.LOGGED_IN,
+        Code = LoginController.LOGGED_IN_CODE,
         Message = "You are already logged in"
       };
     }
@@ -439,7 +440,7 @@ public class LoginController : ApiController, IMemberManFeatures
     {
       return new BasicResponse()
       {
-        Code = LoginController.LOGGED_IN,
+        Code = LoginController.LOGGED_IN_CODE,
         Message = "You are already logged in"
       };
     }
@@ -533,7 +534,7 @@ public class LoginController : ApiController, IMemberManFeatures
     {
       return new SignupResponse()
       {
-        Code = LoginController.LOGGED_IN,
+        Code = LoginController.LOGGED_IN_CODE,
         Message = "You are already logged in"
       };
     }
