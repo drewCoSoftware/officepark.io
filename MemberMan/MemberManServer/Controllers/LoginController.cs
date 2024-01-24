@@ -21,16 +21,20 @@ using IOFile = System.IO.File;
 
 namespace MemberMan;
 
+// ============================================================================================================================
+public interface IHasMembershipHelper
+{
+  MembershipHelper MemberHelper { get; }
+}
 
 // ============================================================================================================================
 /// <summary>
 /// Indicates that a controller has certain member man features.
 /// </summary>
-internal interface IMemberManFeatures
+public interface IMemberManFeatures : IHasMembershipHelper
 {
   IMemberAccess DAL { get; }
   MemberManConfig MemberManConfig { get; }
-  MembershipHelper MemberHelper { get; }
 }
 
 // ============================================================================================================================

@@ -28,7 +28,7 @@ public class CheckMembership : ActionFilterAttribute
   /// </summary>
   public string? RequiredPermissions { get; set; } = null;
 
-  private IMemberManFeatures? MMFeatures = null;
+  private IHasMembershipHelper? MMFeatures = null;
 
   // --------------------------------------------------------------------------------------------------------------------------
   public override void OnActionExecuting(ActionExecutingContext context)
@@ -69,12 +69,12 @@ public class CheckMembership : ActionFilterAttribute
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private IMemberManFeatures? ResolveMemberManFeatures(ActionExecutingContext context)
+  private IHasMembershipHelper? ResolveMemberManFeatures(ActionExecutingContext context)
   {
-    var res = context.Controller as IMemberManFeatures;
-    if (MMFeatures == null)
+    var res = context.Controller as IHasMembershipHelper;
+    if (res == null)
     {
-      string msg = $"This controller does not implement the {nameof(IMemberManFeatures)} features interface and can't be used to check login status!";
+      string msg = $"This controller does not implement the {nameof(IHasMembershipHelper)} features interface and can't be used to check login status!";
       msg += Environment.NewLine + $"Please implement the interface, or override the {nameof(HandleLoginCheck)} function in a {nameof(CheckMembership)} subclass!";
       Debug.WriteLine(msg);
     }
