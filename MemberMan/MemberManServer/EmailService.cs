@@ -73,15 +73,14 @@ public class EmailService : IEmailService
       // Check the allow / disallow lists....
       ValidateToAddresses(mail.To);
 
-
-      // NOTE: This could be some kind of trace?
+      //// NOTE: This could be some kind of trace?
       //Console.WriteLine("Sending mail with:");
       //Console.WriteLine(JsonSerializer.Serialize(new
       //{
-      //  SmtpHost,
-      //  Port,
-      //  User,
-      //  Password    // NOTE: HIDE THE PASSWORD! (stringtools?)
+      //  Options.SmtpServer,
+      //  Options.Port,
+      //  Options.Username,
+      //  Options.Password    // NOTE: HIDE THE PASSWORD! (stringtools?)
       //}, new JsonSerializerOptions() { WriteIndented = true }));
 
       var creds = new NetworkCredential(Options.Username, Options.Password);

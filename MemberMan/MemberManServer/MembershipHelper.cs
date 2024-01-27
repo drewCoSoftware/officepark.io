@@ -233,7 +233,16 @@ public class MembershipHelper
   /// </summary>
   public static string? GetLoginToken(string? cookie, string ip)
   {
-    if (cookie == null) { return null; }
+    if (cookie == null)
+    {
+
+      Console.WriteLine("The login cookie is null!");
+
+      return null;
+    }
+
+    Console.WriteLine($"The cookie is: {cookie}!");
+    Console.WriteLine($"The IP address is: {ip}!");
 
     int ipLen = ip.Length;
     int ipIndex = 0;
