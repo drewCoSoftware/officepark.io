@@ -596,6 +596,9 @@ public class LoginController : ApiController, IMemberManFeatures
     // code that gets the headers so that we can test them too.
     if (HasHeader(Headers.MM_TEST_MODE))
     {
+                // VERBOSE:
+            Console.WriteLine($"The test header: {Headers.MM_TEST_MODE} is set!  Normal login operations will be bypassed!");
+
       // The service pretends that everything is OK, so we don't actually do anything in test mode....
       string testType = GetTestType(Request);
       if (testType != Headers.TestTypes.TEST_PASS)
