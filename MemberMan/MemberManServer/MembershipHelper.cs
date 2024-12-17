@@ -233,16 +233,18 @@ public class MembershipHelper
   /// </summary>
   public static string? GetLoginToken(string? cookie, string ip)
   {
+    // TODO: Convert these functions to use ILogger!
+
     if (cookie == null)
     {
 
-      Console.WriteLine("The login cookie is null!");
+      Debug.WriteLine("The login cookie is null!");
 
       return null;
     }
 
-    Console.WriteLine($"The cookie is: {cookie}!");
-    Console.WriteLine($"The IP address is: {ip}!");
+    Debug.WriteLine($"The cookie is: {cookie}!");
+    Debug.WriteLine($"The IP address is: {ip}!");
 
     int ipLen = ip.Length;
     int ipIndex = 0;

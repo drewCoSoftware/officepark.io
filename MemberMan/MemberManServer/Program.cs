@@ -7,9 +7,6 @@ using DotLiquid.Util;
 using drewCo.Tools;
 using MemberMan;
 using MemberManServer;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.Extensions.Configuration;
 using officepark.io.Membership;
 using static MemberManServer.Mailer;
 

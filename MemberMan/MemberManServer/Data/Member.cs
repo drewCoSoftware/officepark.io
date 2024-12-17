@@ -2,7 +2,6 @@ using CommandLine;
 using DataHelpers.Data;
 using DotLiquid;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting.Internal;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Org.BouncyCastle.Bcpg;
 using System;
