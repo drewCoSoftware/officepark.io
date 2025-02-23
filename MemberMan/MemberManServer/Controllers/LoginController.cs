@@ -148,7 +148,7 @@ public class LoginController : ApiController, IMemberManFeatures
     MemberHelper.Logout(Request, Response);
     _LoginToken = null;
 
-    var res = OK<BasicResponse>();
+    var res = OK<MemberManBasicResponse>();
     return res;
   }
 
@@ -249,7 +249,7 @@ public class LoginController : ApiController, IMemberManFeatures
     var member = DAL.GetMemberByResetToken(args.ResetToken);
     if (member == null || member.TokenExpires == null || member.ResetToken == null)
     {
-      return new BasicResponse()
+      return new MemberManBasicResponse()
       {
         Code = INVALID_RESET_TOKEN,
         Message = "Invalid reset token!"
@@ -403,7 +403,7 @@ public class LoginController : ApiController, IMemberManFeatures
   {
     if (IsLoggedIn())
     {
-      return new BasicResponse()
+      return new MemberManBasicResponse()
       {
         Code = LoginController.LOGGED_IN_CODE,
         Message = "You are already logged in"
@@ -428,7 +428,7 @@ public class LoginController : ApiController, IMemberManFeatures
       }
     }
 
-    return new BasicResponse()
+    return new MemberManBasicResponse()
     {
       Message = "OK"
     };
@@ -438,18 +438,18 @@ public class LoginController : ApiController, IMemberManFeatures
   // --------------------------------------------------------------------------------------------------------------------------
   [HttpPost]
   [Route("/api/verify")]
-  public BasicResponse VerifyUser([FromBody] VerificationArgs args)
+  public MemberManBasicResponse VerifyUser([FromBody] VerificationArgs args)
   {
     if (IsLoggedIn())
     {
-      return new BasicResponse()
+      return new MemberManBasicResponse()
       {
         Code = LoginController.LOGGED_IN_CODE,
         Message = "You are already logged in"
       };
     }
 
-    BasicResponse? testResponse = HandleVerifyTest();
+    MemberManBasicResponse? testResponse = HandleVerifyTest();
     if (testResponse != null)
     {
       return testResponse;
@@ -481,9 +481,9 @@ public class LoginController : ApiController, IMemberManFeatures
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private static BasicResponse InvalidVerificationCode()
+  private static MemberManBasicResponse InvalidVerificationCode()
   {
-    return new BasicResponse()
+    return new MemberManBasicResponse()
     {
       Code = INVALID_VERIFICATION,
       Message = "Invalid verification code",
@@ -491,9 +491,9 @@ public class LoginController : ApiController, IMemberManFeatures
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private static BasicResponse VerfiyExpired()
+  private static MemberManBasicResponse VerfiyExpired()
   {
-    return new BasicResponse()
+    return new MemberManBasicResponse()
     {
       Code = VERIFICATION_EXPIRED,
       Message = "Verification code is expired.",
@@ -501,7 +501,7 @@ public class LoginController : ApiController, IMemberManFeatures
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private BasicResponse? HandleVerifyTest()
+  private MemberManBasicResponse? HandleVerifyTest()
   {
     // In test scenarios we don't actually create the user account.
     // NOTE: 'Request' is null when we are running unit tests.  There may be a better way to wrap the

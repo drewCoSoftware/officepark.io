@@ -5,6 +5,7 @@
 /// This interface type should be implemented by all return types in the system.
 /// The goal is to have common data to program against for messages, errors, auth status, etc.
 /// </summary>
+[Obsolete("This will be / replace with fetchy please.")]
 public interface IAPIResponse
 {
   /// <summary>

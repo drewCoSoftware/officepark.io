@@ -58,7 +58,7 @@ namespace MemberManServer
     {
       HttpStatusCode code = HttpStatusCode.InternalServerError; // 500 if unexpected
 
-      var result = new BasicResponse()
+      var result = new MemberManBasicResponse()
       {
         AuthRequired = false,
         AuthToken = null,

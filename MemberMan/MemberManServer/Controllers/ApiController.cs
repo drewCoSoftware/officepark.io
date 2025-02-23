@@ -83,15 +83,15 @@ public class ApiController : Controller
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public BasicResponse OK(string? message = "OK")
+  public MemberManBasicResponse OK(string? message = "OK")
   {
-    return OK<BasicResponse>(message);
+    return OK<MemberManBasicResponse>(message);
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public BasicResponse Error(int code ,string? message = "Error")
+  public MemberManBasicResponse Error(int code ,string? message = "Error")
   {
-    return Error<BasicResponse>(code, message);
+    return Error<MemberManBasicResponse>(code, message);
   }
   // --------------------------------------------------------------------------------------------------------------------------
   public T Error<T>(int code, string? message = "Error")
@@ -115,7 +115,7 @@ public class ApiController : Controller
       Response.StatusCode = 404;
     }
 
-    return new BasicResponse()
+    return new MemberManBasicResponse()
     {
       Code = ResponseCodes.DOES_NOT_EXIST,
       Message = message

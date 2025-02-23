@@ -35,7 +35,7 @@ public static class ResponseCodes
 }
 
 // ============================================================================================================================
-public class BasicResponse : IAPIResponse
+public class MemberManBasicResponse : IAPIResponse
 {
   public string? AuthToken { get; set; }
   public bool AuthRequired { get; set; } = true;
@@ -44,14 +44,14 @@ public class BasicResponse : IAPIResponse
 }
 
 // ============================================================================================================================
-public class SignupResponse : BasicResponse
+public class SignupResponse : MemberManBasicResponse
 {
   public bool IsUsernameAvailable { get; set; }
   public bool IsEmailAvailable { get; set; }
 }
 
 // ============================================================================================================================
-public class LoginResponse : BasicResponse
+public class LoginResponse : MemberManBasicResponse
 {
   /// <summary>
   /// Is the user logged in?
