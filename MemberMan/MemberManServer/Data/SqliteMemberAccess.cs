@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Razor.Runtime.TagHelpers;
 using Microsoft.Data.Sqlite;
 using Npgsql;
 using Org.BouncyCastle.Crypto;
-using static MemberMan.LoginController;
+using static MemberMan.LoginApiController;
 
 namespace officepark.io.Membership;
 

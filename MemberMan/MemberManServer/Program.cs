@@ -278,8 +278,6 @@ internal class Program
   }
 
   private static bool IsDBInitialized = false;
-  // private static IMemberAccess MemberAccess = default!;
-
   const string DEFAULT_DATA_DIR = "data";
   const string DEFAULT_DB_FILE_NAME = "member-man";
 

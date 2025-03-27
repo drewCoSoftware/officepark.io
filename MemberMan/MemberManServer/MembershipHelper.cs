@@ -19,7 +19,7 @@ public class MembershipHelper
   protected Dictionary<string, Member> LoggedInMembers = new Dictionary<string, Member>();
   protected object DataLock = new object();
 
-  private MemberManConfig Config = null!;
+  public MemberManConfig Config { get; private set; }
 
   // --------------------------------------------------------------------------------------------------------------------------
   public MembershipHelper(MemberManConfig config_)
@@ -175,7 +175,7 @@ public class MembershipHelper
 
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal void UpdateLoginCookie(HttpRequest request, HttpResponse response)
+  public void UpdateLoginCookie(HttpRequest request, HttpResponse response)
   {
 
     string cookieVal = request.Cookies[MEMBERSHIP_COOKIE] ?? "";
@@ -187,7 +187,7 @@ public class MembershipHelper
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal void Logout(HttpRequest request, HttpResponse response)
+  public void Logout(HttpRequest request, HttpResponse response)
   {
     string? token = GetLoginToken(request);
     bool isLoggedIn = token != null && LoggedInMembers.TryGetValue(token, out Member? m);

@@ -83,7 +83,7 @@ public class MemberManFeatureProvider
 // ============================================================================================================================
 [ApiController]
 [Route("[controller]")]
-public class LoginController : ApiController, IMemberManFeatures
+public class LoginApiController : ApiController, IMemberManFeatures
 {
   // TODO: Wrap these into their own static class  / enum.
   public const int INVALID_VERIFICATION = 0x11;
@@ -103,22 +103,20 @@ public class LoginController : ApiController, IMemberManFeatures
   public MembershipHelper MemberHelper { get; private set; } = null!;
 
   private IEmailService _Email = default!;
-  private ConfigHelper _ConfigHelper = null!;
 
   private MemberManFeatureProvider MMFeatures = null!;
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public LoginController(IMemberAccess dal_, IEmailService email_, ConfigHelper config_, MembershipHelper mmHelper_)
+  public LoginApiController(IMemberAccess dal_, IEmailService email_, MembershipHelper mmHelper_, MemberManFeatureProvider mmFeatures_)
   {
     if (dal_ == null) { throw new ArgumentNullException("dal_"); }
     if (email_ == null) { throw new ArgumentNullException("email_"); }
 
     DAL = dal_;
     _Email = email_;
-    _ConfigHelper = config_;
 
-    MemberManConfig = _ConfigHelper.Get<MemberManConfig>();
     MemberHelper = mmHelper_;
+    MemberManConfig = MemberHelper.Config;
     MMFeatures = new MemberManFeatureProvider(MemberHelper);
   }
 
@@ -344,7 +342,7 @@ public class LoginController : ApiController, IMemberManFeatures
     {
       // NOTE: This should return a 404!
       var res = NotFound<LoginResponse>("Invalid username or password!");
-      res.Code = LoginController.LOGIN_FAILED;
+      res.Code = LoginApiController.LOGIN_FAILED;
       return res;
     }
     DAL.RemovePasswordResetData(m.Username);
@@ -357,7 +355,7 @@ public class LoginController : ApiController, IMemberManFeatures
     if (!isVerified)
     {
       msg = $"User: {m.Username} is not verified.";
-      code = LoginController.NOT_VERFIED;
+      code = LoginApiController.NOT_VERFIED;
     }
 
     // TODO: OPTIONS:
@@ -416,7 +414,7 @@ public class LoginController : ApiController, IMemberManFeatures
     {
       return new MemberManBasicResponse()
       {
-        Code = LoginController.LOGGED_IN_CODE,
+        Code = LoginApiController.LOGGED_IN_CODE,
         Message = "You are already logged in"
       };
     }
@@ -455,7 +453,7 @@ public class LoginController : ApiController, IMemberManFeatures
     {
       return new MemberManBasicResponse()
       {
-        Code = LoginController.LOGGED_IN_CODE,
+        Code = LoginApiController.LOGGED_IN_CODE,
         Message = "You are already logged in"
       };
     }
@@ -549,7 +547,7 @@ public class LoginController : ApiController, IMemberManFeatures
     {
       return new SignupResponse()
       {
-        Code = LoginController.LOGGED_IN_CODE,
+        Code = LoginApiController.LOGGED_IN_CODE,
         Message = "You are already logged in"
       };
     }
@@ -713,13 +711,11 @@ public class LoginController : ApiController, IMemberManFeatures
     string templateText = IOFile.ReadAllText(Path.Combine(FileTools.GetLocalDir("EmailTemplates"), "VerifyComplete.html"));
 
 
-    var mmCfg = _ConfigHelper.Get<MemberManConfig>();
-
     // var date = new DateTimeOffset( m.VerificationExpiration
     // TODO: Localize to EST and include that in the email.
     var model = new
     {
-      LoginUrl = mmCfg.LoginUrl
+      LoginUrl = MemberManConfig.LoginUrl
     };
 
     var t = Template.Parse(templateText);
@@ -736,7 +732,7 @@ public class LoginController : ApiController, IMemberManFeatures
     // TODO: This should be overridable....
     string templateText = GetTemplateText(EmailTemplateNames.VERIFICATION_TEMPLATE);
 
-    var mmCfg = _ConfigHelper.Get<MemberManConfig>();
+    var mmCfg = MemberManConfig;
     string link = mmCfg.VerifyAccountUrl + $"?resetToken={m.VerificationCode}";
 
     // var date = new DateTimeOffset( m.VerificationExpiration

@@ -37,6 +37,27 @@ public class EmailServiceConfiguration
 }
 
 // ==========================================================================      
+/// <summary>
+/// Use this email service when you don't want to actually send email!
+/// </summary>
+public class NullEmailService : IEmailService
+{
+  // --------------------------------------------------------------------------------------------------------------------------
+  public EmailSendResult SendEmail(Email mail)
+  {
+    // TOOD: Convert this so that it uses 'Logger'.
+    // Maybe 'Logger' can have some feature where it can log files?
+    Console.WriteLine("null email service is sending an email!");
+
+    return new EmailSendResult()
+    {
+      SendOK = true
+    };
+
+  }
+}
+
+// ==========================================================================      
 public class EmailService : IEmailService
 {
   private EmailServiceConfiguration Options = default!;
