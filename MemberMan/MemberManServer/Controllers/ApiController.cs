@@ -1,13 +1,49 @@
 ﻿using DotLiquid.Util;
 using Microsoft.AspNetCore.Mvc;
+using officepark.io;
 using officepark.io.API;
 using officepark.io.Membership;
 
 namespace MemberMan;
 
 // ============================================================================================================================
-public class ApiController : Controller
+// TODO: SHARE:
+public class BaseController : Controller
 {
+
+  protected string _IPAddress = default!;
+  public virtual string IPAddress
+  {
+    get
+    {
+      return _IPAddress ?? (_IPAddress = IPHelper.GetIP(Request));
+    }
+    internal set { _IPAddress = value; }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  protected void RemoveCookie(string name)
+  {
+    Response.Cookies.Delete(name);
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  protected void SetCookie(string name, string value, DateTime expires)
+  {
+    Response.Cookies.Append(name, value, new CookieOptions()
+    {
+      Expires = DateTime.Now + TimeSpan.FromMinutes(MembershipHelper.LOGIN_COOKIE_TIME),
+      HttpOnly = false,
+    });
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  // TODO: Put this on a base class....
+  protected string? GetCookie(string cookieName)
+  {
+    string? res = Request.Cookies[cookieName];
+    return res;
+  }
 
   // --------------------------------------------------------------------------------------------------------------------------
   protected string ResolveUrl(string url)
@@ -40,31 +76,6 @@ public class ApiController : Controller
     return res;
   }
 
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  protected void RemoveCookie(string name)
-  {
-    Response.Cookies.Delete(name);
-  }
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  protected void SetCookie(string name, string value, DateTime expires)
-  {
-    Response.Cookies.Append(name, value, new CookieOptions()
-    {
-      Expires = DateTime.Now + TimeSpan.FromMinutes(MembershipHelper.LOGIN_COOKIE_TIME),
-      HttpOnly = false,
-    });
-  }
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  // TODO: Put this on a base class....
-  protected string? GetCookie(string cookieName)
-  {
-    string? res = Request.Cookies[cookieName];
-    return res;
-  }
-
   // --------------------------------------------------------------------------------------------------------------------------
   protected bool HasHeader(string headerName)
   {
@@ -72,10 +83,18 @@ public class ApiController : Controller
     bool res = Request.Headers.ContainsKey(headerName);
     return res;
   }
+}
+
+
+// ============================================================================================================================
+public class ApiController : BaseController
+{
+
+
 
   // --------------------------------------------------------------------------------------------------------------------------
   public T OK<T>(string? message = null)
-    where T:IAPIResponse, new()
+    where T : IAPIResponse, new()
   {
     T res = new T();
     res.Message = message;
@@ -89,7 +108,7 @@ public class ApiController : Controller
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public MemberManBasicResponse Error(int code ,string? message = "Error")
+  public MemberManBasicResponse Error(int code, string? message = "Error")
   {
     return Error<MemberManBasicResponse>(code, message);
   }
@@ -97,10 +116,12 @@ public class ApiController : Controller
   public T Error<T>(int code, string? message = "Error")
     where T : IAPIResponse, new()
   {
-    if (Response != null) {
+    if (Response != null)
+    {
       Response.StatusCode = 500;
     }
-    return new T() {
+    return new T()
+    {
       Code = code,
       Message = message
     };

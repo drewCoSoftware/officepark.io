@@ -45,6 +45,42 @@ public static class EmailTemplateNames
 }
 
 // ============================================================================================================================
+/// <summary>
+/// Class that contains all basic/standard MemberMan functionality.
+/// This can be used with API/MVC or any other architecture....
+/// </summary>
+/// NOTE: We may end up folding these features into MembershipHelper.
+public class MemberManFeatureProvider
+{
+  private MembershipHelper MemberHelper = null!;
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public MemberManFeatureProvider(MembershipHelper memberHelper_)
+  {
+    MemberHelper = memberHelper_;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  internal string GeneratePasswordResetToken()
+  {
+    // TODO: Some kind of crypto / random hash or something?
+    // NOTE: This should be a plugin type function so that users may define their own algos.....
+    var uuid = Guid.NewGuid().ToString();
+    string res = StringTools.ComputeSHA1(uuid);
+    return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public Member? GetLoggedInMember(string memberCookie, string ipAddress)
+  {
+    string? token = MembershipHelper.GetLoginToken(memberCookie, ipAddress);
+    var res = MemberHelper.GetMember(token);
+    return res;
+  }
+
+}
+
+// ============================================================================================================================
 [ApiController]
 [Route("[controller]")]
 public class LoginController : ApiController, IMemberManFeatures
@@ -64,10 +100,12 @@ public class LoginController : ApiController, IMemberManFeatures
 
   public IMemberAccess DAL { get; private set; } = default!;
   public MemberManConfig MemberManConfig { get; private set; } = null!;
-  public MembershipHelper MemberHelper{ get; private set; } = null!;
+  public MembershipHelper MemberHelper { get; private set; } = null!;
 
   private IEmailService _Email = default!;
   private ConfigHelper _ConfigHelper = null!;
+
+  private MemberManFeatureProvider MMFeatures = null!;
 
   // --------------------------------------------------------------------------------------------------------------------------
   public LoginController(IMemberAccess dal_, IEmailService email_, ConfigHelper config_, MembershipHelper mmHelper_)
@@ -81,20 +119,12 @@ public class LoginController : ApiController, IMemberManFeatures
 
     MemberManConfig = _ConfigHelper.Get<MemberManConfig>();
     MemberHelper = mmHelper_;
+    MMFeatures = new MemberManFeatureProvider(MemberHelper);
   }
 
 
   #region Properties 
 
-  protected string _IPAddress = default!;
-  public virtual string IPAddress
-  {
-    get
-    {
-      return _IPAddress ?? (_IPAddress = IPHelper.GetIP(Request));
-    }
-    internal set { _IPAddress = value; }
-  }
 
   protected string? _LoginToken = default!;
   public virtual string? LoginToken
@@ -106,7 +136,6 @@ public class LoginController : ApiController, IMemberManFeatures
     internal set { _LoginToken = value; }
   }
 
-  //  protected string? _MembershipCookie = default!;
   public virtual string? MembershipCookie
   {
     get
@@ -124,7 +153,6 @@ public class LoginController : ApiController, IMemberManFeatures
       {
         RemoveCookie(MembershipHelper.MEMBERSHIP_COOKIE);
       }
-
     }
   }
 
@@ -181,7 +209,7 @@ public class LoginController : ApiController, IMemberManFeatures
 
     // If they exist, then we will generate a reset token/code.
     // The DB must be updated at this point.
-    string resetToken = GeneratePasswordResetToken();
+    string resetToken = MMFeatures.GeneratePasswordResetToken();
     DateTimeOffset tokenExpires = DateTimeOffset.UtcNow + MemberManConfig.PasswordResetWindow;
     DAL.SetPasswordResetData(args.Username, resetToken, tokenExpires);
 
@@ -193,36 +221,19 @@ public class LoginController : ApiController, IMemberManFeatures
     return OK();
   }
 
-  // --------------------------------------------------------------------------------------------------------------------------
-  private string GeneratePasswordResetToken()
-  {
-    // TODO: Some kind of crypto / random hash or something?
-    // NOTE: This should be a plugin type function so that users may define their own algos.....
-    var uuid = Guid.NewGuid().ToString();
-    string res = StringTools.ComputeSHA1(uuid);
-    return res;
-  }
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  private Member? GetLoggedInMember()
-  {
-    string? token = MembershipHelper.GetLoginToken(MembershipCookie, IPAddress);
-    var res = MemberHelper.GetMember(token);
-    return res;
-  }
 
   // --------------------------------------------------------------------------------------------------------------------------
   // TODO: This could also go with some kind of base class?
-  private bool IsLoggedIn()
+  protected bool IsLoggedIn()
   {
     bool res = MemberHelper.IsLoggedIn(MembershipCookie, IPAddress);
     return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private bool IsLoggedIn(out Member? m)
+  protected bool IsLoggedIn(out Member? m)
   {
-    m = GetLoggedInMember();
+    m = MMFeatures.GetLoggedInMember(MembershipCookie, IPAddress);
     return m != null;
   }
 
@@ -596,8 +607,8 @@ public class LoginController : ApiController, IMemberManFeatures
     // code that gets the headers so that we can test them too.
     if (HasHeader(Headers.MM_TEST_MODE))
     {
-                // VERBOSE:
-            Console.WriteLine($"The test header: {Headers.MM_TEST_MODE} is set!  Normal login operations will be bypassed!");
+      // VERBOSE:
+      Console.WriteLine($"The test header: {Headers.MM_TEST_MODE} is set!  Normal login operations will be bypassed!");
 
       // The service pretends that everything is OK, so we don't actually do anything in test mode....
       string testType = GetTestType(Request);

@@ -265,14 +265,14 @@ public class MembershipHelper
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal void SetLoggedInUser(Member m, string loginToken)
+  public void SetLoggedInUser(Member m, string loginToken)
   {
     LoggedInMembers[loginToken] = m;
     SaveActiveUserList();
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal bool IsLoggedIn(string? cookie, string ipAddress)
+  public bool IsLoggedIn(string? cookie, string ipAddress)
   {
     if (cookie == null) { return false; }
     bool res = IsLoginActive(cookie, ipAddress);
@@ -280,7 +280,7 @@ public class MembershipHelper
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal bool IsLoggedIn(HttpRequest? request)
+  public bool IsLoggedIn(HttpRequest? request)
   {
     if (request == null) { return false; }
 
