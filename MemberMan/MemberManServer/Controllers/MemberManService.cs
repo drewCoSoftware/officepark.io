@@ -1,13 +1,11 @@
-﻿using drewCo.Tools;
-using Microsoft.AspNetCore.Mvc.ApplicationModels;
-using officepark.io.API;
+﻿using drewCo.Fetchy;
+using drewCo.Tools;
 using officepark.io.Membership;
-using Org.BouncyCastle.Bcpg.Sig;
 
 namespace MemberMan;
 
 // ==============================================================================================================================
-public class ResetPasswordResponse
+public class ResetPasswordResponse : IFetchyResponse
 {
   public int Code { get; set; }
   public string Message { get; set; }

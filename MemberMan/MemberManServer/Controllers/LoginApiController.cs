@@ -16,10 +16,11 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Net.Http.Headers;
 using officepark.io;
-using officepark.io.API;
+
 using officepark.io.Membership;
 using static MemberManServer.Mailer;
 using IOFile = System.IO.File;
+using drewCo.Fetchy;
 
 namespace MemberMan;
 
@@ -125,7 +126,7 @@ public class LoginApiController : ApiController, IHasMembershipService //, IMemb
   // NOTE: This call will always work, we don't need to know if someone is logged in or not....
   [HttpPost]
   [Route("/api/logout")]
-  public IAPIResponse Logout()
+  public IFetchyResponse Logout()
   {
     MemberService.Logout(Request, Response);
     _LoginToken = null;
@@ -145,7 +146,7 @@ public class LoginApiController : ApiController, IHasMembershipService //, IMemb
   /// <returns></returns>
   [HttpPost]
   [Route("/api/forgot-password")]
-  public IAPIResponse ForgotPassword([FromBody] ForgotPasswordArgs args)
+  public IFetchyResponse ForgotPassword([FromBody] ForgotPasswordArgs args)
   {
     // TODO: Check for and reject if the user is currently logged in.
     if (IsLoggedIn())
@@ -195,7 +196,7 @@ public class LoginApiController : ApiController, IHasMembershipService //, IMemb
   // --------------------------------------------------------------------------------------------------------------------------
   [HttpPost]
   [Route("/api/reset-password")]
-  public IAPIResponse ResetPassword([FromBody] ResetPasswordArgs args)
+  public IFetchyResponse ResetPassword([FromBody] ResetPasswordArgs args)
   {
     // TODO: Disallow logged in users.
     if (IsLoggedIn())
@@ -328,7 +329,7 @@ public class LoginApiController : ApiController, IHasMembershipService //, IMemb
   /// </summary>
   [HttpPost]
   [Route("/api/reverify")]
-  public IAPIResponse RequestVerification([FromBody] VerificationArgs args)
+  public IFetchyResponse RequestVerification([FromBody] VerificationArgs args)
   {
     if (IsLoggedIn())
     {

@@ -1,7 +1,7 @@
-﻿using DotLiquid.Util;
+﻿using drewCo.Fetchy;
 using Microsoft.AspNetCore.Mvc;
 using officepark.io;
-using officepark.io.API;
+
 using officepark.io.Membership;
 
 namespace MemberMan;
@@ -90,11 +90,9 @@ public class BaseController : Controller
 public class ApiController : BaseController
 {
 
-
-
   // --------------------------------------------------------------------------------------------------------------------------
   public T OK<T>(string? message = null)
-    where T : IAPIResponse, new()
+    where T : IFetchyResponse, new()
   {
     T res = new T();
     res.Message = message;
@@ -114,7 +112,7 @@ public class ApiController : BaseController
   }
   // --------------------------------------------------------------------------------------------------------------------------
   public T Error<T>(int code, string? message = "Error")
-    where T : IAPIResponse, new()
+    where T : IFetchyResponse, new()
   {
     if (Response != null)
     {
@@ -129,7 +127,7 @@ public class ApiController : BaseController
 
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public IAPIResponse NotFound(string? message = null)
+  public IFetchyResponse NotFound(string? message = null)
   {
     if (Response != null)
     {
@@ -146,7 +144,7 @@ public class ApiController : BaseController
 
   // --------------------------------------------------------------------------------------------------------------------------
   public T NotFound<T>(string? message = null)
-    where T : IAPIResponse, new()
+    where T : IFetchyResponse, new()
   {
     if (Response != null)
     {

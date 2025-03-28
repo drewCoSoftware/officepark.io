@@ -1,4 +1,5 @@
-﻿using officepark.io.API;
+﻿using drewCo.Fetchy;
+
 
 namespace MemberMan;
 
@@ -35,7 +36,7 @@ public static class ResponseCodes
 }
 
 // ============================================================================================================================
-public class MemberManBasicResponse : IAPIResponse
+public class MemberManBasicResponse : IFetchyResponse
 {
   public string? AuthToken { get; set; }
   public bool AuthRequired { get; set; } = true;

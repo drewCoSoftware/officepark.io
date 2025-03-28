@@ -26,7 +26,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\DataHelpers\DataHelpers\DataHelpers.csproj" />
     <ProjectReference Include="..\..\..\Fetchy\Fetchy\Fetchy.csproj" />
-    <ProjectReference Include="..\..\Common\CommonTypes\CommonTypes.csproj" />
   </ItemGroup>
 
   <ItemGroup>
