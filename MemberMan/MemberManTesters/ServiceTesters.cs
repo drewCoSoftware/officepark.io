@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Net.Mime;
 using System.Threading.Tasks.Dataflow;
-using DataHelpers.Data;
 using DotLiquid;
 using drewCo.Tools;
 using HtmlAgilityPack;
@@ -95,7 +94,7 @@ public partial class ServiceTesters : TestBase
         password = PASSWORD
       });
       Assert.True(res.IsLoggedIn, "We should be logged in!");
-      Assert.Equal(LoginController.LOGGED_IN_CODE, res.Code);
+      Assert.Equal(MemberManService.ServiceCodes.LOGGED_IN, res.Code);
     }
 
 

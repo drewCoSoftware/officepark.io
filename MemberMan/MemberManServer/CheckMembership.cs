@@ -28,7 +28,7 @@ public class CheckMembership : ActionFilterAttribute
   /// </summary>
   public string? RequiredPermissions { get; set; } = null;
 
-  private IHasMembershipHelper? MMFeatures = null;
+  private IHasMembershipService? MMFeatures = null;
 
   // --------------------------------------------------------------------------------------------------------------------------
   public override void OnActionExecuting(ActionExecutingContext context)
@@ -53,8 +53,8 @@ public class CheckMembership : ActionFilterAttribute
     {
       // The cookie is good, so we will make sure that we have a valid login handle.  If we do, then we can
       // update the window time of the login cookie.
-      Member? m = MMFeatures.MemberHelper.GetMember(request);
-      MMFeatures.MemberHelper.UpdateLoginCookie(request, response);
+      Member? m = MMFeatures.MMService.GetMemberByRequest(request);
+      MMFeatures.MMService.UpdateLoginCookie(request, response);
 
       // TODO: The 'last visited / active data' in the db should be updated here...?
 
@@ -69,12 +69,12 @@ public class CheckMembership : ActionFilterAttribute
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private IHasMembershipHelper? ResolveMemberManFeatures(ActionExecutingContext context)
+  private IHasMembershipService? ResolveMemberManFeatures(ActionExecutingContext context)
   {
-    var res = context.Controller as IHasMembershipHelper;
+    var res = context.Controller as IHasMembershipService;
     if (res == null)
     {
-      string msg = $"This controller does not implement the {nameof(IHasMembershipHelper)} features interface and can't be used to check login status!";
+      string msg = $"This controller does not implement the {nameof(IHasMembershipService)} features interface and can't be used to check login status!";
       msg += Environment.NewLine + $"Please implement the interface, or override the {nameof(HandleLoginCheck)} function in a {nameof(CheckMembership)} subclass!";
       Debug.WriteLine(msg);
     }
@@ -86,14 +86,14 @@ public class CheckMembership : ActionFilterAttribute
   {
     // Since we just pulled a fresh copy of the member from DB / memory, we can
     // check the permissions directly....
-    bool res = MMFeatures.MemberHelper.HasPermission(m, requiredPermissions);
+    bool res = MMFeatures.MMService.HasPermission(m, requiredPermissions);
     return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
   protected virtual bool HandleLoginCheck(ActionExecutingContext context, HttpRequest request)
   {
-    bool res = MMFeatures != null && MMFeatures.MemberHelper.IsLoggedIn(request);
+    bool res = MMFeatures != null && MMFeatures.MMService.IsLoggedIn(request);
     return res;
   }
 
@@ -106,8 +106,6 @@ public class CheckMembership : ActionFilterAttribute
       Content = "Not Authorized"
     };
   }
-
-
 
   // --------------------------------------------------------------------------------------------------------------------------
   protected virtual void HandleNotLoggedIn(ActionExecutingContext context, HttpRequest request, HttpResponse response)

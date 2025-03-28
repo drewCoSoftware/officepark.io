@@ -1,8 +1,17 @@
 ﻿using drewCo.Tools;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using officepark.io.API;
 using officepark.io.Membership;
 using Org.BouncyCastle.Bcpg.Sig;
 
 namespace MemberMan;
+
+// ==============================================================================================================================
+public class ResetPasswordResponse
+{
+  public int Code { get; set; }
+  public string Message { get; set; }
+}
 
 // ==============================================================================================================================
 public class MemberManService
@@ -23,7 +32,6 @@ public class MemberManService
   }
 
   public IMemberAccess DAL = null!;
-//  public MemberManConfig MemberManConfig = null!;
   public MembershipHelper MemberHelper = null!;
   private IEmailService Email = null!;
 
@@ -35,6 +43,102 @@ public class MemberManService
     Email = email_;
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  // NOTE: A cool dhll features could be 'proxy' keyword where we offer up functions that are forwarded to a certain member class / function.
+  public bool HasPermission(Member m, string? requiredPermissions)
+  {
+    return MemberHelper.HasPermission(m, requiredPermissions);
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public bool IsLoggedIn(HttpRequest req) {
+    return MemberHelper.IsLoggedIn(req);
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public void UpdateLoginCookie(HttpRequest req, HttpResponse res)
+  {
+    MemberHelper.UpdateLoginCookie(req, res);
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public Member? GetMemberByRequest(HttpRequest req)
+  {
+    var res = MemberHelper.GetMember(req);
+    return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public Member? GetMemberByName(string username)
+  {
+    return DAL.GetMember(username);
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public Member GetMemberByToken(string loginToken)
+  {
+    return MemberHelper.GetMember(loginToken);
+  }
+
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public ResetPasswordResponse ResetPassword(ResetPasswordArgs args)
+  {
+    if (args.NewPassword != args.ConfirmPassword)
+    {
+      return new ResetPasswordResponse()
+      {
+        Code = -1,
+        Message = "Passwords do not match!"
+      };
+    }
+
+    // Get the member with the given token.
+    var member = DAL.GetMemberByResetToken(args.ResetToken);
+    if (member == null || member.TokenExpires == null || member.ResetToken == null)
+    {
+      return new ResetPasswordResponse()
+      {
+        Code = MemberManService.ServiceCodes.INVALID_RESET_TOKEN,
+        Message = "Invalid reset token!"
+      };
+    }
+
+    var timestamp = DateTimeOffset.Now;
+    int code = 0;
+    string msg = string.Empty;
+    if (member.ResetToken != args.ResetToken)
+    {
+      code = MemberManService.ServiceCodes.INVALID_RESET_TOKEN;
+      msg = "Reset token mismatch!";
+    }
+
+    if (timestamp > member.TokenExpires)
+    {
+      code = MemberManService.ServiceCodes.RESET_TOKEN_EXPIRED;
+      msg = "Reset token expired!";
+    }
+
+    if (code == 0)
+    {
+      DAL.RemovePasswordResetData(member.Username);
+      DAL.SetPassword(member.Username, args.NewPassword);
+    }
+
+    return new ResetPasswordResponse()
+    {
+      Code = code,
+      Message = msg
+    };
+
+  }
+
+  //// --------------------------------------------------------------------------------------------------------------------------
+  //public Member GetMemberByResetToken(string resetToken)
+  //{
+  //  var res = DAL.GetMemberByResetToken(resetToken);
+  //  return res;
+  //}
 
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? Login(LoginModel login)
@@ -82,5 +186,16 @@ public class MemberManService
     return res;
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  internal string BeginPasswordReset(string username)
+  {
+    // If they exist, then we will generate a reset token/code.
+    // The DB must be updated at this point.
+    string res = GeneratePasswordResetToken();
+    DateTimeOffset tokenExpires = DateTimeOffset.UtcNow + MemberHelper.Config.PasswordResetWindow;
+    DAL.SetPasswordResetData(username, res, tokenExpires);
 
+    return res;
+
+  }
 }

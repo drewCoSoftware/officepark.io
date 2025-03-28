@@ -2,12 +2,14 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using DotLiquid;
+using drewCo.Fetchy;
 using drewCo.Tools;
 using Humanizer;
 using Humanizer.Localisation;
 using MailKit.Search;
 using MemberManServer;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
@@ -22,18 +24,18 @@ using IOFile = System.IO.File;
 namespace MemberMan;
 
 // ============================================================================================================================
-public interface IHasMembershipHelper
+public interface IHasMembershipService
 {
-  MembershipHelper MemberHelper { get; }
+  MemberManService MMService { get; }
 }
 
 // ============================================================================================================================
 /// <summary>
 /// Indicates that a controller has certain member man features.
 /// </summary>
-public interface IMemberManFeatures : IHasMembershipHelper
+public interface IMemberManFeatures : IHasMembershipService
 {
-  IMemberAccess DAL { get; }
+  //  IMemberAccess DAL { get; }
   MemberManConfig MemberManConfig { get; }
 }
 
@@ -48,15 +50,16 @@ public static class EmailTemplateNames
 // ============================================================================================================================
 [ApiController]
 [Route("[controller]")]
-public class LoginApiController : ApiController, IMemberManFeatures
+public class LoginApiController : ApiController, IHasMembershipService //, IMemberManFeatures
 {
 
   public IMemberAccess DAL { get; private set; } = default!;
   public MemberManConfig MemberManConfig { get; private set; } = null!;
-  public MembershipHelper MemberHelper { get; private set; } = null!;
+  public MembershipHelper MemberService { get; private set; } = null!;
   private IEmailService _Email = default!;
 
-  private MemberManService MMService = null!;
+  public MemberManService MMService { get; private set; } = null!;
+
 
   // --------------------------------------------------------------------------------------------------------------------------
   public LoginApiController(MemberManService mmService_, IMemberAccess dal_, IEmailService email_, MembershipHelper mmHelper_)
@@ -64,13 +67,13 @@ public class LoginApiController : ApiController, IMemberManFeatures
     if (dal_ == null) { throw new ArgumentNullException("dal_"); }
     if (email_ == null) { throw new ArgumentNullException("email_"); }
 
-    MMService= mmService_;
+    MMService = mmService_;
 
     DAL = dal_;
     _Email = email_;
 
-    MemberHelper = mmHelper_;
-    MemberManConfig = MemberHelper.Config;
+    MemberService = mmHelper_;
+    MemberManConfig = MemberService.Config;
   }
 
 
@@ -109,11 +112,11 @@ public class LoginApiController : ApiController, IMemberManFeatures
 
   #endregion
 
-  // --------------------------------------------------------------------------------------------------------------------------
-  public IMemberAccess GetDAL()
-  {
-    return DAL;
-  }
+  //// --------------------------------------------------------------------------------------------------------------------------
+  //public IMemberAccess GetDAL()
+  //{
+  //  return MMService.GetDAL();
+  //}
 
   public MemberManConfig GetConfig() { return MemberManConfig; }
 
@@ -124,7 +127,7 @@ public class LoginApiController : ApiController, IMemberManFeatures
   [Route("/api/logout")]
   public IAPIResponse Logout()
   {
-    MemberHelper.Logout(Request, Response);
+    MemberService.Logout(Request, Response);
     _LoginToken = null;
 
     var res = OK<MemberManBasicResponse>();
@@ -147,22 +150,22 @@ public class LoginApiController : ApiController, IMemberManFeatures
     // TODO: Check for and reject if the user is currently logged in.
     if (IsLoggedIn())
     {
-      // TODO: Research a better error code to return....
+      // TODO: Replace with basic response!
       return NotFound();
+      //return new BasicResponse()
+      //{
+      //  Code = MemberManService.ServiceCodes.LOGGED_IN
+      //};
     }
 
     // Find the user.
-    var member = DAL.GetMember(args.Username);
+    var member = MMService.GetMemberByName(args.Username);
     if (member == null)
     {
       return NotFound();
     }
 
-    // If they exist, then we will generate a reset token/code.
-    // The DB must be updated at this point.
-    string resetToken = MMService.GeneratePasswordResetToken();
-    DateTimeOffset tokenExpires = DateTimeOffset.UtcNow + MemberManConfig.PasswordResetWindow;
-    DAL.SetPasswordResetData(args.Username, resetToken, tokenExpires);
+    string resetToken = MMService.BeginPasswordReset(args.Username);
 
     // With that token, we will generate and send out an email with the reset instructions.
     // Then the email is sent!
@@ -200,50 +203,13 @@ public class LoginApiController : ApiController, IMemberManFeatures
       return NotFound();
     }
 
-    // Make sure that the passwords match....
-    // This can be part of some better defined validation type code.....
-    if (args.NewPassword != args.ConfirmPassword)
-    {
-      return Error(-1, "Passwords do not match!");
-    }
-
-    // Get the member with the given token.
-    var member = DAL.GetMemberByResetToken(args.ResetToken);
-    if (member == null || member.TokenExpires == null || member.ResetToken == null)
-    {
-      return new MemberManBasicResponse()
-      {
-        Code = MemberManService.ServiceCodes.INVALID_RESET_TOKEN,
-        Message = "Invalid reset token!"
-      };
-    }
-
-    var timestamp = DateTimeOffset.Now;
-    int code = 0;
-    string msg = string.Empty;
-    if (member.ResetToken != args.ResetToken)
-    {
-      code = MemberManService.ServiceCodes.INVALID_RESET_TOKEN;
-      msg = "Reset token mismatch!";
-    }
-
-    if (timestamp > member.TokenExpires)
-    {
-      code = MemberManService.ServiceCodes.RESET_TOKEN_EXPIRED;
-      msg = "Reset token expired!";
-    }
-
-
-    if (code != 0)
-    {
-      // We were not able to reset the password.....
-      return Error(code, msg);
+    ResetPasswordResponse response = MMService.ResetPassword(args);
+    if (response.Code != 0)
+    {    // TODO: Use const for 'OK' code!
+      return Error(response.Code, response.Message);
     }
     else
     {
-      // Reset OK!
-      DAL.RemovePasswordResetData(member.Username);
-      DAL.SetPassword(member.Username, args.NewPassword);
       return OK();
     }
   }
@@ -340,7 +306,7 @@ public class LoginApiController : ApiController, IMemberManFeatures
       {
         throw new InvalidOperationException("Could not generate a login token!");
       }
-      MemberHelper.SetLoggedInUser(m, _LoginToken);
+      MemberService.SetLoggedInUser(m, _LoginToken);
     }
 
 

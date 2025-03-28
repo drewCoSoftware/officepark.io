@@ -110,6 +110,15 @@ public class TimeManApiController : ControllerBase
 // }
 
 
+// TEMP:
+public class BasicResponse : IAPIResponse
+{
+  public string? AuthToken {get; set; }
+  public bool AuthRequired { get; set; }
+  public string? Message { get; set; }
+  public int Code { get; set; }
+}
+
 // ============================================================================================================================
 [ApiController]
 [Route("[controller]")]
