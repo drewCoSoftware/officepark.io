@@ -44,80 +44,33 @@ public static class EmailTemplateNames
   public const string FORGOT_PASSWORD_TEMPLATE = "ForgotPassword";
 }
 
-// ============================================================================================================================
-/// <summary>
-/// Class that contains all basic/standard MemberMan functionality.
-/// This can be used with API/MVC or any other architecture....
-/// </summary>
-/// NOTE: We may end up folding these features into MembershipHelper.
-public class MemberManFeatureProvider
-{
-  private MembershipHelper MemberHelper = null!;
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  public MemberManFeatureProvider(MembershipHelper memberHelper_)
-  {
-    MemberHelper = memberHelper_;
-  }
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  internal string GeneratePasswordResetToken()
-  {
-    // TODO: Some kind of crypto / random hash or something?
-    // NOTE: This should be a plugin type function so that users may define their own algos.....
-    var uuid = Guid.NewGuid().ToString();
-    string res = StringTools.ComputeSHA1(uuid);
-    return res;
-  }
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  public Member? GetLoggedInMember(string memberCookie, string ipAddress)
-  {
-    string? token = MembershipHelper.GetLoginToken(memberCookie, ipAddress);
-    var res = MemberHelper.GetMember(token);
-    return res;
-  }
-
-}
 
 // ============================================================================================================================
 [ApiController]
 [Route("[controller]")]
 public class LoginApiController : ApiController, IMemberManFeatures
 {
-  // TODO: Wrap these into their own static class  / enum.
-  public const int INVALID_VERIFICATION = 0x11;
-  public const int VERIFICATION_EXPIRED = 0x12;
-  public const int NOT_VERFIED = 0x13;
-  public const int LOGIN_FAILED = 0x14;
-  public const int INVALID_RESET_TOKEN = 0x15;
-  public const int RESET_TOKEN_EXPIRED = 0x16;
-
-  /// <summary>
-  /// The user is already logged in.
-  /// </summary>
-  public const int LOGGED_IN_CODE = 0x17;
 
   public IMemberAccess DAL { get; private set; } = default!;
   public MemberManConfig MemberManConfig { get; private set; } = null!;
   public MembershipHelper MemberHelper { get; private set; } = null!;
-
   private IEmailService _Email = default!;
 
-  private MemberManFeatureProvider MMFeatures = null!;
+  private MemberManService MMService = null!;
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public LoginApiController(IMemberAccess dal_, IEmailService email_, MembershipHelper mmHelper_, MemberManFeatureProvider mmFeatures_)
+  public LoginApiController(MemberManService mmService_, IMemberAccess dal_, IEmailService email_, MembershipHelper mmHelper_)
   {
     if (dal_ == null) { throw new ArgumentNullException("dal_"); }
     if (email_ == null) { throw new ArgumentNullException("email_"); }
+
+    MMService= mmService_;
 
     DAL = dal_;
     _Email = email_;
 
     MemberHelper = mmHelper_;
     MemberManConfig = MemberHelper.Config;
-    MMFeatures = new MemberManFeatureProvider(MemberHelper);
   }
 
 
@@ -207,7 +160,7 @@ public class LoginApiController : ApiController, IMemberManFeatures
 
     // If they exist, then we will generate a reset token/code.
     // The DB must be updated at this point.
-    string resetToken = MMFeatures.GeneratePasswordResetToken();
+    string resetToken = MMService.GeneratePasswordResetToken();
     DateTimeOffset tokenExpires = DateTimeOffset.UtcNow + MemberManConfig.PasswordResetWindow;
     DAL.SetPasswordResetData(args.Username, resetToken, tokenExpires);
 
@@ -224,14 +177,14 @@ public class LoginApiController : ApiController, IMemberManFeatures
   // TODO: This could also go with some kind of base class?
   protected bool IsLoggedIn()
   {
-    bool res = MemberHelper.IsLoggedIn(MembershipCookie, IPAddress);
+    bool res = MMService.IsLoggedIn(MembershipCookie, IPAddress);
     return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
   protected bool IsLoggedIn(out Member? m)
   {
-    m = MMFeatures.GetLoggedInMember(MembershipCookie, IPAddress);
+    m = MMService.GetLoggedInMember(MembershipCookie, IPAddress);
     return m != null;
   }
 
@@ -260,7 +213,7 @@ public class LoginApiController : ApiController, IMemberManFeatures
     {
       return new MemberManBasicResponse()
       {
-        Code = INVALID_RESET_TOKEN,
+        Code = MemberManService.ServiceCodes.INVALID_RESET_TOKEN,
         Message = "Invalid reset token!"
       };
     }
@@ -270,13 +223,13 @@ public class LoginApiController : ApiController, IMemberManFeatures
     string msg = string.Empty;
     if (member.ResetToken != args.ResetToken)
     {
-      code = INVALID_RESET_TOKEN;
+      code = MemberManService.ServiceCodes.INVALID_RESET_TOKEN;
       msg = "Reset token mismatch!";
     }
 
     if (timestamp > member.TokenExpires)
     {
-      code = RESET_TOKEN_EXPIRED;
+      code = MemberManService.ServiceCodes.RESET_TOKEN_EXPIRED;
       msg = "Reset token expired!";
     }
 
@@ -325,6 +278,9 @@ public class LoginApiController : ApiController, IMemberManFeatures
   [Route("/api/login")]
   public LoginResponse Login(LoginModel login)
   {
+    // TEMP:
+    Thread.Sleep(2000);
+
     // If the user is currently logged in, then we can just return OK or something....
     // TODO: Can we make this block of code part of the 'CheckMembership' attribute?
     // TODO: This is also something that should use the properties for LoginToken, IPAddress, etc.
@@ -332,20 +288,18 @@ public class LoginApiController : ApiController, IMemberManFeatures
     {
       var res = OK<LoginResponse>();
       res.IsLoggedIn = true;
-      res.Code = LOGGED_IN_CODE;
+      res.Code = MemberManService.ServiceCodes.LOGGED_IN;
       return res;
     }
 
-    // Reach into the DAL to look for active user + password.
-    Member? m = DAL.GetMember(login.username, login.password);
+    Member? m = MMService.Login(login);
     if (m == null)
     {
       // NOTE: This should return a 404!
       var res = NotFound<LoginResponse>("Invalid username or password!");
-      res.Code = LoginApiController.LOGIN_FAILED;
+      res.Code = MemberManService.ServiceCodes.LOGIN_FAILED;
       return res;
     }
-    DAL.RemovePasswordResetData(m.Username);
 
     // Set the auth token cookie too?
     // NOTE: Here we can interprt options to decide if the user can be logged in, even if they aren't verifed.
@@ -355,7 +309,7 @@ public class LoginApiController : ApiController, IMemberManFeatures
     if (!isVerified)
     {
       msg = $"User: {m.Username} is not verified.";
-      code = LoginApiController.NOT_VERFIED;
+      code = MemberManService.ServiceCodes.NOT_VERFIED;
     }
 
     // TODO: OPTIONS:
@@ -414,7 +368,7 @@ public class LoginApiController : ApiController, IMemberManFeatures
     {
       return new MemberManBasicResponse()
       {
-        Code = LoginApiController.LOGGED_IN_CODE,
+        Code = MemberManService.ServiceCodes.LOGGED_IN,
         Message = "You are already logged in"
       };
     }
@@ -453,7 +407,7 @@ public class LoginApiController : ApiController, IMemberManFeatures
     {
       return new MemberManBasicResponse()
       {
-        Code = LoginApiController.LOGGED_IN_CODE,
+        Code = MemberManService.ServiceCodes.LOGGED_IN,
         Message = "You are already logged in"
       };
     }
@@ -494,7 +448,7 @@ public class LoginApiController : ApiController, IMemberManFeatures
   {
     return new MemberManBasicResponse()
     {
-      Code = INVALID_VERIFICATION,
+      Code = MemberManService.ServiceCodes.INVALID_VERIFICATION,
       Message = "Invalid verification code",
     };
   }
@@ -504,7 +458,7 @@ public class LoginApiController : ApiController, IMemberManFeatures
   {
     return new MemberManBasicResponse()
     {
-      Code = VERIFICATION_EXPIRED,
+      Code = MemberManService.ServiceCodes.VERIFICATION_EXPIRED,
       Message = "Verification code is expired.",
     };
   }
@@ -547,7 +501,7 @@ public class LoginApiController : ApiController, IMemberManFeatures
     {
       return new SignupResponse()
       {
-        Code = LoginApiController.LOGGED_IN_CODE,
+        Code = MemberManService.ServiceCodes.LOGGED_IN,
         Message = "You are already logged in"
       };
     }

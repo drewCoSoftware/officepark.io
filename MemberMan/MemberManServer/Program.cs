@@ -25,7 +25,6 @@ internal class Program
       return exitCode;
     }
 
-    MemberAccess = InitMMDatabase();
 
 
     var builder = WebApplication.CreateBuilder(args);
@@ -33,13 +32,21 @@ internal class Program
     var cfgHelper = InitConfig(builder, builder.Environment);
     var mmCfg = cfgHelper.Get<MemberManConfig>();
 
+    MemberAccess = InitMMDatabase();
 
     builder.Services.AddSingleton<IMemberAccess>(MemberAccess);
-    builder.Services.AddSingleton<IEmailService>(new EmailService(mmCfg.EmailConfig));
+
+    EmailService email = new EmailService(mmCfg.EmailConfig);
+    builder.Services.AddSingleton((IEmailService)email);
 
     var mmHelper = new MembershipHelper(mmCfg);
     mmHelper.LoadActiveUserList(DateTimeOffset.Now);
     builder.Services.AddSingleton<MembershipHelper>(mmHelper);  
+
+    var mmService = new MemberManService(MemberAccess, mmHelper, email);
+    builder.Services.AddSingleton(mmService);
+
+
 
     var ctl = builder.Services.AddControllers();
     ctl.AddJsonOptions((ops) =>
