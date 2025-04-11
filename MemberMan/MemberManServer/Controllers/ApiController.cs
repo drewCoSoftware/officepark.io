@@ -141,6 +141,22 @@ public class ApiController : BaseController
     };
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  public T Forbidden<T>(string? message = null)
+    where T : IFetchyResponse, new()
+  {
+    if (Response != null)
+    {
+      Response.StatusCode = 403;
+    }
+
+    return new T()
+    {
+      Code = ResponseCodes.DOES_NOT_EXIST,
+      Message = message
+    };
+  }
+
 
   // --------------------------------------------------------------------------------------------------------------------------
   public T NotFound<T>(string? message = null)

@@ -262,8 +262,7 @@ public class LoginApiController : ApiController, IHasMembershipService //, IMemb
     Member? m = MMService.Login(login);
     if (m == null)
     {
-      // NOTE: This should return a 404!
-      var res = NotFound<LoginResponse>("Invalid username or password!");
+      var res = Forbidden<LoginResponse>("Invalid username or password!");
       res.Code = MemberManService.ServiceCodes.LOGIN_FAILED;
       return res;
     }

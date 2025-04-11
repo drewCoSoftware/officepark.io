@@ -33,6 +33,7 @@ public static class ResponseCodes
   /// User is not authoerized to perform the specified action!
   /// </summary>
   public const int NOT_AUTHORIZED = 5;
+
 }
 
 // ============================================================================================================================
@@ -75,4 +76,9 @@ public class LoginResponse : MemberManBasicResponse
   /// Url to user avatar.  Can be an image, gravatar, whatever....
   /// </summary>
   public string? Avatar { get; set; } = null;
+
+  /// <summary>
+  /// Optional url that the user should be redirected to.
+  /// </summary>
+  public string? RedirectUrl { get; set; } = null;
 }
