@@ -38,7 +38,7 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
             };
         }
 
-        var permissions = toMember.Permissions.Split(",");
+        var permissions = (toMember.Permissions ?? string.Empty).Split(",");
         if (!permissions.Contains(permission))
         {
             toMember.Permissions += "," + permission;

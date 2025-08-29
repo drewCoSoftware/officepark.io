@@ -22,60 +22,68 @@ namespace officepark.io.Membership;
 // ============================================================================================================================
 public class Member : IHasPrimary
 {
-  public int ID { get; set; }
+    public int ID { get; set; }
 
-  [Unique]
-  public string Username { get; set; } = null!;
+    [Unique]
+    public string Username { get; set; } = null!;
 
-  [Unique]
-  public string Email { get; set; } = null!;
+    [Unique]
+    public string Email { get; set; } = null!;
 
-  public DateTimeOffset CreatedOn { get; set; } = DateTime.MinValue;
+    /// <summary>
+    /// When was this member created?
+    /// </summary>
+    public DateTimeOffset CreatedOn { get; set; } = DateTime.MinValue;
 
-  [Unique]
-  [IsNullable]
-  public string? VerificationCode { get; set; } = null;
+    ///// <summary>
+    ///// When was this member modified?  Useful for caching permissions, etc.
+    ///// </summary>
+    //public DateTimeOffset ModifiedOn { get; set; } = DateTimeOffset.MinValue;
 
-  public DateTimeOffset VerificationExpiration { get; set; } = DateTime.MinValue;
+    [Unique]
+    [IsNullable]
+    public string? VerificationCode { get; set; } = null;
 
-  [IsNullable]
-  public DateTimeOffset? VerifiedOn { get; set; } = null;
+    public DateTimeOffset VerificationExpiration { get; set; } = DateTime.MinValue;
 
-  public bool IsVerified { get { return VerifiedOn != null && VerifiedOn > CreatedOn; } }
+    [IsNullable]
+    public DateTimeOffset? VerifiedOn { get; set; } = null;
 
-  [IsNullable]
-  [Unique]
-  public string? ResetToken { get; set; } = null;
+    public bool IsVerified { get { return VerifiedOn != null && VerifiedOn > CreatedOn; } }
 
-  [IsNullable]
-  public DateTimeOffset? TokenExpires { get; set; } = null;
+    [IsNullable]
+    [Unique]
+    public string? ResetToken { get; set; } = null;
 
-  // TODO:
-  // Indicates that the user should be prompted to change their password on the next login.
-  // public bool ResetPassword { get; set; } = true;
+    [IsNullable]
+    public DateTimeOffset? TokenExpires { get; set; } = null;
 
-  /// <summary>
-  /// Comma delimited list of permissions, to be interpreted by the application.
-  /// </summary>
-  public string? Permissions { get; set; } = null;
+    // TODO:
+    // Indicates that the user should be prompted to change their password on the next login.
+    // public bool ResetPassword { get; set; } = true;
 
-  /// <summary>
-  /// The hashed password.
-  /// </summary>
-  public string Password { get; set; } = null!;
+    /// <summary>
+    /// Comma delimited list of permissions, to be interpreted by the application.
+    /// </summary>
+    public string? Permissions { get; set; } = null;
 
-  // This data is used with the current session.
-  [JsonIgnore]
-  public DateTimeOffset LoggedInSince { get; set; }
-  [JsonIgnore]
-  public DateTimeOffset LastActive { get; set; }
-  [JsonIgnore]
-  public string IP { get; set; }
-  [JsonIgnore]
-  public string CookieVal { get; set; }
+    /// <summary>
+    /// The hashed password.
+    /// </summary>
+    public string Password { get; set; } = null!;
 
-  [JsonIgnore]
-  public bool IsLoggedIn { get; set; } = false;
+    // This data is used with the current session.
+    [JsonIgnore]
+    public DateTimeOffset LoggedInSince { get; set; }
+    [JsonIgnore]
+    public DateTimeOffset LastActive { get; set; }
+    [JsonIgnore]
+    public string IP { get; set; }
+    [JsonIgnore]
+    public string CookieVal { get; set; }
+
+    [JsonIgnore]
+    public bool IsLoggedIn { get; set; } = false;
 }
 
 
@@ -88,11 +96,11 @@ public class Member : IHasPrimary
 // NOTE: This is .netcore specific.
 public class HttpException : Exception
 {
-  public int StatusCode { get; private set; }
-  public HttpException(int statusCode, string msg) : base(msg)
-  {
-    StatusCode = statusCode;
-  }
+    public int StatusCode { get; private set; }
+    public HttpException(int statusCode, string msg) : base(msg)
+    {
+        StatusCode = statusCode;
+    }
 }
 
 
