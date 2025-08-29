@@ -26,7 +26,7 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
 
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public PermissionResult AddPermission(Member toMember, string permission)
+    public PermissionResult AddPermission(Member toMember, string permission, DateTimeOffset modDate)
     {
         var m = GetMember(toMember.Username);
         if (m == null)
@@ -64,7 +64,7 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public PermissionResult GrantPermission(Member grantor, Member grantee, string permission, string grantCode)
+    public PermissionResult GrantPermission(Member grantor, Member grantee, string permission, string grantCode, DateTimeOffset modDate)
     {
         throw new NotImplementedException();
     }
@@ -133,16 +133,18 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
             throw new InvalidOperationException("Invalid email address!");
         }
 
-        string query = "INSERT INTO Members (username,email,createdon,verificationcode,verificationexpiration,permissions,password) VALUES (@Username,@Email,@CreatedOn,@VerificationCode,@VerificationExpiration,@Permissions,@Password) RETURNING id";
+        string query = "INSERT INTO Members (username,email,createdon,modifiedon,verificationcode,verificationexpiration,permissions,password) VALUES (@Username,@Email,@CreatedOn,@ModifiedOn,@VerificationCode,@VerificationExpiration,@Permissions,@Password) RETURNING id";
 
         IMemberAccess t = this;
         string usePassword = t.GetPasswordHash(password);
+        var now = DateTimeOffset.UtcNow;
         var m = new Member()
         {
             Username = username,
             Password = usePassword,
             Email = email,
-            CreatedOn = DateTimeOffset.UtcNow,
+            CreatedOn = now,
+            ModifiedOn = now,
             Permissions = "BASIC",
         };
         SetVerificationProps(m, verifyWindow);
@@ -230,7 +232,7 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
         // this, or at least indicate to the user in debug mode that something is off.
         // Transaction((conn) =>
         // {
-        var updateVerification = "UPDATE members SET verifiedon = @date, verificationexpiration = @verifyExpired, verificationcode = null WHERE username = @username";
+        var updateVerification = "UPDATE members SET verifiedon = @date, modifiedon = @date, verificationexpiration = @verifyExpired, verificationcode = null WHERE username = @username";
         int affected = RunExecute(updateVerification, new
         {
             date,
@@ -264,14 +266,14 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
 
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public void SetPassword(string username, string password)
+    public void SetPassword(string username, string password, DateTimeOffset modDate)
     {
-        string pwQuery = "UPDATE members SET password = @password WHERE username = @username";
+        string pwQuery = "UPDATE members SET password = @password, modifiedon = @date WHERE username = @username";
 
         IMemberAccess t = this;
         password = t.GetPasswordHash(password);
 
-        int updated = RunExecute(pwQuery, new { password, username });
+        int updated = RunExecute(pwQuery, new { password, username, date = modDate });
 
         if (updated != 1)
         {
@@ -312,13 +314,14 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    internal string SetPermissions(string username, string permissions)
+    internal string SetPermissions(string username, string permissions, DateTimeOffset modDate)
     {
-        string query = "UPDATE members SET permissions = @permissions WHERE username = @username";
+        string query = "UPDATE members SET permissions = @permissions, modifiedon = @date WHERE username = @username";
         int updated = RunExecute(query, new
         {
-            permissions = permissions,
-            username = username
+            permissions,
+            username,
+            date = modDate
         });
 
         if (updated != 1)
@@ -330,9 +333,12 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
+    /// <summary>
+    /// Update the member data to match the given instance.
+    /// </summary>
     internal void UpdateMember(Member m)
     {
-        var def = this.SchemaDef.GetTableDef(typeof(Member)); // nameof(Member))!;
+        var def = this.SchemaDef.GetTableDef(typeof(Member));
         string query = def.GetUpdateQuery();
 
         int updated = RunExecute(query, m);

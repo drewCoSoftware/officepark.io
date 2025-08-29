@@ -24,7 +24,7 @@ public interface IMemberAccess
     /// Add a permission to the member's permission list.
     /// This should only be used on members that have full trust / during initial setup.
     /// </summary>
-    PermissionResult AddPermission(Member toMember, string permission);
+    PermissionResult AddPermission(Member toMember, string permission, DateTimeOffset modDate);
 
     // --------------------------------------------------------------------------------------------------------------------------
     /// <summary>
@@ -35,7 +35,7 @@ public interface IMemberAccess
     /// <param name="permission"></param>
     /// <param name="grantCode"></param>
     /// <returns></returns>
-    PermissionResult GrantPermission(Member grantor, Member grantee, string permission, string grantCode);
+    PermissionResult GrantPermission(Member grantor, Member grantee, string permission, string grantCode, DateTimeOffset modDate);
 
     // --------------------------------------------------------------------------------------------------------------------------
     /// <summary>
@@ -87,7 +87,7 @@ public interface IMemberAccess
     void SetPasswordResetData(string username, string resetToken, DateTimeOffset? tokenExpires);
     void RemovePasswordResetData(string username);
     Member GetMemberByResetToken(string resetToken);
-    void SetPassword(string username, string newPassword);
+    void SetPassword(string username, string newPassword, DateTimeOffset modDate);
 
     bool HasPermission(string username, string? requiredPermissions);
 }

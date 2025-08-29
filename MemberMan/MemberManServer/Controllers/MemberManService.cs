@@ -120,7 +120,7 @@ public class MemberManService
     if (code == 0)
     {
       DAL.RemovePasswordResetData(member.Username);
-      DAL.SetPassword(member.Username, args.NewPassword);
+      DAL.SetPassword(member.Username, args.NewPassword, DateTimeOffset.Now);
     }
 
     return new ResetPasswordResponse()

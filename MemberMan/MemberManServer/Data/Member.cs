@@ -35,10 +35,10 @@ public class Member : IHasPrimary
     /// </summary>
     public DateTimeOffset CreatedOn { get; set; } = DateTime.MinValue;
 
-    ///// <summary>
-    ///// When was this member modified?  Useful for caching permissions, etc.
-    ///// </summary>
-    //public DateTimeOffset ModifiedOn { get; set; } = DateTimeOffset.MinValue;
+    /// <summary>
+    /// When was this member modified?  Useful for caching permissions, etc.
+    /// </summary>
+    public DateTimeOffset ModifiedOn { get; set; } = DateTimeOffset.MinValue;
 
     [Unique]
     [IsNullable]

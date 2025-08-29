@@ -190,6 +190,8 @@ internal class Program
       }
 
       m.VerifiedOn = DateTimeOffset.Now;
+      m.ModifiedOn = m.VerifiedOn.Value;
+
       MemberAccess.UpdateMember(m);
 
     }
