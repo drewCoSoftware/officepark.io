@@ -2,7 +2,9 @@ using System;
 using System.Diagnostics;
 using System.Net.Mime;
 using System.Threading.Tasks.Dataflow;
+using DataHelpers.Data;
 using DotLiquid;
+using drewCo.Fetchy;
 using drewCo.Tools;
 using HtmlAgilityPack;
 using MemberMan;
@@ -12,7 +14,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Configuration;
-using officepark.io.API;
 
 using officepark.io.Membership;
 using Xunit;
@@ -43,6 +44,7 @@ public partial class ServiceTesters : TestBase
 
     // JFC, its 2024 and the dopes at XUnit still have the library in alpha mode.
     // Not really trying to do all that, so we will just deal with this test case appearing as tho it is failed!
+    // NOTE: No, this test case isn't meant to pass at this time: 7.8.2025
     Skip.IfNot(mmCfg.UseActiveUserData, "INCONCLUSIVE! The config is set to not use active user data.  This test can't be fully evaluated!");
 
     var loginResponse = context.LoginCtl.Login(new LoginModel()
@@ -345,8 +347,10 @@ public partial class ServiceTesters : TestBase
 
     // NOTE: The membershiphelpers are all using the same path for the active login data.
     // We should maybe find a way to isolate those?
+    var mmAccess = GetMemberAccess();
     var mmHelper = GetMembershipHelper(cfgHelper);
-    var loginCtl = new SimLoginController(GetMemberAccess(), emailSvc, cfgHelper, mmHelper);
+    var mmSvc = new MemberManService(mmAccess, mmHelper, emailSvc);
+    var loginCtl = new SimLoginController(mmSvc, mmAccess, emailSvc, cfgHelper, mmHelper);
     var context = new TestContext(cfgHelper, emailSvc, loginCtl, mmHelper);
 
     return context;
@@ -391,15 +395,17 @@ public partial class ServiceTesters : TestBase
       VerificationCode = oldCode,
     };
 
-    BasicResponse response = context.LoginCtl.VerifyUser(args);
-    Assert.Equal(LoginController.VERIFICATION_EXPIRED, response.Code);
+    // throw new NotImplementedException();
+
+    MemberManBasicResponse response = context.LoginCtl.VerifyUser(args);
+    Assert.Equal(MemberManService.ServiceCodes.VERIFICATION_EXPIRED, response.Code);
 
 
     // We are expired, so let's reverify!
     var vr = context.LoginCtl.RequestVerification(new VerificationArgs()
     {
       Username = NAME,
-    }) as BasicResponse;
+    });
     Assert.NotNull(vr);
     Assert.Equal(0, vr!.Code);
 

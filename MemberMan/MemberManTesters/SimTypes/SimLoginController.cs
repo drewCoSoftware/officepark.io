@@ -4,11 +4,11 @@ using MemberMan;
 using officepark.io.Membership;
 
 // ==========================================================================
-public class SimLoginController : LoginController
+public class SimLoginController : LoginApiController
 {
   // --------------------------------------------------------------------------------------------------------------------------
-  public SimLoginController(IMemberAccess dal_, IEmailService email_, ConfigHelper config_, MembershipHelper mmHelper_)
-   : base(dal_, email_, config_, mmHelper_)
+  public SimLoginController(MemberManService svc, IMemberAccess dal_, IEmailService email_, ConfigHelper config_, MembershipHelper mmHelper_)
+   : base(svc, dal_, email_, mmHelper_)
   {
     _IPAddress = "127.0.0.1";
     _LoginToken = null; // "abc-def";

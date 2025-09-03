@@ -16,7 +16,7 @@ namespace MemberManTesters
     /// This test case was provided to solve a bug where failure to send the verification complete email
     /// was making it appear as tho the verification process failed.  This could be misleading to the end users.
     /// </summary>
-    [Fact]
+    [Fact(Skip = "not implemented!")]
     public void FailedVerificationCompleteEmailWillSignalSuccessToUI()
     {
       // Complete me!
@@ -60,7 +60,7 @@ namespace MemberManTesters
 
       string insertQuery = memberTable.GetInsertQuery();
 
-      const string EXPECTED = "INSERT INTO Members (username,email,createdon,verificationcode,verificationexpiration,verifiedon,permissions,password) VALUES (@Username,@Email,@CreatedOn,@VerificationCode,@VerificationExpiration,@VerifiedOn,@Permissions,@Password) RETURNING id";
+      const string EXPECTED = "INSERT INTO Members (username,email,createdon,verificationcode,verificationexpiration,verifiedon,resettoken,tokenexpires,permissions,password) VALUES (@Username,@Email,@CreatedOn,@VerificationCode,@VerificationExpiration,@VerifiedOn,@ResetToken,@TokenExpires,@Permissions,@Password) RETURNING id";
       Assert.Equal(EXPECTED, insertQuery);
     }
 

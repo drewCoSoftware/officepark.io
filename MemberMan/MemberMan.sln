@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MemberManTesters", "MemberM
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MemberManServer", "MemberManServer\MemberManServer.csproj", "{2EC6156A-6FE8-4A46-BD37-B841D0B81C87}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonTypes", "..\Common\CommonTypes\CommonTypes.csproj", "{88BBB0B1-FB82-4224-83E0-2AB6AF04B39B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataHelpers", "..\..\DataHelpers\DataHelpers\DataHelpers.csproj", "{DBD252FB-413D-9DBA-87E2-3FD30481F5D8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{2EC6156A-6FE8-4A46-BD37-B841D0B81C87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2EC6156A-6FE8-4A46-BD37-B841D0B81C87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2EC6156A-6FE8-4A46-BD37-B841D0B81C87}.Release|Any CPU.Build.0 = Release|Any CPU
-		{88BBB0B1-FB82-4224-83E0-2AB6AF04B39B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{88BBB0B1-FB82-4224-83E0-2AB6AF04B39B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{88BBB0B1-FB82-4224-83E0-2AB6AF04B39B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{88BBB0B1-FB82-4224-83E0-2AB6AF04B39B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBD252FB-413D-9DBA-87E2-3FD30481F5D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBD252FB-413D-9DBA-87E2-3FD30481F5D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBD252FB-413D-9DBA-87E2-3FD30481F5D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBD252FB-413D-9DBA-87E2-3FD30481F5D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -9,7 +9,7 @@ public partial class ServiceTesters
   class TestContext
   {
     // --------------------------------------------------------------------------------------------------------------------------
-    internal TestContext(ConfigHelper config_, SimEmailService emailSvc_, LoginController loginCtl_, SimMembershipHelper mmHelper_)
+    internal TestContext(ConfigHelper config_, SimEmailService emailSvc_, LoginApiController loginCtl_, SimMembershipHelper mmHelper_)
     {
       Config = config_;
       EmailSvc = emailSvc_;
@@ -19,7 +19,7 @@ public partial class ServiceTesters
 
     public ConfigHelper Config { get; private set; } = null!;
     public SimEmailService EmailSvc { get; private set; } = null!;
-    public LoginController LoginCtl { get; private set; } = null!;
+    public LoginApiController LoginCtl { get; private set; } = null!;
     public SimMembershipHelper MembershipHelper { get; set; } = null!;
 
     // --------------------------------------------------------------------------------------------------------------------------
