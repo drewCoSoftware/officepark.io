@@ -6,90 +6,97 @@ using BC = BCrypt.Net.BCrypt;
 
 namespace officepark.io.Membership;
 
-public class PermissionResult {
-    public bool Success { get; set; }
-    public string? ErrorMessage { get; set; }
+public class PermissionResult
+{
+  public bool Success { get; set; }
+  public string? ErrorMessage { get; set; }
 }
 
 // ==========================================================================
 public interface IMemberAccess
 {
 
-    MemberAvailability CheckAvailability(string username, string email);
-    IPasswordHandler PasswordHandler { get; }
-    IPasswordValidator PasswordValidator { get; }
+  MemberAvailability CheckAvailability(string username, string email);
+  IPasswordHandler PasswordHandler { get; }
+  IPasswordValidator PasswordValidator { get; }
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    /// <summary>
-    /// Add a permission to the member's permission list.
-    /// This should only be used on members that have full trust / during initial setup.
-    /// </summary>
-    PermissionResult AddPermission(Member toMember, string permission, DateTimeOffset modDate);
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// Add a permission to the member's permission list.
+  /// This should only be used on members that have full trust / during initial setup.
+  /// </summary>
+  PermissionResult AddPermission(Member toMember, string permission, DateTimeOffset modDate);
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    /// <summary>
-    /// One member grants permission to another given that they have 'grantCode' set in their permissions list.
-    /// </summary>
-    /// <param name="grantor"></param>
-    /// <param name="grantee"></param>
-    /// <param name="permission"></param>
-    /// <param name="grantCode"></param>
-    /// <returns></returns>
-    PermissionResult GrantPermission(Member grantor, Member grantee, string permission, string grantCode, DateTimeOffset modDate);
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// One member grants permission to another given that they have 'grantCode' set in their permissions list.
+  /// </summary>
+  /// <param name="grantor"></param>
+  /// <param name="grantee"></param>
+  /// <param name="permission"></param>
+  /// <param name="grantCode"></param>
+  /// <returns></returns>
+  PermissionResult GrantPermission(Member grantor, Member grantee, string permission, string grantCode, DateTimeOffset modDate);
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    /// <summary>
-    /// Check a user's login credentials.
-    /// </summary>
-    Member? GetMember(string username, string password);
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// Check a user's login credentials.
+  /// </summary>
+  Member? GetMember(string username, string password);
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    // Cool.  With default implementations, we complete the loop and have ABCs! Lol, j/k.
-    string GetPasswordHash(string password)
-    {
-        return PasswordHandler.GetPasswordHash(password);
-    }
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// Get the member data by its ID.
+  /// </summary>
+  Member? GetMember(int id);
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    /// <summary>
-    /// Compares the given password to the hash.  This will tell us if the password is actually correct or not.
-    /// </summary>
-    /// TODO: We should allow plugins for different pasword checking schemes...
-    bool CheckPassword(string password, string hash)
-    {
-        return PasswordHandler.CheckPassword(password, hash);
-    }
+  // --------------------------------------------------------------------------------------------------------------------------
+  // Cool.  With default implementations, we complete the loop and have ABCs! Lol, j/k.
+  string GetPasswordHash(string password)
+  {
+    return PasswordHandler.GetPasswordHash(password);
+  }
 
-    Member? GetMember(string username);
-    List<Member> GetMemberList();
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// Compares the given password to the hash.  This will tell us if the password is actually correct or not.
+  /// </summary>
+  /// TODO: We should allow plugins for different pasword checking schemes...
+  bool CheckPassword(string password, string hash)
+  {
+    return PasswordHandler.CheckPassword(password, hash);
+  }
 
-    Member CreateMember(string username, string email, string password, TimeSpan verifyWindow);
-    void RemoveMember(string username, bool mustExist = true);
+  Member? GetMember(string username);
+  List<Member> GetMemberList();
 
-    /// <summary>
-    /// Change the verification code and expiration date.
-    /// </summary>
-    Member RefreshVerification(string username, TimeSpan verifyWindow);
+  Member CreateMember(string username, string email, string password, TimeSpan verifyWindow);
+  void RemoveMember(string username, bool mustExist = true);
 
-    /// <summary>
-    /// A function to verify that the given password matches the matching password.
-    /// The matching password -> match algorithm can be anything you like, but
-    /// is plaintext -> bcrypt hash by default.
-    /// </summary>
-    bool VerifyPassword(string password, string match)
-    {
-        bool res = BCrypt.Net.BCrypt.Verify(password, match);
-        return res;
-    }
+  /// <summary>
+  /// Change the verification code and expiration date.
+  /// </summary>
+  Member RefreshVerification(string username, TimeSpan verifyWindow);
 
-    Member? GetMemberByVerification(string verificationCode);
-    void CompleteVerification(Member member, DateTimeOffset date);
-    void SetPasswordResetData(string username, string resetToken, DateTimeOffset? tokenExpires);
-    void RemovePasswordResetData(string username);
-    Member GetMemberByResetToken(string resetToken);
-    void SetPassword(string username, string newPassword, DateTimeOffset modDate);
+  /// <summary>
+  /// A function to verify that the given password matches the matching password.
+  /// The matching password -> match algorithm can be anything you like, but
+  /// is plaintext -> bcrypt hash by default.
+  /// </summary>
+  bool VerifyPassword(string password, string match)
+  {
+    bool res = BCrypt.Net.BCrypt.Verify(password, match);
+    return res;
+  }
 
-    bool HasPermission(string username, string? requiredPermissions);
+  Member? GetMemberByVerification(string verificationCode);
+  void CompleteVerification(Member member, DateTimeOffset date);
+  void SetPasswordResetData(string username, string resetToken, DateTimeOffset? tokenExpires);
+  void RemovePasswordResetData(string username);
+  Member GetMemberByResetToken(string resetToken);
+  void SetPassword(string username, string newPassword, DateTimeOffset modDate);
+
+  bool HasPermission(string username, string? requiredPermissions);
 }
 
 

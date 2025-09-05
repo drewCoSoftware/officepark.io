@@ -342,7 +342,7 @@ public class MembershipHelper
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  internal bool HasPermission(Member m, string? requiredPermissions, string? defaultScope = null)
+  internal bool HasRequiredPermissions(Member m, string? requiredPermissions, string? defaultScope = null)
   {
     if (!string.IsNullOrWhiteSpace(defaultScope))
     {

@@ -43,9 +43,9 @@ public class MemberManService
 
   // --------------------------------------------------------------------------------------------------------------------------
   // NOTE: A cool dhll features could be 'proxy' keyword where we offer up functions that are forwarded to a certain member class / function.
-  public bool HasPermission(Member m, string? requiredPermissions)
+  public bool HasRequiredPermissions(Member m, string? requiredPermissions)
   {
-    return MemberHelper.HasPermission(m, requiredPermissions);
+    return MemberHelper.HasRequiredPermissions(m, requiredPermissions);
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

@@ -61,7 +61,7 @@ public class CheckMembership : ActionFilterAttribute
 
       // Permissions check?
       if (!string.IsNullOrWhiteSpace(RequiredPermissions) &&
-          !HasPermission(context, m, RequiredPermissions))
+          !IsAllowedTo(context, m, RequiredPermissions))
       {
         HandleMissingPermissions(context);
       }
@@ -82,11 +82,11 @@ public class CheckMembership : ActionFilterAttribute
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  protected virtual bool HasPermission(ActionExecutingContext context, Member m, string? requiredPermissions)
+  protected virtual bool IsAllowedTo(ActionExecutingContext context, Member m, string? requiredPermissions)
   {
     // Since we just pulled a fresh copy of the member from DB / memory, we can
     // check the permissions directly....
-    bool res = MMFeatures.MMService.HasPermission(m, requiredPermissions);
+    bool res = MMFeatures.MMService.HasRequiredPermissions(m, requiredPermissions);
     return res;
   }
 
