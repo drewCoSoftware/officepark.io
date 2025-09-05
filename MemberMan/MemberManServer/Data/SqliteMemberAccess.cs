@@ -1,6 +1,7 @@
 using Dapper;
 using DataHelpers.Data;
 using drewCo.Tools;
+using drewCo.Tools.Logging;
 using MemberMan;
 using Microsoft.AspNetCore.Razor.Runtime.TagHelpers;
 using Microsoft.Data.Sqlite;
@@ -58,6 +59,9 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
                     ErrorMessage = "Could not save new permissions!"
                 };
             }
+        }
+        else {
+          Log.Info($"member: {toMember.Username} already has permission: {permission}");
         }
 
         return new PermissionResult() { Success = true };
