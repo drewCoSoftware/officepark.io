@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Text.RegularExpressions;
 using CommandLine;
+using DataHelpers.Data;
 using DotLiquid;
 using DotLiquid.Util;
 using drewCo.Tools;
@@ -307,11 +308,15 @@ internal class Program
 
       FileTools.CreateDirectory(dir);
 
-      MemberAccess = new SqliteMemberAccess(dir, filename);
-      if (!File.Exists(MemberAccess.DBFilePath))
+
+      var mmFactory = new SqliteDataFactory<MemberManSchema>(dir, filename);
+      if (!File.Exists(mmFactory.DBFilePath))
       {
-        MemberAccess.SetupDatabase();
+        mmFactory.SetupDatabase();
       }
+
+      MemberAccess = new SqliteMemberAccess(mmFactory);
+
       IsDBInitialized = true;
     }
     else

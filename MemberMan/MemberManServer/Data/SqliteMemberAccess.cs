@@ -1,30 +1,24 @@
-using Dapper;
-using DataHelpers.Data;
+using DataHelpers;
 using drewCo.Tools;
 using drewCo.Tools.Logging;
-using MemberMan;
-using Microsoft.AspNetCore.Razor.Runtime.TagHelpers;
-using Microsoft.Data.Sqlite;
-using Npgsql;
-using Org.BouncyCastle.Crypto;
-using static MemberMan.LoginApiController;
 
 namespace officepark.io.Membership;
 
 // ==========================================================================  
-public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAccess
+public class SqliteMemberAccess : IMemberAccess
 {
   public IPasswordHandler PasswordHandler { get; private set; }
   public IPasswordValidator PasswordValidator { get; private set; }
 
+  private IDataFactory<MemberManSchema> DataFactory = null!;
+
   // --------------------------------------------------------------------------------------------------------------------------
-  public SqliteMemberAccess(string dataDir, string dbFileName, IPasswordHandler? pwHandler_ = null, IPasswordValidator? pwValidator_ = null)
-  : base(dataDir, dbFileName)
+  public SqliteMemberAccess(IDataFactory<MemberManSchema> dataFactory_, IPasswordHandler? pwHandler_ = null, IPasswordValidator? pwValidator_ = null)
   {
+    DataFactory = dataFactory_;
     PasswordHandler = pwHandler_ ?? new BCryptPasswordHandler();
     PasswordValidator = pwValidator_ ?? new DefaultPasswordValidator();
   }
-
 
   // --------------------------------------------------------------------------------------------------------------------------
   public PermissionResult AddPermission(Member toMember, string permission, DateTimeOffset modDate)
@@ -39,30 +33,33 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
       };
     }
 
-    var permissions = (toMember.Permissions ?? string.Empty).Split(",");
-    if (!permissions.Contains(permission))
+    using (var dal = DataFactory.Action())
     {
-      toMember.Permissions += "," + permission;
-
-      string query = "UPDATE Members SET Permissions = @perms WHERE username = @userName";
-      var res = RunExecute(query, new
+      var permissions = (toMember.Permissions ?? string.Empty).Split(",");
+      if (!permissions.Contains(permission))
       {
-        perms = toMember.Permissions,
-        userName = toMember.Username
-      });
+        toMember.Permissions += "," + permission;
 
-      if (res != 1)
-      {
-        return new PermissionResult()
+        string query = "UPDATE Members SET Permissions = @perms WHERE username = @userName";
+        var res = dal.RunExecute(query, new
         {
-          Success = false,
-          ErrorMessage = "Could not save new permissions!"
-        };
+          perms = toMember.Permissions,
+          userName = toMember.Username
+        });
+
+        if (res != 1)
+        {
+          return new PermissionResult()
+          {
+            Success = false,
+            ErrorMessage = "Could not save new permissions!"
+          };
+        }
       }
-    }
-    else
-    {
-      Log.Info($"member: {toMember.Username} already has permission: {permission}");
+      else
+      {
+        Log.Info($"member: {toMember.Username} already has permission: {permission}");
+      }
     }
 
     return new PermissionResult() { Success = true };
@@ -78,30 +75,27 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMember(string username, string password)
   {
-    // string hash = (this as IMemberAccess).GetPasswordHash(password);
-
-    //// We need to get the stored password first...
-    //string storedHash = GetStoredHash(username);
-    //noo
-
     string query = "SELECT * FROM Members WHERE username = @username";
-    var res = RunSingleQuery<Member>(query, new
+    using (var dal = DataFactory.Action())
     {
-      username = username,
-    });
-
-    // Check to see if the password is OK....
-    // If not, return null.
-    if (res != null)
-    {
-      bool passOK = (this as IMemberAccess).CheckPassword(password, res.Password);
-      if (!passOK)
+      var res = dal.RunSingleQuery<Member>(query, new
       {
-        return null;
-      }
-    }
+        username = username,
+      });
 
-    return res;
+      // Check to see if the password is OK....
+      // If not, return null.
+      if (res != null)
+      {
+        bool passOK = (this as IMemberAccess).CheckPassword(password, res.Password);
+        if (!passOK)
+        {
+          return null;
+        }
+      }
+
+      return res;
+    }
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -110,24 +104,15 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     throw new NotSupportedException("Permission checks against the database are not supported at this time!");
   }
 
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //public Member? GetMember(string username)
-  //{
-  //  string query = "SELECT * FROM Members WHERE username = @username";
-  //  var res = RunSingleQuery<Member>(query, new
-  //  {
-  //    username = username,
-  //  });
-  //  return res;
-
-  //}
-
   // --------------------------------------------------------------------------------------------------------------------------
   private string? GetStoredHash(string username)
   {
-    string query = "SELECT password FROM members WHERE username = @username";
-    string? res = RunSingleQuery<string?>(query, new { username = username });
-    return res;
+    using (var dal = DataFactory.Action())
+    {
+      string query = "SELECT password FROM members WHERE username = @username";
+      string? res = dal.RunSingleQuery<string?>(query, new { username = username });
+      return res;
+    }
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -154,10 +139,12 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     };
     SetVerificationProps(m, verifyWindow);
 
-    // HINT: The query is a 'returns' query, so we expect the PK for the new member.
-    int memberId = RunSingleQuery<int>(query, m);
-    m.ID = memberId;
-
+    using (var dal = DataFactory.Action())
+    {
+      // HINT: The query is a 'returns' query, so we expect the PK for the new member.
+      int memberId = dal.RunSingleQuery<int>(query, m);
+      m.ID = memberId;
+    }
     return m;
   }
 
@@ -174,28 +161,37 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     // TODO: We don't actually want to be able to perma-delete users!
     // If anything we should deactivate them, or move their entries to some kind
     // of deactivated table.
-    string query = "DELETE FROM members WHERE username = @username";
-    int removed = RunExecute(query, new { @username = username });
-
-    // NOTE: This is misleading because a failed removal doesn't necessarily mean that the user didn't exist.  There could be a differnt reason...
-    if (removed != 1 && mustExist)
+    using (var dal = DataFactory.Action())
     {
-      throw new InvalidOperationException($"Unable to remove the member: {username}");
+      string query = "DELETE FROM members WHERE username = @username";
+      int removed = dal.RunExecute(query, new { @username = username });
+
+      // NOTE: This is misleading because a failed removal doesn't necessarily mean that the user didn't exist.  There could be a differnt reason...
+      if (removed != 1 && mustExist)
+      {
+        throw new InvalidOperationException($"Unable to remove the member: {username}");
+      }
     }
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMember(int memberId)
   {
-    Member? res = RunSingleQuery<Member>("SELECT * FROM members WHERE id = @memberId", new { memberId = memberId });
-    return res;
+    using (var dal = DataFactory.Action())
+    {
+      Member? res = dal.RunSingleQuery<Member>("SELECT * FROM members WHERE id = @memberId", new { memberId = memberId });
+      return res;
+    }
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMember(string username)
   {
-    Member? res = RunSingleQuery<Member>("SELECT * FROM members WHERE username = @username", new { username = username });
-    return res;
+    using (var dal = DataFactory.Action())
+    {
+      Member? res = dal.RunSingleQuery<Member>("SELECT * FROM members WHERE username = @username", new { username = username });
+      return res;
+    }
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -207,31 +203,40 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   // --------------------------------------------------------------------------------------------------------------------------
   public MemberAvailability CheckAvailability(string username, string email)
   {
-    var byName = "SELECT username FROM members WHERE username = @username";
-    var byNameRes = RunQuery<Member>(byName, new { username = username });
+    using (var dal = DataFactory.Action())
+    {
+      var byName = "SELECT username FROM members WHERE username = @username";
+      var byNameRes = dal.RunQuery<Member>(byName, new { username = username });
 
-    var byEmail = "SELECT email FROM members WHERE email = @email";
-    var byEmailRes = RunQuery<Member>(byEmail, new { email = email });
+      var byEmail = "SELECT email FROM members WHERE email = @email";
+      var byEmailRes = dal.RunQuery<Member>(byEmail, new { email = email });
 
-    var res = new MemberAvailability(byNameRes.Count() == 0, byEmailRes.Count() == 0);
-    return res;
+      var res = new MemberAvailability(byNameRes.Count() == 0, byEmailRes.Count() == 0);
+      return res;
+    }
 
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMemberByResetToken(string resetToken)
   {
-    var byTokenQuery = "SELECT username,resettoken,tokenexpires FROM members WHERE resettoken = @resetToken";
-    var byToken = RunSingleQuery<Member>(byTokenQuery, new { @resetToken = resetToken });
-    return byToken;
+    using (var dal = DataFactory.Action())
+    {
+      var byTokenQuery = "SELECT username,resettoken,tokenexpires FROM members WHERE resettoken = @resetToken";
+      var byToken = dal.RunSingleQuery<Member>(byTokenQuery, new { @resetToken = resetToken });
+      return byToken;
+    }
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMemberByVerification(string code)
   {
-    var byVerification = "SELECT username, email, verificationexpiration FROM members WHERE verificationcode = @verificationcode";
-    var byVerify = RunSingleQuery<Member>(byVerification, new { @verificationcode = code });
-    return byVerify;
+    using (var dal = DataFactory.Action())
+    {
+      var byVerification = "SELECT username, email, verificationexpiration FROM members WHERE verificationcode = @verificationcode";
+      var byVerify = dal.RunSingleQuery<Member>(byVerification, new { @verificationcode = code });
+      return byVerify;
+    }
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -244,18 +249,21 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     // this, or at least indicate to the user in debug mode that something is off.
     // Transaction((conn) =>
     // {
-    var updateVerification = "UPDATE members SET verifiedon = @date, modifiedon = @date, verificationexpiration = @verifyExpired, verificationcode = null WHERE username = @username";
-    int affected = RunExecute(updateVerification, new
+    using (var dal = DataFactory.Action())
     {
-      date,
-      username = m.Username,
-      verifyExpired = DateTimeOffset.MinValue
-    });
-    if (affected == 0)
-    {
-      Console.WriteLine($"Update query for user {m.Username} did not have an effect!");
+      var updateVerification = "UPDATE members SET verifiedon = @date, modifiedon = @date, verificationexpiration = @verifyExpired, verificationcode = null WHERE username = @username";
+      int affected = dal.RunExecute(updateVerification, new
+      {
+        date,
+        username = m.Username,
+        verifyExpired = DateTimeOffset.MinValue
+      });
+      if (affected == 0)
+      {
+        Console.WriteLine($"Update query for user {m.Username} did not have an effect!");
+      }
     }
-    //    });
+
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -269,10 +277,13 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
       username = username,
     };
 
-    int updated = RunExecute(query, args);
-    if (updated != 1)
+    using (var dal = DataFactory.Action())
     {
-      Console.WriteLine($"Setting password reset data for user {username} did not have an effect!");
+      int updated = dal.RunExecute(query, args);
+      if (updated != 1)
+      {
+        Console.WriteLine($"Setting password reset data for user {username} did not have an effect!");
+      }
     }
   }
 
@@ -284,13 +295,16 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
 
     IMemberAccess t = this;
     password = t.GetPasswordHash(password);
-
-    int updated = RunExecute(pwQuery, new { password, username, date = modDate });
-
-    if (updated != 1)
+    using (var dal = DataFactory.Action())
     {
-      throw new InvalidOperationException($"Unable to set password for user: {username}!");
+      int updated = dal.RunExecute(pwQuery, new { password, username, date = modDate });
+
+      if (updated != 1)
+      {
+        throw new InvalidOperationException($"Unable to set password for user: {username}!");
+      }
     }
+
 
   }
 
@@ -310,16 +324,20 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
     }
     SetVerificationProps(m, verifyWindow);
 
-    string query = "UPDATE members SET verificationcode = @code, verificationexpiration = @expires WHERE username = @name";
-    int updated = RunExecute(query, new
+    using (var dal = DataFactory.Action())
     {
-      code = m.VerificationCode,
-      expires = m.VerificationExpiration,
-      name = m.Username
-    });
-    if (updated != 1)
-    {
-      throw new InvalidOperationException("Verification data could not be refreshed!");
+
+      string query = "UPDATE members SET verificationcode = @code, verificationexpiration = @expires WHERE username = @name";
+      int updated = dal.RunExecute(query, new
+      {
+        code = m.VerificationCode,
+        expires = m.VerificationExpiration,
+        name = m.Username
+      });
+      if (updated != 1)
+      {
+        throw new InvalidOperationException("Verification data could not be refreshed!");
+      }
     }
 
     return m;
@@ -328,17 +346,20 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   // --------------------------------------------------------------------------------------------------------------------------
   internal string SetPermissions(string username, string permissions, DateTimeOffset modDate)
   {
-    string query = "UPDATE members SET permissions = @permissions, modifiedon = @date WHERE username = @username";
-    int updated = RunExecute(query, new
+    using (var dal = DataFactory.Action())
     {
-      permissions,
-      username,
-      date = modDate
-    });
+      string query = "UPDATE members SET permissions = @permissions, modifiedon = @date WHERE username = @username";
+      int updated = dal.RunExecute(query, new
+      {
+        permissions,
+        username,
+        date = modDate
+      });
 
-    if (updated != 1)
-    {
-      throw new InvalidOperationException($"Unable to set permissions for member: {username}!");
+      if (updated != 1)
+      {
+        throw new InvalidOperationException($"Unable to set permissions for member: {username}!");
+      }
     }
 
     return permissions;
@@ -350,13 +371,16 @@ public class SqliteMemberAccess : SqliteDataAccess<MemberManSchema>, IMemberAcce
   /// </summary>
   internal void UpdateMember(Member m)
   {
-    var def = this.SchemaDef.GetTableDef(typeof(Member));
+    var def = DataFactory.Schema.GetTableDef(typeof(Member));
     string query = def.GetUpdateQuery();
 
-    int updated = RunExecute(query, m);
-    if (updated != 1)
+    using (var dal = DataFactory.Action())
     {
-      throw new InvalidOperationException($"Unable to update data for member: {m.Username}!");
+      int updated = dal.RunExecute(query, m);
+      if (updated != 1)
+      {
+        throw new InvalidOperationException($"Unable to update data for member: {m.Username}!");
+      }
     }
   }
 }
