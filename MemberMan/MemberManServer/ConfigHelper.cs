@@ -3,7 +3,6 @@
 /// <summary>
 /// Makes it easy to bind data out of the application configuration.
 /// </summary>
-[Obsolete("This type will be removed!")]
 public class ConfigHelper
 {
   private IConfiguration Config = null!;

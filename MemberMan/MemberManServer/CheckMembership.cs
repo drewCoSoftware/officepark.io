@@ -93,7 +93,7 @@ public class CheckMembership : ActionFilterAttribute
   // --------------------------------------------------------------------------------------------------------------------------
   protected virtual bool HandleLoginCheck(ActionExecutingContext context, HttpRequest request)
   {
-    bool res = MMFeatures != null && MMFeatures.MMService.IsLoggedIn(request);
+    bool res = MMFeatures != null && MMFeatures.MMService.IsLoggedIn(request, out _);
     return res;
   }
 

@@ -1,5 +1,6 @@
 ﻿using drewCo.Fetchy;
 using drewCo.Tools;
+using Microsoft.OpenApi.Writers;
 using officepark.io.Membership;
 
 namespace MemberMan;
@@ -49,8 +50,8 @@ public class MemberManService
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public bool IsLoggedIn(HttpRequest req) {
-    return MemberHelper.IsLoggedIn(req);
+  public bool IsLoggedIn(HttpRequest req, out Member? member) {
+    return MemberHelper.IsLoggedIn(req, out member);
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -152,16 +153,16 @@ public class MemberManService
 
   // --------------------------------------------------------------------------------------------------------------------------
   // TODO: This could also go with some kind of base class?
-  public bool IsLoggedIn(string loginToken, string ipAddress)
+  public bool IsLoggedIn(string loginToken, string ipAddress, out Member? member)
   {
-    bool res = MemberHelper.IsLoggedIn(loginToken, ipAddress);
+    bool res = MemberHelper.IsLoggedIn(loginToken, ipAddress, out member);
     return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public bool IsLoggedIn(string loginToken, string ipAddress, out Member? m)
+  public bool IsLoggedIn(string loginToken, string ipAddress)
   {
-    m = GetLoggedInMember(loginToken, ipAddress);
+    var m = GetLoggedInMember(loginToken, ipAddress);
     return m != null;
   }
 

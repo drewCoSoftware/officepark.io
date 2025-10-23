@@ -33,7 +33,7 @@ public class SqliteMemberAccess : IMemberAccess
       };
     }
 
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       var permissions = (toMember.Permissions ?? string.Empty).Split(",");
       if (!permissions.Contains(permission))
@@ -76,7 +76,7 @@ public class SqliteMemberAccess : IMemberAccess
   public Member? GetMember(string username, string password)
   {
     string query = "SELECT * FROM Members WHERE username = @username";
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       var res = dal.RunSingleQuery<Member>(query, new
       {
@@ -107,7 +107,7 @@ public class SqliteMemberAccess : IMemberAccess
   // --------------------------------------------------------------------------------------------------------------------------
   private string? GetStoredHash(string username)
   {
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       string query = "SELECT password FROM members WHERE username = @username";
       string? res = dal.RunSingleQuery<string?>(query, new { username = username });
@@ -139,7 +139,7 @@ public class SqliteMemberAccess : IMemberAccess
     };
     SetVerificationProps(m, verifyWindow);
 
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       // HINT: The query is a 'returns' query, so we expect the PK for the new member.
       int memberId = dal.RunSingleQuery<int>(query, m);
@@ -161,7 +161,7 @@ public class SqliteMemberAccess : IMemberAccess
     // TODO: We don't actually want to be able to perma-delete users!
     // If anything we should deactivate them, or move their entries to some kind
     // of deactivated table.
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       string query = "DELETE FROM members WHERE username = @username";
       int removed = dal.RunExecute(query, new { @username = username });
@@ -177,7 +177,7 @@ public class SqliteMemberAccess : IMemberAccess
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMember(int memberId)
   {
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       Member? res = dal.RunSingleQuery<Member>("SELECT * FROM members WHERE id = @memberId", new { memberId = memberId });
       return res;
@@ -187,7 +187,7 @@ public class SqliteMemberAccess : IMemberAccess
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMember(string username)
   {
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       Member? res = dal.RunSingleQuery<Member>("SELECT * FROM members WHERE username = @username", new { username = username });
       return res;
@@ -203,7 +203,7 @@ public class SqliteMemberAccess : IMemberAccess
   // --------------------------------------------------------------------------------------------------------------------------
   public MemberAvailability CheckAvailability(string username, string email)
   {
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       var byName = "SELECT username FROM members WHERE username = @username";
       var byNameRes = dal.RunQuery<Member>(byName, new { username = username });
@@ -220,7 +220,7 @@ public class SqliteMemberAccess : IMemberAccess
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMemberByResetToken(string resetToken)
   {
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       var byTokenQuery = "SELECT username,resettoken,tokenexpires FROM members WHERE resettoken = @resetToken";
       var byToken = dal.RunSingleQuery<Member>(byTokenQuery, new { @resetToken = resetToken });
@@ -231,7 +231,7 @@ public class SqliteMemberAccess : IMemberAccess
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? GetMemberByVerification(string code)
   {
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       var byVerification = "SELECT username, email, verificationexpiration FROM members WHERE verificationcode = @verificationcode";
       var byVerify = dal.RunSingleQuery<Member>(byVerification, new { @verificationcode = code });
@@ -249,7 +249,7 @@ public class SqliteMemberAccess : IMemberAccess
     // this, or at least indicate to the user in debug mode that something is off.
     // Transaction((conn) =>
     // {
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       var updateVerification = "UPDATE members SET verifiedon = @date, modifiedon = @date, verificationexpiration = @verifyExpired, verificationcode = null WHERE username = @username";
       int affected = dal.RunExecute(updateVerification, new
@@ -277,7 +277,7 @@ public class SqliteMemberAccess : IMemberAccess
       username = username,
     };
 
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       int updated = dal.RunExecute(query, args);
       if (updated != 1)
@@ -295,7 +295,7 @@ public class SqliteMemberAccess : IMemberAccess
 
     IMemberAccess t = this;
     password = t.GetPasswordHash(password);
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       int updated = dal.RunExecute(pwQuery, new { password, username, date = modDate });
 
@@ -324,7 +324,7 @@ public class SqliteMemberAccess : IMemberAccess
     }
     SetVerificationProps(m, verifyWindow);
 
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
 
       string query = "UPDATE members SET verificationcode = @code, verificationexpiration = @expires WHERE username = @name";
@@ -346,7 +346,7 @@ public class SqliteMemberAccess : IMemberAccess
   // --------------------------------------------------------------------------------------------------------------------------
   internal string SetPermissions(string username, string permissions, DateTimeOffset modDate)
   {
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       string query = "UPDATE members SET permissions = @permissions, modifiedon = @date WHERE username = @username";
       int updated = dal.RunExecute(query, new
@@ -374,7 +374,7 @@ public class SqliteMemberAccess : IMemberAccess
     var def = DataFactory.Schema.GetTableDef(typeof(Member));
     string query = def.GetUpdateQuery();
 
-    using (var dal = DataFactory.Action())
+    using (var dal = DataFactory.GetDataAccess())
     {
       int updated = dal.RunExecute(query, m);
       if (updated != 1)

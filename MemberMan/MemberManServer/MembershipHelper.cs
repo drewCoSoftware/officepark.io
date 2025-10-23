@@ -29,7 +29,7 @@ public class MembershipHelper
 
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public bool IsLoginActive(string cookieVal, string ip)
+  public bool IsLoginActive(string cookieVal, string ip, out Member? member)
   {
     string token = GetLoginToken(cookieVal, ip);
 
@@ -38,6 +38,7 @@ public class MembershipHelper
     {
       ExpireMembers();
       bool res = LoggedInMembers.TryGetValue(token, out Member? m);
+      member = m;
 
       return res;
     }
@@ -272,23 +273,25 @@ public class MembershipHelper
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public bool IsLoggedIn(string? cookie, string ipAddress)
+  public bool IsLoggedIn(string? cookie, string ipAddress, out Member? member)
   {
+    member = null;
     if (cookie == null) { return false; }
-    bool res = IsLoginActive(cookie, ipAddress);
+    bool res = IsLoginActive(cookie, ipAddress, out member);
     return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public bool IsLoggedIn(HttpRequest? request)
+  public bool IsLoggedIn(HttpRequest? request, out Member? member)
   {
+    member = null;
     if (request == null) { return false; }
 
     string? cookie = request.Cookies[MEMBERSHIP_COOKIE];
     if (string.IsNullOrEmpty(cookie)) { return false; }
 
     string ipAddress = IPHelper.GetIP(request);
-    bool res = cookie != null && IsLoginActive(cookie, ipAddress);
+    bool res = cookie != null && IsLoginActive(cookie, ipAddress, out member);
     return res;
   }
 

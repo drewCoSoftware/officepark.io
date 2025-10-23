@@ -8,7 +8,7 @@ namespace MemberMan;
 
 // ============================================================================================================================
 // TODO: SHARE:
-public class BaseController : Controller
+public class ApiBaseController : Controller
 {
 
   protected string _IPAddress = default!;
@@ -28,11 +28,11 @@ public class BaseController : Controller
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  protected void SetCookie(string name, string value, DateTime expires)
+  protected void SetCookie(string name, string value, DateTimeOffset? expires = null)
   {
     Response.Cookies.Append(name, value, new CookieOptions()
     {
-      Expires = DateTime.Now + TimeSpan.FromMinutes(MembershipHelper.LOGIN_COOKIE_TIME),
+      Expires = expires,
       HttpOnly = false,
     });
   }
@@ -87,7 +87,7 @@ public class BaseController : Controller
 
 
 // ============================================================================================================================
-public class ApiController : BaseController
+public class ApiController : ApiBaseController
 {
 
   // --------------------------------------------------------------------------------------------------------------------------

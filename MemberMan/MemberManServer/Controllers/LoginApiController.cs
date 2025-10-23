@@ -18,7 +18,6 @@ using Microsoft.Net.Http.Headers;
 using officepark.io;
 
 using officepark.io.Membership;
-using static MemberManServer.Mailer;
 using IOFile = System.IO.File;
 using drewCo.Fetchy;
 
@@ -246,7 +245,7 @@ public class LoginApiController : ApiController, IHasMembershipService //, IMemb
   public LoginResponse Login(LoginModel login)
   {
     // TEMP:
-    Thread.Sleep(2000);
+    // Thread.Sleep(2000);
 
     // If the user is currently logged in, then we can just return OK or something....
     // TODO: Can we make this block of code part of the 'CheckMembership' attribute?
@@ -280,7 +279,7 @@ public class LoginApiController : ApiController, IHasMembershipService //, IMemb
 
     // TODO: OPTIONS:
     bool isLoggedIn = true;
-    bool ALLOW_UNVERIFIED_LOGIN = false;
+    bool ALLOW_UNVERIFIED_LOGIN = true;
     if (!isVerified && !ALLOW_UNVERIFIED_LOGIN)
     {
       isLoggedIn = false;
@@ -300,6 +299,7 @@ public class LoginApiController : ApiController, IHasMembershipService //, IMemb
 
       // TODO: Invent a proper 'Set/GetCookie' functions on the base class...
       MembershipCookie = cookieVal;
+      SetCookie("test", "something else");
 
       _LoginToken = MembershipHelper.GetLoginToken(cookieVal, m.IP);
       if (_LoginToken == null)
