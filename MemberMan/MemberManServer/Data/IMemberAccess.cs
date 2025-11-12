@@ -68,6 +68,7 @@ public interface IMemberAccess
   }
 
   Member? GetMember(string username);
+
   List<Member> GetMemberList();
 
   Member CreateMember(string username, string email, string password, TimeSpan verifyWindow);

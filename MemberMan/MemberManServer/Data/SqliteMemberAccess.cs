@@ -1,4 +1,5 @@
 using DataHelpers;
+using DataHelpers.Data;
 using drewCo.Tools;
 using drewCo.Tools.Logging;
 
@@ -276,10 +277,11 @@ public class SqliteMemberAccess : IMemberAccess
       tokenExpires = tokenExpires,
       username = username,
     };
+    var qParams = Helpers.CreateParams("update", args, true);
 
     using (var dal = DataFactory.GetDataAccess())
     {
-      int updated = dal.RunExecute(query, args);
+      int updated = dal.RunExecute(query, qParams);
       if (updated != 1)
       {
         Console.WriteLine($"Setting password reset data for user {username} did not have an effect!");
