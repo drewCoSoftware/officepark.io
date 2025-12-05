@@ -22,6 +22,21 @@ namespace officepark.io.Membership;
 // ============================================================================================================================
 public class Member : IHasPrimary
 {
+  private static Member _Anon = null!;
+  public static Member Anonymous
+  {
+    get
+    {
+      return _Anon ?? (_Anon = new Member()
+      {
+        Username = "anonymous",
+        Email = "anon@noemail.com",
+        Permissions = null,
+        IsAnonymous = true,
+      });
+    }
+  }
+
   public int ID { get; set; }
 
   [Unique]
@@ -75,8 +90,11 @@ public class Member : IHasPrimary
   // This data is used with the current session.
   [JsonIgnore]
   public DateTimeOffset LoggedInSince { get; set; }
+
+  // TODO: This should go live in the database!
   [JsonIgnore]
   public DateTimeOffset LastActive { get; set; }
+
   [JsonIgnore]
   public string IP { get; set; }
   [JsonIgnore]
@@ -84,6 +102,9 @@ public class Member : IHasPrimary
 
   [JsonIgnore]
   public bool IsLoggedIn { get; set; } = false;
+
+  [JsonIgnore]
+  public bool IsAnonymous { get; set; } = false;
 
   // --------------------------------------------------------------------------------------------------------------------------
   // REFACTOR:  This can go live with the permissions helpers....
