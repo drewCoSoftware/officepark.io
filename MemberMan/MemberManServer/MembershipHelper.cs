@@ -1,4 +1,5 @@
 ﻿using drewCo.Tools;
+using drewCo.Tools.Logging;
 using MemberMan;
 using System.Diagnostics;
 
@@ -10,6 +11,11 @@ namespace officepark.io.Membership;
 /// </summary>
 public class MembershipHelper
 {
+
+  public static class LogLevels { 
+    public const string MM_DEBUG = "MM_DEBUG";
+  }
+
   // OPTIONS:  This should come from member man config....
   // That also means that this helper class should also use instance methods....
   // We can worry about all that later....
@@ -31,7 +37,11 @@ public class MembershipHelper
   // --------------------------------------------------------------------------------------------------------------------------
   public bool IsLoginActive(string cookieVal, string ip, out Member? member)
   {
-    string token = GetLoginToken(cookieVal, ip);
+    string? token = GetLoginToken(cookieVal, ip);
+
+    Log.AddMessage(LogLevels.MM_DEBUG, $"Checking active login for ip: {ip}");
+    Log.AddMessage(LogLevels.MM_DEBUG, $"Cookie is: {cookieVal}");
+    Log.AddMessage(LogLevels.MM_DEBUG, $"The login token is: {token ?? "<null>"}");
 
     // TODO: This should be concurrent....
     lock (DataLock)
@@ -59,12 +69,14 @@ public class MembershipHelper
         if (item.Value.LastActive + TimeSpan.FromMinutes(LOGIN_COOKIE_TIME) < now)
         {
           toRemove.Add(item.Key);
+
         }
       }
 
       foreach (var item in toRemove)
       {
         LoggedInMembers.Remove(item);
+        Log.AddMessage(LogLevels.MM_DEBUG, $"Member: {item} was expired!");
       }
 
       SaveActiveUserList();
@@ -238,14 +250,13 @@ public class MembershipHelper
 
     if (cookie == null)
     {
-
-      Debug.WriteLine("The login cookie is null!");
+      Log.AddMessage(LogLevels.MM_DEBUG, "The login cookie is null!");
 
       return null;
     }
 
-    Debug.WriteLine($"The cookie is: {cookie}!");
-    Debug.WriteLine($"The IP address is: {ip}!");
+    Console.WriteLine($"The cookie is: {cookie}!");
+    Console.WriteLine($"The IP address is: {ip}!");
 
     int ipLen = ip.Length;
     int ipIndex = 0;
