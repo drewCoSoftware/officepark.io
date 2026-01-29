@@ -2,6 +2,7 @@
 using drewCo.Tools.Logging;
 using MemberMan;
 using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace officepark.io.Membership;
 
@@ -12,7 +13,8 @@ namespace officepark.io.Membership;
 public class MembershipHelper
 {
 
-  public static class LogLevels { 
+  public static class LogLevels
+  {
     public const string MM_DEBUG = "MM_DEBUG";
   }
 
@@ -276,11 +278,44 @@ public class MembershipHelper
 
   }
 
+
   // --------------------------------------------------------------------------------------------------------------------------
-  public void SetLoggedInUser(Member m, string loginToken)
+  /// <summary>
+  /// This will complete the login for the given user.
+  /// Because MemberMan uses a token / cookie for tracking logins
+  /// </summary>
+ public void CompleteLogin(Member m, DateTimeOffset timestamp, HttpResponse response)
   {
+    // TODO: The membership helper should be able to do all of this stuff.
+    m.LoggedInSince = DateTime.UtcNow;
+    m.LastActive = m.LoggedInSince;
+
+    string cookieVal = MembershipHelper.CreateLoginCookie();
+
+    // TODO: Invent a proper 'Set/GetCookie' functions on the base class...
+    // MembershipCookie = cookieVal;
+
+    string loginToken = MembershipHelper.GetLoginToken(cookieVal, m.IP);
+    if (loginToken == null)
+    {
+      throw new InvalidOperationException("Could not generate a login token!");
+    }
+
+    SetMembershipCookie(cookieVal, timestamp, response);
+
     LoggedInMembers[loginToken] = m;
     SaveActiveUserList();
+
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public static void SetMembershipCookie(string value, DateTimeOffset timestamp, HttpResponse response) 
+  {
+    response.Cookies.Append(MEMBERSHIP_COOKIE, value, new CookieOptions()
+    {
+      Expires = timestamp + TimeSpan.FromMinutes(MembershipHelper.LOGIN_COOKIE_TIME),
+      HttpOnly = false,
+    });
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -412,6 +447,11 @@ public class MembershipHelper
     }
 
     return res;
+  }
+
+  internal void CompleteLogin(Member m, DateTimeOffset utcNow, Action<object> value)
+  {
+    throw new NotImplementedException();
   }
 
   // ============================================================================================================================

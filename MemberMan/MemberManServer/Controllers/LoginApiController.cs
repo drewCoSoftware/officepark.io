@@ -292,21 +292,22 @@ public class LoginApiController : ApiController, IHasMembershipService //, IMemb
     // Now we create our entry for membership.
     if (isLoggedIn)
     {
-      m.LoggedInSince = DateTime.UtcNow;
-      m.LastActive = m.LoggedInSince;
+      //// TODO: The membership helper should be able to do all of this stuff.
+      //m.LoggedInSince = DateTime.UtcNow;
+      //m.LastActive = m.LoggedInSince;
 
-      string cookieVal = MembershipHelper.CreateLoginCookie();
+      //string cookieVal = MembershipHelper.CreateLoginCookie();
 
-      // TODO: Invent a proper 'Set/GetCookie' functions on the base class...
-      MembershipCookie = cookieVal;
-      SetCookie("test", "something else");
+      //// TODO: Invent a proper 'Set/GetCookie' functions on the base class...
+      //MembershipCookie = cookieVal;
 
-      _LoginToken = MembershipHelper.GetLoginToken(cookieVal, m.IP);
-      if (_LoginToken == null)
-      {
-        throw new InvalidOperationException("Could not generate a login token!");
-      }
-      MemberService.SetLoggedInUser(m, _LoginToken);
+      //_LoginToken = MembershipHelper.GetLoginToken(cookieVal, m.IP);
+      //if (_LoginToken == null)
+      //{
+      //  throw new InvalidOperationException("Could not generate a login token!");
+      //}
+      //MemberService.SetLoggedInUser(m, _LoginToken);
+      MemberService.CompleteLogin(m, DateTimeOffset.UtcNow, Response);
     }
 
 
