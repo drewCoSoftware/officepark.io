@@ -112,19 +112,13 @@ public class LoginApiController : ApiController, IHasMembershipService //, IMemb
 
   #endregion
 
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //public IMemberAccess GetDAL()
-  //{
-  //  return MMService.GetDAL();
-  //}
-
   public MemberManConfig GetConfig() { return MemberManConfig; }
 
 
   // --------------------------------------------------------------------------------------------------------------------------
   // NOTE: This call will always work, we don't need to know if someone is logged in or not....
   [HttpPost]
-  [Route("/api/logout")]
+  [Route("/api/v1/logout")]
   public IFetchyResponse Logout()
   {
     MemberService.Logout(Request, Response);

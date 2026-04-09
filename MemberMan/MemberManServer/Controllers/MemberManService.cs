@@ -132,13 +132,6 @@ public class MemberManService
 
   }
 
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //public Member GetMemberByResetToken(string resetToken)
-  //{
-  //  var res = DAL.GetMemberByResetToken(resetToken);
-  //  return res;
-  //}
-
   // --------------------------------------------------------------------------------------------------------------------------
   public Member? Login(LoginModel login)
   {
