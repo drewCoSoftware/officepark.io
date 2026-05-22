@@ -277,7 +277,7 @@ public class SqliteMemberAccess : IMemberAccess
       tokenExpires = tokenExpires,
       username = username,
     };
-    var qParams = this.DataFactory.Schema.Flavor.CreateParams("update", args, true);
+    var qParams = this.DataFactory.Schema.Flavor.CreateParams(args, true);
 
     using (var dal = DataFactory.GetDataAccess())
     {
