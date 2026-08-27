@@ -48,8 +48,9 @@ public class MembershipHelper
     // TODO: This should be concurrent....
     lock (DataLock)
     {
+      Member? m = null;
       ExpireMembers();
-      bool res = LoggedInMembers.TryGetValue(token, out Member? m);
+      bool res = (token != null) && LoggedInMembers.TryGetValue(token, out m);
       member = m;
 
       return res;
