@@ -1,20 +1,24 @@
 using DataHelpers;
-using DataHelpers.Data;
 using drewCo.Tools;
 using drewCo.Tools.Logging;
 
 namespace officepark.io.Membership;
 
 // ==========================================================================  
+/// <summary>
+/// Convenience DAL that really only works when you have a dataset named 'Members' with the exact same schema as 'Member'
+/// If you want to add more columns to that dataset (say a derived type) then this DAL doesn't really work
+/// anymore.  I will try to find ways to work around that....
+/// </summary>
 public class SqliteMemberAccess : IMemberAccess
 {
   public IPasswordHandler PasswordHandler { get; private set; }
   public IPasswordValidator PasswordValidator { get; private set; }
 
-  private IDataFactory<MemberManSchema> DataFactory = null!;
+  private IDataFactory<IMemberManSchema> DataFactory = null!;
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public SqliteMemberAccess(IDataFactory<MemberManSchema> dataFactory_, IPasswordHandler? pwHandler_ = null, IPasswordValidator? pwValidator_ = null)
+  public SqliteMemberAccess(IDataFactory<IMemberManSchema> dataFactory_, IPasswordHandler? pwHandler_ = null, IPasswordValidator? pwValidator_ = null)
   {
     DataFactory = dataFactory_;
     PasswordHandler = pwHandler_ ?? new BCryptPasswordHandler();
@@ -34,7 +38,7 @@ public class SqliteMemberAccess : IMemberAccess
       };
     }
 
-    using (var dal = DataFactory.GetDataAccess())
+    using (DataHelpers.Data.IDataAccess<IMemberManSchema> dal = DataFactory.GetDataAccess())
     {
       var permissions = (toMember.Permissions ?? string.Empty).Split(",");
       if (!permissions.Contains(permission))
@@ -391,4 +395,10 @@ public class SqliteMemberAccess : IMemberAccess
 public class MemberManSchema
 {
   public List<Member> Members { get; set; } = new List<Member>();
+}
+
+// ==========================================================================
+public interface IMemberManSchema
+{
+  List<Member> Members { get; set; }
 }

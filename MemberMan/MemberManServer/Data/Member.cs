@@ -17,8 +17,6 @@ using System.Threading.Tasks;
 
 namespace officepark.io.Membership;
 
-
-
 // ============================================================================================================================
 public class Member : IHasPrimary
 {
