@@ -309,7 +309,7 @@ internal class Program
       FileTools.CreateDirectory(dir);
 
 
-      var mmFactory = new SqliteDataFactory<IMemberManSchema>(dir, filename);
+      var mmFactory = new SqliteDataFactory<MemberManSchema>(dir, filename);
       if (!File.Exists(mmFactory.DBFilePath))
       {
         mmFactory.SetupDatabase();

@@ -15,10 +15,10 @@ public class SqliteMemberAccess : IMemberAccess
   public IPasswordHandler PasswordHandler { get; private set; }
   public IPasswordValidator PasswordValidator { get; private set; }
 
-  private IDataFactory<IMemberManSchema> DataFactory = null!;
+  private IDataFactory<MemberManSchema> DataFactory = null!;
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public SqliteMemberAccess(IDataFactory<IMemberManSchema> dataFactory_, IPasswordHandler? pwHandler_ = null, IPasswordValidator? pwValidator_ = null)
+  public SqliteMemberAccess(IDataFactory<MemberManSchema> dataFactory_, IPasswordHandler? pwHandler_ = null, IPasswordValidator? pwValidator_ = null)
   {
     DataFactory = dataFactory_;
     PasswordHandler = pwHandler_ ?? new BCryptPasswordHandler();
@@ -38,7 +38,7 @@ public class SqliteMemberAccess : IMemberAccess
       };
     }
 
-    using (DataHelpers.Data.IDataAccess<IMemberManSchema> dal = DataFactory.GetDataAccess())
+    using (DataHelpers.Data.IDataAccess<MemberManSchema> dal = DataFactory.GetDataAccess())
     {
       var permissions = (toMember.Permissions ?? string.Empty).Split(",");
       if (!permissions.Contains(permission))
@@ -281,7 +281,7 @@ public class SqliteMemberAccess : IMemberAccess
       tokenExpires = tokenExpires,
       username = username,
     };
-    var qParams = this.DataFactory.Schema.Flavor.CreateParams(args, true);
+    var qParams = this.DataFactory.Schema.CreateParams(args, true);
 
     using (var dal = DataFactory.GetDataAccess())
     {
@@ -395,10 +395,4 @@ public class SqliteMemberAccess : IMemberAccess
 public class MemberManSchema
 {
   public List<Member> Members { get; set; } = new List<Member>();
-}
-
-// ==========================================================================
-public interface IMemberManSchema
-{
-  List<Member> Members { get; set; }
 }
